@@ -427,10 +427,10 @@ export const SalesTerminalView: React.FC = () => {
         </div>
 
         {/* View Switcher Tabs: Sell Register, Sold Items History, Receipts Archive */}
-        <div className="flex items-center gap-2 self-start md:self-auto shrink-0 flex-wrap">
+        <div className="flex items-center gap-2 self-start md:self-auto shrink-0 flex-wrap w-full md:w-auto">
           <button
             onClick={() => setActiveTab('pos')}
-            className={`px-4 py-2 rounded-2xl text-xs font-extrabold flex items-center gap-2 transition cursor-pointer ${
+            className={`flex-1 sm:flex-none justify-center px-4 py-2 rounded-2xl text-xs font-extrabold flex items-center gap-2 transition cursor-pointer ${
               activeTab === 'pos'
                 ? 'bg-[#111111] text-white shadow-xs'
                 : 'bg-[#F7F6F3] text-[#111111] hover:bg-slate-200/70 border border-slate-200/80'
@@ -447,29 +447,29 @@ export const SalesTerminalView: React.FC = () => {
 
           <button
             onClick={() => setActiveTab('sold-items')}
-            className={`px-4 py-2 rounded-2xl text-xs font-extrabold flex items-center gap-2 transition cursor-pointer ${
+            className={`flex-1 sm:flex-none justify-center px-4 py-2 rounded-2xl text-xs font-extrabold flex items-center gap-2 transition cursor-pointer ${
               activeTab === 'sold-items'
                 ? 'bg-[#111111] text-white shadow-xs'
                 : 'bg-[#F7F6F3] text-[#111111] hover:bg-slate-200/70 border border-slate-200/80'
             }`}
           >
             <History className="w-4 h-4 text-[#111111]/70" />
-            <span>Sold Items History</span>
+            <span>Sold Items</span>
             <span className="px-2 py-0.5 rounded-full bg-[#22A06B]/15 text-[#22A06B] text-[10px] font-mono font-black">
-              {totalItemsSold} Sold
+              {totalItemsSold}
             </span>
           </button>
 
           <button
             onClick={() => setActiveTab('receipts')}
-            className={`px-4 py-2 rounded-2xl text-xs font-extrabold flex items-center gap-2 transition cursor-pointer ${
+            className={`flex-1 sm:flex-none justify-center px-4 py-2 rounded-2xl text-xs font-extrabold flex items-center gap-2 transition cursor-pointer ${
               activeTab === 'receipts'
                 ? 'bg-[#111111] text-white shadow-xs'
                 : 'bg-[#F7F6F3] text-[#111111] hover:bg-slate-200/70 border border-slate-200/80'
             }`}
           >
             <Receipt className="w-4 h-4 text-[#111111]/70" />
-            <span>Sales Receipts</span>
+            <span>Receipts</span>
             <span className="px-2 py-0.5 rounded-full bg-slate-200/90 text-[10px] font-mono text-[#111111] font-bold">
               {receipts.length}
             </span>
@@ -544,7 +544,7 @@ export const SalesTerminalView: React.FC = () => {
             </div>
 
             {/* Parts Catalog Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[640px] overflow-y-auto pr-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[640px] overflow-y-auto pr-1 no-scrollbar">
               {filteredParts.length === 0 ? (
                 <div className="col-span-full py-12 text-center text-[#111111]/50 space-y-2">
                   <Package className="w-8 h-8 mx-auto text-[#111111]/30 stroke-[1.5]" />
@@ -807,7 +807,7 @@ export const SalesTerminalView: React.FC = () => {
                     </p>
                   </div>
                 ) : (
-                  <div className="divide-y divide-slate-200/70 max-h-56 overflow-y-auto pr-1">
+                  <div className="divide-y divide-slate-200/70 max-h-56 overflow-y-auto pr-1 no-scrollbar">
                     {cart.map(item => (
                       <div key={item.part.id} className="py-2.5 flex items-center justify-between gap-2">
                         <div className="min-w-0 flex-1">
@@ -1056,8 +1056,68 @@ export const SalesTerminalView: React.FC = () => {
             ))}
           </div>
 
-          {/* Sold Items Table */}
-          <div className="overflow-x-auto">
+          {/* Sold Items - Mobile Card View */}
+          <div className="block md:hidden divide-y divide-slate-100">
+            {filteredSoldItems.length === 0 ? (
+              <div className="py-12 text-center text-[#111111]/40 text-xs">
+                No sold items found matching your filter criteria.
+              </div>
+            ) : (
+              filteredSoldItems.map(item => (
+                <div key={`${item.receipt_id}-${item.part_id}-${item.part_number}`} className="py-3.5 space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="font-mono font-black text-xs px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-[#111111]">
+                        {item.part_number}
+                      </span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
+                        {item.brand}
+                      </span>
+                    </div>
+                    <span className="font-mono font-black text-xs px-2.5 py-0.5 rounded-full bg-[#111111] text-white">
+                      {item.quantity} {item.quantity === 1 ? 'Unit' : 'Units'}
+                    </span>
+                  </div>
+
+                  <div>
+                    <h4 className="font-extrabold text-sm text-[#111111] leading-tight">{item.name}</h4>
+                    <div className="text-[11px] text-slate-500 font-mono mt-0.5">OEM: {item.oem_number}</div>
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs bg-[#F7F6F3] p-2.5 rounded-xl border border-slate-200/70">
+                    <div>
+                      <div className="text-[10px] text-slate-400 uppercase font-bold">Customer</div>
+                      <div className="font-bold text-[#111111]">{item.customer_name}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-[10px] text-slate-400 uppercase font-bold">Total Price</div>
+                      <div className="font-mono font-black text-sm text-[#111111]">{formatMoney(item.total_price)}</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-1 text-xs">
+                    <div className="text-[11px] text-slate-500 font-mono flex items-center gap-1">
+                      <Clock className="w-3 h-3 text-slate-400" />
+                      <span>{item.date} {item.time}</span>
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        setViewingReceipt(item.fullReceipt);
+                        setIsReceiptOpen(true);
+                      }}
+                      className="text-xs font-bold text-[#111111] hover:text-[#F6AF31] underline decoration-slate-300 transition cursor-pointer"
+                    >
+                      View Receipt #{item.receipt_number}
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Sold Items Table - Desktop */}
+          <div className="hidden md:block overflow-x-auto no-scrollbar">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-slate-200 text-[10px] uppercase font-extrabold text-[#111111]/60 tracking-wider">
@@ -1200,8 +1260,73 @@ export const SalesTerminalView: React.FC = () => {
             </div>
           </div>
 
-          {/* Receipts Table */}
-          <div className="overflow-x-auto">
+          {/* Receipts - Mobile Card View */}
+          <div className="block md:hidden divide-y divide-slate-100">
+            {filteredReceipts.length === 0 ? (
+              <div className="py-12 text-center text-[#111111]/40 text-xs">
+                No sales receipts found matching your search.
+              </div>
+            ) : (
+              filteredReceipts.map(receipt => (
+                <div key={receipt.id} className="py-3.5 space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-mono font-black text-xs px-2.5 py-0.5 rounded bg-[#111111] text-[#F6AF31]">
+                      {receipt.receipt_number}
+                    </span>
+                    <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#22A06B]/15 text-[#22A06B]">
+                      {receipt.payment_method}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs bg-[#F7F6F3] p-2.5 rounded-xl border border-slate-200/70">
+                    <div>
+                      <div className="text-[10px] text-slate-400 uppercase font-bold">Customer / Fleet</div>
+                      <div className="font-bold text-[#111111]">{receipt.customer_name}</div>
+                      {receipt.customer_phone && (
+                        <div className="text-[10px] text-slate-500">{receipt.customer_phone}</div>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <div className="text-[10px] text-slate-400 uppercase font-bold">Grand Total</div>
+                      <div className="font-mono font-black text-sm text-[#111111]">
+                        {formatMoney(receipt.grand_total)}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="text-[11px] text-slate-600">
+                    <span className="font-bold text-slate-800">
+                      {receipt.items.reduce((sum, it) => sum + it.quantity, 0)} units:
+                    </span>{' '}
+                    <span className="text-slate-500">
+                      {receipt.items.map(it => it.name).join(', ')}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-1 border-t border-slate-100 text-xs">
+                    <div className="text-[11px] text-slate-400 font-mono flex items-center gap-1">
+                      <Clock className="w-3 h-3 text-slate-400" />
+                      <span>{receipt.date} {receipt.time}</span>
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        setViewingReceipt(receipt);
+                        setIsReceiptOpen(true);
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-[#111111] text-[#F6AF31] hover:bg-black font-extrabold text-xs flex items-center gap-1.5 transition cursor-pointer shadow-2xs"
+                    >
+                      <Printer className="w-3.5 h-3.5 stroke-[2.5]" />
+                      <span>View & Print</span>
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Receipts Table - Desktop */}
+          <div className="hidden md:block overflow-x-auto no-scrollbar">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-slate-200 text-[10px] uppercase font-extrabold text-[#111111]/60 tracking-wider">

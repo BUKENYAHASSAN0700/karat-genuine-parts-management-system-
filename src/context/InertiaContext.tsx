@@ -9,7 +9,11 @@ import {
   RecentTransaction,
   ClientAccount,
   CurrencyCode,
-  SaleReceipt
+  SaleReceipt,
+  CommercialOrder,
+  OEMSupplier,
+  OEMPurchaseOrder,
+  OEMPurchaseOrderItem
 } from '../types';
 import { 
   INITIAL_OWNER, 
@@ -17,7 +21,10 @@ import {
   INITIAL_TRANSACTIONS, 
   INITIAL_INQUIRIES,
   INITIAL_CLIENTS,
-  INITIAL_RECEIPTS
+  INITIAL_RECEIPTS,
+  INITIAL_ORDERS,
+  INITIAL_OEM_SUPPLIERS,
+  INITIAL_OEM_ORDERS
 } from '../data/initialData';
 
 const UGX_EXCHANGE_RATE = 3750; // 1 USD = 3,750 UGX
@@ -49,6 +56,9 @@ interface InertiaContextType {
   currency: CurrencyCode;
   setCurrency: (currency: CurrencyCode) => void;
   exchangeRate: number;
+  setExchangeRate: (rate: number) => void;
+  updateUser: (userData: Partial<User>) => void;
+  resetAllDataToDefaults: () => void;
   formatMoney: (amountInUSD: number, options?: { showCode?: boolean; round?: boolean }) => string;
   formatMoneyShort: (amountInUSD: number) => string;
   getConvertedAmount: (amountInUSD: number) => number;
@@ -68,6 +78,10 @@ interface InertiaContextType {
   isSidebarCollapsed: boolean;
   setIsSidebarCollapsed: React.Dispatch<React.SetStateAction<boolean>>;
   toggleSidebar: () => void;
+  isMobileMenuOpen: boolean;
+  setIsMobileMenuOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  toggleMobileMenu: () => void;
+  closeMobileMenu: () => void;
   login: (email: string, password?: string) => boolean;
   logout: () => void;
   addPart: (part: Omit<SparePart, 'id'>) => void;
@@ -76,8 +90,20 @@ interface InertiaContextType {
   updatePartStock: (partId: string, newStock: number) => void;
   deletePart: (partId: string) => void;
   addTransaction: (tx: Omit<RecentTransaction, 'id'>) => void;
+  orders: CommercialOrder[];
+  addOrder: (order: Omit<CommercialOrder, 'id' | 'date'>) => CommercialOrder;
+  updateOrderStatus: (id: string, fulfillmentStatus?: CommercialOrder['fulfillment_status'], paymentStatus?: CommercialOrder['payment_status']) => void;
+  deleteOrder: (id: string) => void;
+  convertInquiryToOrder: (inquiryId: string) => CommercialOrder | null;
+  deleteInquiry: (id: string) => void;
   addInquiry: (inquiry: Omit<InquiryItem, 'id' | 'created_at'>) => void;
   updateInquiryStatus: (id: string, status: InquiryItem['status']) => void;
+  oemOrders: OEMPurchaseOrder[];
+  suppliers: OEMSupplier[];
+  addOEMOrder: (order: Omit<OEMPurchaseOrder, 'id' | 'order_date'>) => OEMPurchaseOrder;
+  updateOEMOrderStatus: (id: string, status: OEMPurchaseOrder['status'], extra?: { tracking_number?: string; eta?: string; notes?: string }) => void;
+  receiveOEMOrderShipment: (orderId: string, receiverName?: string) => void;
+  deleteOEMOrder: (id: string) => void;
   setFlashMessage: (type: 'success' | 'error', message: string) => void;
   clearFlash: () => void;
 }
@@ -115,6 +141,33 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   });
 
+  const [exchangeRate, setExchangeRateState] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('karat_exchange_rate');
+      return saved ? Number(saved) : UGX_EXCHANGE_RATE;
+    } catch {
+      return UGX_EXCHANGE_RATE;
+    }
+  });
+
+  const setExchangeRate = (rate: number) => {
+    setExchangeRateState(rate);
+    try {
+      localStorage.setItem('karat_exchange_rate', String(rate));
+    } catch {}
+  };
+
+  const updateUser = (userData: Partial<User>) => {
+    setCurrentUser(prev => {
+      if (!prev) return null;
+      const updated: User = { ...prev, ...userData };
+      try {
+        localStorage.setItem('karat_user', JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  };
+
   const setCurrency = (newCurrency: CurrencyCode) => {
     setCurrencyState(newCurrency);
     try {
@@ -126,14 +179,14 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const getConvertedAmount = (amountInUSD: number): number => {
     if (currency === 'UGX') {
-      return Math.round(amountInUSD * UGX_EXCHANGE_RATE);
+      return Math.round(amountInUSD * exchangeRate);
     }
     return amountInUSD;
   };
 
   const formatMoney = (amountInUSD: number, options?: { showCode?: boolean; round?: boolean }): string => {
     if (currency === 'UGX') {
-      const ugxAmount = Math.round(amountInUSD * UGX_EXCHANGE_RATE);
+      const ugxAmount = Math.round(amountInUSD * exchangeRate);
       return options?.showCode !== false 
         ? `UGX ${ugxAmount.toLocaleString()}` 
         : ugxAmount.toLocaleString();
@@ -144,7 +197,7 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const formatMoneyShort = (amountInUSD: number): string => {
     if (currency === 'UGX') {
-      const ugxVal = amountInUSD * UGX_EXCHANGE_RATE;
+      const ugxVal = amountInUSD * exchangeRate;
       if (ugxVal >= 1_000_000_000) return `UGX ${(ugxVal / 1_000_000_000).toFixed(1)}B`;
       if (ugxVal >= 1_000_000) return `UGX ${(ugxVal / 1_000_000).toFixed(1)}M`;
       if (ugxVal >= 1_000) return `UGX ${(ugxVal / 1_000).toFixed(0)}k`;
@@ -191,12 +244,63 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [receipts]);
 
   const [transactions, setTransactions] = useState<RecentTransaction[]>(INITIAL_TRANSACTIONS);
-  const [inquiries, setInquiries] = useState<InquiryItem[]>(INITIAL_INQUIRIES);
+  const [inquiries, setInquiries] = useState<InquiryItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('karat_inquiries');
+      return saved ? JSON.parse(saved) : INITIAL_INQUIRIES;
+    } catch {
+      return INITIAL_INQUIRIES;
+    }
+  });
+
+  const [orders, setOrders] = useState<CommercialOrder[]>(() => {
+    try {
+      const saved = localStorage.getItem('karat_orders');
+      return saved ? JSON.parse(saved) : INITIAL_ORDERS;
+    } catch {
+      return INITIAL_ORDERS;
+    }
+  });
+
+  // Sync inquiries to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('karat_inquiries', JSON.stringify(inquiries));
+    } catch {}
+  }, [inquiries]);
+
+  // Sync orders to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('karat_orders', JSON.stringify(orders));
+    } catch {}
+  }, [orders]);
+
+  const [oemOrders, setOemOrders] = useState<OEMPurchaseOrder[]>(() => {
+    try {
+      const saved = localStorage.getItem('karat_oem_orders');
+      return saved ? JSON.parse(saved) : INITIAL_OEM_ORDERS;
+    } catch {
+      return INITIAL_OEM_ORDERS;
+    }
+  });
+
+  const [suppliers] = useState<OEMSupplier[]>(INITIAL_OEM_SUPPLIERS);
+
+  // Sync OEM orders to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('karat_oem_orders', JSON.stringify(oemOrders));
+    } catch {}
+  }, [oemOrders]);
   const [clients] = useState<ClientAccount[]>(INITIAL_CLIENTS);
   const [addModalOpen, setAddModalOpen] = useState<boolean>(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
 
   const toggleSidebar = () => setIsSidebarCollapsed(prev => !prev);
+  const toggleMobileMenu = () => setIsMobileMenuOpen(prev => !prev);
+  const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
   const [flash, setFlash] = useState<InertiaFlashProps>({
     success: null,
@@ -234,17 +338,19 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   }, [flash]);
 
-  const login = (email: string, _password?: string): boolean => {
-    // Authenticate shop owner
-    const cleanEmail = email.trim().toLowerCase();
-    if (!cleanEmail) {
-      setFlashMessage('error', 'Please enter your KARAT shop owner email.');
+  const login = (identifier: string, _password?: string): boolean => {
+    // Authenticate user
+    const cleanId = identifier.trim().toLowerCase();
+    if (!cleanId) {
+      setFlashMessage('error', 'Please enter your username.');
       return false;
     }
 
+    const isKaratAdmin = cleanId === 'karat';
     const ownerUser: User = {
       ...INITIAL_OWNER,
-      email: cleanEmail.includes('@') ? cleanEmail : `${cleanEmail}@karat.com`,
+      name: isKaratAdmin ? 'KARAT Administrator' : INITIAL_OWNER.name,
+      email: cleanId.includes('@') ? cleanId : `${cleanId}@karat.co.ug`,
     };
 
     setIsAuthenticated(true);
@@ -256,7 +362,7 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
       // LocalStorage fallback
     }
 
-    setFlashMessage('success', `Welcome back, ${ownerUser.name}. KARAT Master Dashboard loaded.`);
+    setFlashMessage('success', 'Welcome back to KARAT Heavy Machinery Depot.');
     return true;
   };
 
@@ -375,6 +481,127 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setFlashMessage('success', `Transaction recorded: $${newTx.amount.toLocaleString()} USD`);
   };
 
+  const addOrder = (orderData: Omit<CommercialOrder, 'id' | 'date'>): CommercialOrder => {
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+    const orderNum = 89 + orders.length;
+    const newOrder: CommercialOrder = {
+      ...orderData,
+      id: `ORD-2026-0${orderNum}`,
+      date: dateStr,
+    };
+    setOrders(prev => [newOrder, ...prev]);
+
+    // Also add to transactions as sale
+    addTransaction({
+      name: newOrder.customer_company || newOrder.customer_name,
+      subtitle: `${newOrder.id} - ${newOrder.equipment_model}`,
+      type: 'sale',
+      date: dateStr,
+      time: now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
+      status: 'Successful',
+      amount: newOrder.total_amount,
+      currency: currency,
+      iconType: 'caterpillar',
+    });
+
+    setFlashMessage('success', `Commercial Order ${newOrder.id} successfully recorded.`);
+    return newOrder;
+  };
+
+  const updateOrderStatus = (
+    id: string, 
+    fulfillmentStatus?: CommercialOrder['fulfillment_status'], 
+    paymentStatus?: CommercialOrder['payment_status']
+  ) => {
+    setOrders(prev => prev.map(ord => {
+      if (ord.id === id) {
+        return {
+          ...ord,
+          fulfillment_status: fulfillmentStatus !== undefined ? fulfillmentStatus : ord.fulfillment_status,
+          payment_status: paymentStatus !== undefined ? paymentStatus : ord.payment_status,
+        };
+      }
+      return ord;
+    }));
+    setFlashMessage('success', `Order ${id} status updated.`);
+  };
+
+  const deleteOrder = (id: string) => {
+    setOrders(prev => prev.filter(ord => ord.id !== id));
+    setFlashMessage('success', `Order ${id} deleted.`);
+  };
+
+  const convertInquiryToOrder = (inquiryId: string): CommercialOrder | null => {
+    const inq = inquiries.find(q => q.id === inquiryId);
+    if (!inq) return null;
+
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+    const orderNum = 89 + orders.length;
+    const orderId = `ORD-2026-0${orderNum}`;
+
+    const orderItems = (inq.items && inq.items.length > 0) ? inq.items : [
+      {
+        part_number: inq.id,
+        name: inq.parts_requested,
+        quantity: 1,
+        unit_price: inq.quoted_amount,
+        total_price: inq.quoted_amount,
+        in_stock: true,
+      }
+    ];
+
+    const newOrder: CommercialOrder = {
+      id: orderId,
+      po_reference: `PO-${(inq.customer_company || inq.customer_name).slice(0, 4).toUpperCase().replace(/[^A-Z]/g, '')}-${Math.floor(1000 + Math.random() * 9000)}`,
+      inquiry_id: inq.id,
+      customer_name: inq.customer_name,
+      customer_company: inq.customer_company,
+      customer_phone: inq.customer_phone,
+      customer_email: inq.customer_email,
+      equipment_model: inq.equipment_model,
+      delivery_site: inq.delivery_site || 'Kampala Central Depot',
+      delivery_method: 'Field Van Delivery',
+      items: orderItems,
+      subtotal: inq.quoted_amount,
+      total_amount: inq.quoted_amount,
+      payment_status: '30-Day Credit Account',
+      fulfillment_status: 'Processing & Packing',
+      date: dateStr,
+      estimated_delivery: 'Within 2-3 Business Days',
+      notes: inq.notes ? `Converted from RFQ ${inq.id}. ${inq.notes}` : `Converted from RFQ ${inq.id}`,
+    };
+
+    setOrders(prev => [newOrder, ...prev]);
+
+    setInquiries(prev => prev.map(q => q.id === inquiryId ? {
+      ...q,
+      status: 'Converted to Order',
+      converted_order_id: orderId
+    } : q));
+
+    addTransaction({
+      name: inq.customer_company || inq.customer_name,
+      subtitle: `${orderId} (Converted from RFQ ${inq.id})`,
+      type: 'sale',
+      date: dateStr,
+      time: now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
+      status: 'Successful',
+      amount: inq.quoted_amount,
+      currency: currency,
+      iconType: 'caterpillar',
+    });
+
+    setFlashMessage('success', `RFQ ${inq.id} converted into Commercial Order ${orderId}!`);
+    return newOrder;
+  };
+
+  const deleteInquiry = (id: string) => {
+    setInquiries(prev => prev.filter(q => q.id !== id));
+    setFlashMessage('success', `Inquiry ${id} removed.`);
+  };
+
   const addInquiry = (inquiryData: Omit<InquiryItem, 'id' | 'created_at'>) => {
     const newInq: InquiryItem = {
       ...inquiryData,
@@ -388,6 +615,135 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const updateInquiryStatus = (id: string, status: InquiryItem['status']) => {
     setInquiries(prev => prev.map(inq => inq.id === id ? { ...inq, status } : inq));
     setFlashMessage('success', `Quotation ${id} updated to ${status}.`);
+  };
+
+  const addOEMOrder = (orderData: Omit<OEMPurchaseOrder, 'id' | 'order_date'>): OEMPurchaseOrder => {
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+    const poNumber = 8842 + oemOrders.length;
+    const poId = `PO-OEM-${poNumber}`;
+
+    const newPO: OEMPurchaseOrder = {
+      ...orderData,
+      id: poId,
+      order_date: dateStr,
+    };
+
+    setOemOrders(prev => [newPO, ...prev]);
+    setFlashMessage('success', `OEM Purchase Order ${poId} dispatched to ${newPO.supplier_name}.`);
+    return newPO;
+  };
+
+  const updateOEMOrderStatus = (
+    id: string, 
+    status: OEMPurchaseOrder['status'], 
+    extra?: { tracking_number?: string; eta?: string; notes?: string }
+  ) => {
+    setOemOrders(prev => prev.map(order => {
+      if (order.id === id) {
+        return {
+          ...order,
+          status,
+          tracking_number: extra?.tracking_number !== undefined ? extra.tracking_number : order.tracking_number,
+          eta: extra?.eta !== undefined ? extra.eta : order.eta,
+          notes: extra?.notes !== undefined ? extra.notes : order.notes,
+        };
+      }
+      return order;
+    }));
+    setFlashMessage('success', `OEM Purchase Order ${id} updated to ${status}.`);
+  };
+
+  const receiveOEMOrderShipment = (orderId: string, receiverName?: string) => {
+    const po = oemOrders.find(o => o.id === orderId);
+    if (!po) return;
+
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+    const grnNum = `GRN-${now.getFullYear()}-0${420 + Math.floor(Math.random() * 80)}`;
+    const receivedOfficer = receiverName || currentUser?.name || 'Hassan (Yard Supervisor)';
+
+    // 1. Update OEM order status
+    setOemOrders(prev => prev.map(o => {
+      if (o.id === orderId) {
+        return {
+          ...o,
+          status: 'Received & Stocked' as const,
+          received_date: dateStr,
+          received_by: receivedOfficer,
+          grn_number: grnNum,
+          items: o.items.map(it => ({
+            ...it,
+            quantity_received: it.quantity_ordered
+          }))
+        };
+      }
+      return o;
+    }));
+
+    // 2. Automatically increment stock in parts catalog
+    let totalItemsAdded = 0;
+    setParts(prevParts => {
+      const updated = [...prevParts];
+      po.items.forEach(poItem => {
+        const existingIdx = updated.findIndex(p => 
+          (poItem.part_id && p.id === poItem.part_id) || 
+          p.part_number === poItem.part_number || 
+          (poItem.oem_number && p.oem_number === poItem.oem_number)
+        );
+
+        if (existingIdx >= 0) {
+          const part = updated[existingIdx];
+          const newQty = part.stock_quantity + poItem.quantity_ordered;
+          const newStatus: SparePart['status'] = newQty <= 0 ? 'Out of Stock' : (newQty <= part.min_stock_alert ? 'Low Stock' : 'In Stock');
+          updated[existingIdx] = {
+            ...part,
+            stock_quantity: newQty,
+            status: newStatus,
+          };
+          totalItemsAdded += poItem.quantity_ordered;
+        } else {
+          const nextId = generateNextKaratId(updated);
+          updated.push({
+            id: nextId,
+            part_number: poItem.part_number,
+            oem_number: poItem.oem_number,
+            name: poItem.name,
+            brand: (poItem.brand as any) || 'Caterpillar',
+            category: 'OEM Restock Ingest',
+            machinery_models: ['Heavy Equipment Fleet'],
+            stock_quantity: poItem.quantity_ordered,
+            min_stock_alert: 2,
+            unit_cost: poItem.unit_cost,
+            unit_price: Math.round(poItem.unit_cost * 1.6),
+            warehouse_bin: poItem.target_bin || 'Yard 4 Ingest Bay',
+            status: 'In Stock'
+          });
+          totalItemsAdded += poItem.quantity_ordered;
+        }
+      });
+      return updated;
+    });
+
+    // 3. Log a Purchase transaction
+    addTransaction({
+      name: po.supplier_name,
+      subtitle: `${po.id} • ${grnNum} Stock Shelved`,
+      type: 'purchase',
+      date: dateStr,
+      time: now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
+      status: 'Successful',
+      amount: po.total_cost,
+      currency: currency,
+      iconType: 'caterpillar',
+    });
+
+    setFlashMessage('success', `Shipment ${po.id} verified and stocked! GRN ${grnNum} generated. Added ${totalItemsAdded} units to inventory.`);
+  };
+
+  const deleteOEMOrder = (id: string) => {
+    setOemOrders(prev => prev.filter(o => o.id !== id));
+    setFlashMessage('success', `OEM Order ${id} deleted.`);
   };
 
   const startSaleWithPart = (part: SparePart) => {
@@ -473,6 +829,25 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return newReceipt;
   };
 
+  const resetAllDataToDefaults = () => {
+    try {
+      localStorage.removeItem('karat_parts');
+      localStorage.removeItem('karat_receipts');
+      localStorage.removeItem('karat_inquiries');
+      localStorage.removeItem('karat_orders');
+      localStorage.removeItem('karat_oem_orders');
+      localStorage.removeItem('karat_exchange_rate');
+      localStorage.removeItem('karat_store_settings');
+    } catch {}
+    setParts(INITIAL_SPARE_PARTS);
+    setReceipts(INITIAL_RECEIPTS);
+    setInquiries(INITIAL_INQUIRIES);
+    setOrders(INITIAL_ORDERS);
+    setOemOrders(INITIAL_OEM_ORDERS);
+    setExchangeRateState(UGX_EXCHANGE_RATE);
+    setFlashMessage('success', 'All system records and inventory reset to factory defaults.');
+  };
+
   return (
     <InertiaContext.Provider
       value={{
@@ -485,7 +860,10 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setDateRange,
         currency,
         setCurrency,
-        exchangeRate: UGX_EXCHANGE_RATE,
+        exchangeRate,
+        setExchangeRate,
+        updateUser,
+        resetAllDataToDefaults,
         formatMoney,
         formatMoneyShort,
         getConvertedAmount,
@@ -505,6 +883,10 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
         isSidebarCollapsed,
         setIsSidebarCollapsed,
         toggleSidebar,
+        isMobileMenuOpen,
+        setIsMobileMenuOpen,
+        toggleMobileMenu,
+        closeMobileMenu,
         login,
         logout,
         addPart,
@@ -513,8 +895,20 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
         updatePartStock,
         deletePart,
         addTransaction,
+        orders,
+        addOrder,
+        updateOrderStatus,
+        deleteOrder,
+        convertInquiryToOrder,
+        deleteInquiry,
         addInquiry,
         updateInquiryStatus,
+        oemOrders,
+        suppliers,
+        addOEMOrder,
+        updateOEMOrderStatus,
+        receiveOEMOrderShipment,
+        deleteOEMOrder,
         setFlashMessage,
         clearFlash,
       }}

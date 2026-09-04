@@ -4,8 +4,12 @@ import { Header } from '../Navigation/Header';
 import { Sidebar } from '../Navigation/Sidebar';
 import { DashboardView } from '../Dashboard/DashboardView';
 import { InventoryPreview } from '../Inventory/InventoryPreview';
-import { SalesView, PurchasesView, ReportsView, SettingsView } from '../Operations/OperationsViews';
+import { SalesView } from '../Operations/OperationsViews';
+import { InquiriesOrdersView } from '../Inquiries/InquiriesOrdersView';
+import { OEMRestockView } from '../Restock/OEMRestockView';
 import { SalesTerminalView } from '../Sales/SalesTerminalView';
+import { FinancialReportsView } from '../Reports/FinancialReportsView';
+import { StoreSettingsView } from '../Settings/StoreSettingsView';
 import { AddPartModal } from '../Inventory/AddPartModal';
 import { LoginView } from '../Auth/LoginView';
 import { CheckCircle2, AlertCircle, X } from 'lucide-react';
@@ -53,13 +57,15 @@ export const AppLayout: React.FC = () => {
       case 'sales':
         return <SalesTerminalView />;
       case 'inquiries':
-        return <SalesView />;
+      case 'orders':
+        return <InquiriesOrdersView />;
       case 'purchases':
-        return <PurchasesView />;
+      case 'restock':
+        return <OEMRestockView />;
       case 'reports':
-        return <ReportsView />;
+        return <FinancialReportsView />;
       case 'settings':
-        return <SettingsView />;
+        return <StoreSettingsView />;
       default:
         return <DashboardView />;
     }

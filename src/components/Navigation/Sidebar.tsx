@@ -27,10 +27,17 @@ export const Sidebar: React.FC = () => {
     currentUser,
     isSidebarCollapsed,
     toggleSidebar,
-    receipts
+    isMobileMenuOpen,
+    closeMobileMenu,
+    receipts,
+    inquiries,
+    orders,
+    oemOrders
   } = useInertia();
 
   const lowStockCount = parts.filter(p => p.status === 'Low Stock' || p.status === 'Out of Stock' || p.stock_quantity <= p.min_stock_alert).length;
+  const activeInquiriesCount = inquiries.filter(i => i.status !== 'Declined' && i.status !== 'Converted to Order').length;
+  const inboundShipmentsCount = oemOrders.filter(o => o.status !== 'Received & Stocked' && o.status !== 'Cancelled').length;
 
   const navigationSections = [
     {
@@ -54,7 +61,9 @@ export const Sidebar: React.FC = () => {
           id: 'inquiries', 
           icon: FileText, 
           label: 'Inquiries & Orders', 
-          description: 'Customer requests' 
+          description: 'Customer requests',
+          badge: activeInquiriesCount > 0 ? `${activeInquiriesCount} Active` : undefined,
+          badgeColor: 'bg-[#F6AF31] text-[#111111]'
         },
       ]
     },
@@ -73,13 +82,17 @@ export const Sidebar: React.FC = () => {
           id: 'purchases', 
           icon: Truck, 
           label: 'OEM Restock', 
-          description: 'Supplier logistics' 
+          description: 'Factory POs & Ingest',
+          badge: inboundShipmentsCount > 0 ? `${inboundShipmentsCount} Inbound` : undefined,
+          badgeColor: 'bg-blue-600 text-white'
         },
         { 
           id: 'reports', 
           icon: BarChart3, 
           label: 'Financial Reports', 
-          description: 'Revenue & performance' 
+          description: 'P&L, aging & URA taxes',
+          badge: 'P&L',
+          badgeColor: 'bg-emerald-600 text-white'
         },
       ]
     },
@@ -90,7 +103,9 @@ export const Sidebar: React.FC = () => {
           id: 'settings', 
           icon: Settings, 
           label: 'Store Settings', 
-          description: 'Rates & owner profile' 
+          description: 'Depot, FX & EFRIS tax',
+          badge: 'Y4 Depot',
+          badgeColor: 'bg-[#111111] text-[#F6AF31]'
         },
       ]
     }
@@ -115,14 +130,13 @@ export const Sidebar: React.FC = () => {
           </div>
           {!isSidebarCollapsed && (
             <div className="truncate">
-              <div className="flex items-center gap-1.5">
-                <span className="text-base font-black tracking-tight text-[#111111] font-mono leading-none">
-                  KARAT
+              <div>
+                <span className="text-sm font-black tracking-tight text-[#111111] font-mono leading-none block truncate">
+                  KARAT GENUINE PARTS
                 </span>
-                <span className="w-1.5 h-1.5 rounded-full bg-[#F6AF31]" />
               </div>
               <div className="text-[9px] uppercase font-bold tracking-wider text-[#111111]/40 truncate mt-0.5">
-                Machinery System
+                Heavy Machinery Depot
               </div>
             </div>
           )}
@@ -257,32 +271,32 @@ export const Sidebar: React.FC = () => {
     </aside>
 
     {/* Mobile Slide-in Drawer with Hidden Scrollbar */}
-    {isSidebarCollapsed && (
+    {isMobileMenuOpen && (
       <div className="md:hidden fixed inset-0 z-50 flex">
         <div 
-          className="fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity"
-          onClick={toggleSidebar}
+          className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity"
+          onClick={closeMobileMenu}
         />
         <div className="relative flex flex-col justify-between w-72 max-w-[85vw] bg-white h-full p-4 shadow-2xl z-10 animate-in slide-in-from-left duration-200 overflow-hidden">
           {/* Mobile Header */}
           <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 shrink-0">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-2xl bg-[#111111] text-[#F6AF31] flex items-center justify-center font-black">
+              <div className="w-9 h-9 rounded-2xl bg-[#111111] text-[#F6AF31] flex items-center justify-center font-black shadow-xs">
                 <Cpu className="w-4 h-4 text-[#F6AF31]" />
               </div>
               <div>
-                <span className="text-base font-black tracking-tight text-[#111111] font-mono">
-                  KARAT
+                <span className="text-sm font-black tracking-tight text-[#111111] font-mono leading-none block">
+                  KARAT GENUINE PARTS
                 </span>
-                <div className="text-[9px] uppercase font-bold tracking-wider text-[#111111]/40">
-                  Machinery System
+                <div className="text-[9px] uppercase font-bold tracking-wider text-[#111111]/40 mt-0.5">
+                  Heavy Machinery Depot
                 </div>
               </div>
             </div>
 
             <button
-              onClick={toggleSidebar}
-              className="w-8 h-8 rounded-xl bg-[#F7F6F3] text-[#111111] flex items-center justify-center border border-slate-200"
+              onClick={closeMobileMenu}
+              className="w-8 h-8 rounded-xl bg-[#F7F6F3] hover:bg-slate-200/80 text-[#111111] flex items-center justify-center border border-slate-200 transition cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
@@ -304,9 +318,9 @@ export const Sidebar: React.FC = () => {
                       key={item.id}
                       onClick={() => {
                         setActiveView(item.id);
-                        toggleSidebar();
+                        closeMobileMenu();
                       }}
-                      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-2xl text-left transition ${
+                      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-2xl text-left transition cursor-pointer ${
                         isActive
                           ? 'bg-[#111111] text-white shadow-xs'
                           : 'text-[#111111]/70 hover:text-[#111111] hover:bg-[#F7F6F3]'

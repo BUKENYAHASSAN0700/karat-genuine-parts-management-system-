@@ -25,7 +25,7 @@ export const Header: React.FC = () => {
     setActiveView, 
     setAddModalOpen,
     parts,
-    toggleSidebar,
+    toggleMobileMenu,
     currency,
     setCurrency,
     setFlashMessage
@@ -69,8 +69,8 @@ export const Header: React.FC = () => {
     <header className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl px-4 sm:px-6 py-3 shadow-xs flex items-center justify-between gap-3 sm:gap-4 transition-all duration-300">
       {/* Mobile-Only Sidebar Toggle */}
       <button
-        onClick={toggleSidebar}
-        className="md:hidden w-9 h-9 rounded-xl bg-[#F7F6F3] hover:bg-slate-200/80 text-[#111111] border border-slate-200/80 flex items-center justify-center shrink-0 transition"
+        onClick={toggleMobileMenu}
+        className="md:hidden w-9 h-9 rounded-xl bg-[#F7F6F3] hover:bg-slate-200/80 text-[#111111] border border-slate-200/80 flex items-center justify-center shrink-0 transition cursor-pointer"
         title="Toggle Navigation Menu"
       >
         <PanelLeft className="w-4 h-4 text-[#111111]" />
@@ -165,7 +165,7 @@ export const Header: React.FC = () => {
 
           {dropdownOpen && (
             <div 
-              className="absolute right-0 mt-2 w-64 bg-white border border-slate-200/90 rounded-2xl shadow-xl py-2 z-50 animate-in fade-in slide-in-from-top-2"
+              className="absolute right-0 mt-2 w-64 max-w-[calc(100vw-2rem)] bg-white border border-slate-200/90 rounded-2xl shadow-xl py-2 z-50 animate-in fade-in slide-in-from-top-2"
             >
               {/* User Profile Header */}
               <div className="px-4 py-2.5 border-b border-slate-100 flex items-center gap-2.5">

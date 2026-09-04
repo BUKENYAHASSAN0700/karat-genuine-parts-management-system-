@@ -285,7 +285,7 @@ export const DashboardView: React.FC = () => {
             </div>
 
             {/* Brand Filter Pills */}
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 no-scrollbar">
               {(['All', 'Caterpillar', 'Komatsu', 'Volvo', 'Hitachi'] as const).map(brand => (
                 <button
                   key={brand}
@@ -664,8 +664,68 @@ export const DashboardView: React.FC = () => {
           </div>
         </div>
 
-        {/* Sold Items Table */}
-        <div className="overflow-x-auto">
+        {/* Sold Items - Mobile Card View */}
+        <div className="block md:hidden divide-y divide-slate-100">
+          {allSoldItems.length === 0 ? (
+            <div className="py-12 text-center text-[#111111]/40 text-xs">
+              No items sold yet. Use the POS Register to complete product sales.
+            </div>
+          ) : (
+            allSoldItems.slice(0, 8).map(item => (
+              <div key={`${item.receipt_id}-${item.part_id}-${item.part_number}`} className="py-3.5 space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="font-mono font-black text-xs px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-[#111111]">
+                      {item.part_number}
+                    </span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
+                      {item.brand}
+                    </span>
+                  </div>
+                  <span className="font-mono font-black text-xs px-2.5 py-0.5 rounded-full bg-[#111111] text-white">
+                    {item.quantity} {item.quantity === 1 ? 'Unit' : 'Units'}
+                  </span>
+                </div>
+
+                <div>
+                  <h4 className="font-extrabold text-sm text-[#111111] leading-tight">{item.name}</h4>
+                  <div className="text-[11px] text-slate-500 font-mono mt-0.5">OEM: {item.oem_number}</div>
+                </div>
+
+                <div className="flex items-center justify-between text-xs bg-[#F7F6F3] p-2.5 rounded-xl border border-slate-200/70">
+                  <div>
+                    <div className="text-[10px] text-slate-400 uppercase font-bold">Customer</div>
+                    <div className="font-bold text-[#111111]">{item.customer_name}</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-[10px] text-slate-400 uppercase font-bold">Sale Total</div>
+                    <div className="font-mono font-black text-sm text-[#111111]">{formatMoney(item.total_price)}</div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-1 text-xs">
+                  <div className="text-[11px] text-slate-500 font-mono flex items-center gap-1">
+                    <Clock className="w-3 h-3 text-slate-400" />
+                    <span>{item.date} {item.time}</span>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      setViewingReceipt(item.fullReceipt);
+                      setIsReceiptOpen(true);
+                    }}
+                    className="text-xs font-bold text-[#111111] hover:text-[#F6AF31] underline decoration-slate-300 transition cursor-pointer"
+                  >
+                    Receipt #{item.receipt_number}
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Sold Items Table - Desktop */}
+        <div className="hidden md:block overflow-x-auto no-scrollbar">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-slate-200 text-[10px] uppercase font-extrabold text-[#111111]/60 tracking-wider">
