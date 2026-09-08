@@ -137,6 +137,7 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({ isOpen, onClos
       name: item.name,
       oem_number: item.oem_number,
       brand: item.brand,
+      series: item.series,
       category: item.category,
       description: item.description,
       stock_quantity: item.stock_quantity,
@@ -497,8 +498,15 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({ isOpen, onClos
                                   <div className="text-[10px] text-[#111111]/50">OEM: {item.oem_number}</div>
                                 </td>
                                 <td className="px-3 py-2">
-                                  <span className="font-bold text-[#111111]">{item.brand}</span>
-                                  <div className="text-[10px] text-[#111111]/50 truncate max-w-[140px]">{item.category}</div>
+                                  <div className="flex items-center gap-1.5 flex-wrap">
+                                    <span className="font-bold text-[#111111]">{item.brand}</span>
+                                    {item.series && (
+                                      <span className="text-[9px] font-bold text-amber-900 bg-amber-100/80 px-1 py-0.2 rounded">
+                                        {item.series}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="text-[10px] text-[#111111]/70 truncate max-w-[140px] font-medium">{item.category}</div>
                                 </td>
                                 <td className="px-3 py-2">
                                   <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-black">

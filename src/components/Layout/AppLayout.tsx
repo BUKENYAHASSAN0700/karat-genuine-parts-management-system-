@@ -4,16 +4,12 @@ import { Header } from '../Navigation/Header';
 import { Sidebar } from '../Navigation/Sidebar';
 import { DashboardView } from '../Dashboard/DashboardView';
 import { InventoryPreview } from '../Inventory/InventoryPreview';
-import { SalesView } from '../Operations/OperationsViews';
-import { InquiriesOrdersView } from '../Inquiries/InquiriesOrdersView';
 import { OEMRestockView } from '../Restock/OEMRestockView';
 import { SalesTerminalView } from '../Sales/SalesTerminalView';
-import { FinancialReportsView } from '../Reports/FinancialReportsView';
 import { StoreSettingsView } from '../Settings/StoreSettingsView';
 import { AddPartModal } from '../Inventory/AddPartModal';
 import { LoginView } from '../Auth/LoginView';
 import { CheckCircle2, AlertCircle, X } from 'lucide-react';
-import { div } from 'motion/react-client';
 
 export const AppLayout: React.FC = () => {
   const { isAuthenticated, activeView, props, clearFlash } = useInertia();
@@ -57,14 +53,9 @@ export const AppLayout: React.FC = () => {
       case 'sell':
       case 'sales':
         return <SalesTerminalView />;
-      case 'inquiries':
-      case 'orders':
-        return <InquiriesOrdersView />;
       case 'purchases':
       case 'restock':
         return <OEMRestockView />;
-      case 'reports':
-        return <FinancialReportsView />;
       case 'settings':
         return <StoreSettingsView />;
       default:
@@ -73,7 +64,7 @@ export const AppLayout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F6F3] text-[#111111] font-sans selection:bg-[#F6AF31] selection:text-[#111111] p-3 sm:p-5 lg:p-6">
+    <div className="h-screen w-screen max-w-full overflow-hidden bg-[#F7F6F3] text-[#111111] font-sans selection:bg-[#F6AF31] selection:text-[#111111] p-3 sm:p-5 lg:p-6 flex flex-col">
       {/* Flash Messages */}
       {flash.success && (
         <div className="fixed top-5 right-5 z-50 bg-[#111111] text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 text-xs font-semibold animate-in fade-in border border-slate-700">
@@ -95,20 +86,20 @@ export const AppLayout: React.FC = () => {
         </div>
       )}
 
-      {/* Unified Connected Layout Shell */}
-      <div className="max-w-[1600px] w-full mx-auto flex gap-4 lg:gap-5 items-start">
-        {/* Left Sidebar attached with the SINGLE Brand Logo at top-left */}
+      {/* Unified Connected Layout Shell: Fixed to screen, no window scrolling */}
+      <div className="max-w-[1600px] w-full mx-auto flex gap-4 lg:gap-5 items-stretch flex-1 min-h-0 overflow-hidden">
+        {/* Left Sidebar: Fixed height, locked in place, never scrolls with workspace */}
         <Sidebar />
 
-        {/* Right Flow: Attached Top Bar + Main Workspace View */}
-        <div className="flex-1 w-full min-w-0 flex flex-col gap-4 lg:gap-5">
-          {/* Sticky Solid Top Bar container that hides scrolling content underneath */}
-          <div className="sticky top-0 z-30 pt-3 sm:pt-5 lg:pt-6 pb-2 bg-[#F7F6F3]">
+        {/* Right Flow: Fixed Top Bar + Independently Scrollable Workspace */}
+        <div className="flex-1 w-full min-w-0 flex flex-col h-full overflow-hidden">
+          {/* Top Bar: Stationary, does not scroll */}
+          <div className="shrink-0 pb-3 sm:pb-4">
             <Header />
           </div>
 
-          {/* Main View Area */}
-          <main className="flex-1 w-full min-w-0 pb-6">
+          {/* Main View Area: ONLY this part scrolls, with clean hidden scrollbar */}
+          <main className="flex-1 w-full min-w-0 overflow-y-auto no-scrollbar pb-6 focus:outline-none">
             {renderActiveView()}
           </main>
         </div>

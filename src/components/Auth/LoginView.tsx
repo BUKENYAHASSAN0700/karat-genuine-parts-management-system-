@@ -55,7 +55,7 @@ export const LoginView: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-4 sm:p-6 lg:p-8 bg-[#0B0C0E] text-white font-sans selection:bg-[#F6AF31] selection:text-[#111111] relative overflow-hidden">
+    <div className="min-h-full h-full w-full flex items-center justify-center p-4 sm:p-6 lg:p-8 bg-[#0B0C0E] text-white font-sans selection:bg-[#F6AF31] selection:text-[#111111] relative overflow-y-auto no-scrollbar">
       
       {/* Background Micro-Grid & Ambient Radial Lighting */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(246,175,49,0.08),transparent_55%)] pointer-events-none" />

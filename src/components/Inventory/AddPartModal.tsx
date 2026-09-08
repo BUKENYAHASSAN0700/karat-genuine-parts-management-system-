@@ -1,33 +1,76 @@
 import React, { useState, useEffect } from 'react';
-import { X, Boxes, Plus, Sparkles, RefreshCw, Cpu } from 'lucide-react';
+import { X, Boxes, Plus, RefreshCw, Cpu, Layers, DollarSign, Calendar, Tag, ShieldCheck } from 'lucide-react';
 import { useInertia, generateNextKaratId } from '../../context/InertiaContext';
 import { SparePart } from '../../types';
+import { SERIES_LIST, getCategoriesForSeries } from '../../data/partTaxonomy';
+
+const COMMON_UNITS = [
+  { value: 'PCS', label: 'PCS - Pieces' },
+  { value: 'SET', label: 'SET - Full Set' },
+  { value: 'KIT', label: 'KIT - Overhaul / Seal Kit' },
+  { value: 'ASSY', label: 'ASSY - Complete Assembly' },
+  { value: 'PAIR', label: 'PAIR - Paired Components' },
+  { value: 'MTR', label: 'MTR - Meters' },
+  { value: 'KG', label: 'KG - Kilograms' },
+  { value: 'BOX', label: 'BOX - Boxed Package' },
+  { value: 'ROLL', label: 'ROLL - Continuous Roll' },
+];
+
+const TAX_OPTIONS = [
+  { value: '18% VAT', label: '18% VAT (Standard EFRIS)', rate: 18 },
+  { value: 'Exempt (0%)', label: 'Exempt (0% Statutory)', rate: 0 },
+  { value: 'Zero Rated (0%)', label: 'Zero Rated (0% Export)', rate: 0 },
+  { value: '6% WHT', label: '6% Withholding Tax', rate: 6 },
+];
 
 export const AddPartModal: React.FC = () => {
   const { addModalOpen, setAddModalOpen, addPart, parts, currency } = useInertia();
 
-  const [assignedId, setAssignedId] = useState<string>('KA113');
+  const [assignedId, setAssignedId] = useState<string>('KA119');
   const [error, setError] = useState<string | null>(null);
+  const [selectedSeries, setSelectedSeries] = useState<string>('Motor Series');
+
+  const todayStr = new Date().toISOString().slice(0, 10);
 
   const [formData, setFormData] = useState({
     oem_number: '',
     name: '',
     description: '',
-    category: 'Hydraulics & Cylinders',
+    series: 'Motor Series',
+    category: 'KST Starter Motor Series',
     machinery_models: 'CAT 349D, CAT 336D',
+    model: 'CAT 349D',
     brand: 'Caterpillar' as SparePart['brand'],
+    unit: 'PCS',
+    taxes: '18% VAT',
+    tax_rate: 18,
     stock_quantity: 1,
     min_stock_alert: 2,
-    unit_cost: 0,
+    unit_cost: 1100,
     unit_price: 1850,
+    registered_date: todayStr,
     warehouse_bin: 'Aisle 3 - Bay B - Level 2',
   });
 
-  // Automatically assign 5-character KA... ID when modal opens
+  const handleSeriesChange = (newSeries: string) => {
+    setSelectedSeries(newSeries);
+    const availableCats = getCategoriesForSeries(newSeries);
+    setFormData(prev => ({
+      ...prev,
+      series: newSeries,
+      category: availableCats[0] || '',
+    }));
+  };
+
+  // Automatically assign next 5-character KA... ID when modal opens
   useEffect(() => {
     if (addModalOpen) {
       setAssignedId(generateNextKaratId(parts));
       setError(null);
+      setFormData(prev => ({
+        ...prev,
+        registered_date: new Date().toISOString().slice(0, 10),
+      }));
     }
   }, [addModalOpen, parts]);
 
@@ -36,6 +79,15 @@ export const AddPartModal: React.FC = () => {
   const handleRegenerateId = () => {
     const randomSuffix = Math.floor(100 + Math.random() * 899);
     setAssignedId(`KA${randomSuffix}`);
+  };
+
+  const handleTaxChange = (taxValue: string) => {
+    const selected = TAX_OPTIONS.find(t => t.value === taxValue);
+    setFormData(prev => ({
+      ...prev,
+      taxes: taxValue,
+      tax_rate: selected ? selected.rate : 18,
+    }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -59,7 +111,13 @@ export const AddPartModal: React.FC = () => {
 
     const unitPrice = Number(formData.unit_price) || 0;
     if (unitPrice <= 0) {
-      setError('Unit price must be greater than 0.');
+      setError('Price on item must be greater than 0.');
+      return;
+    }
+
+    const itemCost = Number(formData.unit_cost) || 0;
+    if (itemCost < 0) {
+      setError('Cost for item cannot be negative.');
       return;
     }
 
@@ -74,31 +132,24 @@ export const AddPartModal: React.FC = () => {
       oem_number: formData.oem_number.trim() || 'OEM-STANDARD',
       name: formData.name.trim(),
       description: formData.description.trim(),
+      series: formData.series,
       category: formData.category,
       machinery_models: modelsArray.length > 0 ? modelsArray : ['All Standard Fleets'],
+      model: formData.model.trim() || (modelsArray[0] || 'Universal Fleet'),
       brand: formData.brand,
+      unit: formData.unit || 'PCS',
+      taxes: formData.taxes || '18% VAT',
+      tax_rate: formData.tax_rate,
       stock_quantity: stockQty,
       min_stock_alert: minAlert,
-      unit_cost: formData.unit_cost || unitPrice * 0.65,
+      unit_cost: itemCost,
       unit_price: unitPrice,
+      registered_date: formData.registered_date || todayStr,
       warehouse_bin: formData.warehouse_bin.trim() || 'General Receiving Rack',
       status: partStatus,
     });
 
     setAddModalOpen(false);
-    setFormData({
-      oem_number: '',
-      name: '',
-      description: '',
-      category: 'Hydraulics & Cylinders',
-      machinery_models: 'CAT 349D, CAT 336D',
-      brand: 'Caterpillar',
-      stock_quantity: 1,
-      min_stock_alert: 2,
-      unit_cost: 0,
-      unit_price: 1850,
-      warehouse_bin: 'Aisle 3 - Bay B - Level 2',
-    });
     setError(null);
   };
 
@@ -112,27 +163,30 @@ export const AddPartModal: React.FC = () => {
       setFormData({
         ...formData,
         machinery_models: current.length > 0 ? `${formData.machinery_models}, ${model}` : model,
+        model: formData.model ? formData.model : model,
       });
     }
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in">
-      <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-7 max-w-xl w-full shadow-2xl space-y-5 max-h-[92vh] overflow-y-auto no-scrollbar">
+      <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-7 max-w-2xl w-full shadow-2xl space-y-5 max-h-[92vh] overflow-y-auto no-scrollbar">
         {/* Modal Header */}
         <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 sticky -top-6 bg-white z-10 pt-1">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-[#111111] text-[#F6AF31] flex items-center justify-center shadow-xs">
-              <Boxes className="w-4 h-4 text-[#F6AF31]" />
+            <div className="w-9 h-9 rounded-xl bg-[#111111] text-[#F6AF31] flex items-center justify-center shadow-xs">
+              <Boxes className="w-5 h-5 text-[#F6AF31]" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="font-extrabold text-base text-[#111111]">Register New Spare Part</h3>
-                <span className="px-2 py-0.5 rounded-lg bg-[#111111] text-[#F6AF31] font-mono font-black text-xs">
+                <span className="px-2.5 py-0.5 rounded-lg bg-[#111111] text-[#F6AF31] font-mono font-black text-xs">
                   {assignedId}
                 </span>
               </div>
-              <p className="text-[11px] text-[#111111]/50">Enter product information to upload into live KARAT inventory</p>
+              <p className="text-[11px] text-[#111111]/60">
+                Direct item pricing — the exact price entered is what appears systemwide.
+              </p>
             </div>
           </div>
           <button
@@ -150,214 +204,346 @@ export const AddPartModal: React.FC = () => {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Product ID & OEM Code */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            {/* Auto-Assigned Product Number Badge (Clean, without the label clutter) */}
-            <div className="p-3 bg-[#F7F6F3] border border-slate-200/90 rounded-2xl flex items-center justify-between">
-              <div>
-                <span className="text-[10px] uppercase font-bold text-[#111111]/50 block">ID</span>
-                <span className="font-mono font-black text-base text-[#111111] tracking-tight">{assignedId}</span>
-              </div>
-              <button
-                type="button"
-                onClick={handleRegenerateId}
-                className="text-[10px] text-[#111111]/50 hover:text-[#111111] flex items-center gap-1 font-semibold p-1.5 rounded-lg hover:bg-slate-200 transition"
-                title="Refresh ID"
-              >
-                <RefreshCw className="w-3 h-3" />
-                <span>Refresh</span>
-              </button>
+          {/* Section 1: Identification & Codes */}
+          <div className="bg-[#F7F6F3]/70 p-4 rounded-2xl border border-slate-200/80 space-y-3">
+            <div className="text-[11px] font-black uppercase text-[#111111]/80 tracking-wider flex items-center gap-1.5">
+              <Tag className="w-3.5 h-3.5 text-[#111111]" />
+              <span>Product Identification & Part Numbers</span>
             </div>
 
-            {/* OEM Code */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              {/* Product ID */}
+              <div className="p-3 bg-white border border-slate-200 rounded-xl flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-[#111111]/50 block">Product ID (Part No)</span>
+                  <span className="font-mono font-black text-sm text-[#111111]">{assignedId}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleRegenerateId}
+                  className="text-[10px] text-[#111111]/60 hover:text-[#111111] flex items-center gap-1 font-semibold px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 transition"
+                  title="Generate New ID"
+                >
+                  <RefreshCw className="w-3 h-3" />
+                  <span>Refresh</span>
+                </button>
+              </div>
+
+              {/* OEM Part Number */}
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
+                  OEM Part NO *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. CAT-349D-HYD or VOE21340611"
+                  value={formData.oem_number}
+                  onChange={e => setFormData({ ...formData, oem_number: e.target.value })}
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-[#111111] font-mono focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
+                />
+              </div>
+            </div>
+
+            {/* Part Name */}
             <div>
               <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
-                OEM Code / OEM Part #
+                Part Name / Title *
               </label>
               <input
                 type="text"
-                placeholder="e.g. CAT-349D-HYD or VOE21340611"
-                value={formData.oem_number}
-                onChange={e => setFormData({ ...formData, oem_number: e.target.value })}
-                className="w-full bg-[#F7F6F3] border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-[#111111] font-mono focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
+                required
+                placeholder="e.g. Main Hydraulic Control Valve Assembly"
+                value={formData.name}
+                onChange={e => setFormData({ ...formData, name: e.target.value })}
+                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-[#111111] font-semibold focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
+              />
+            </div>
+
+            {/* Part Description */}
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
+                Description (DESC) & Technical Specifications
+              </label>
+              <textarea
+                rows={2}
+                placeholder="e.g. Heavy-duty variable displacement hydraulic control valve assembly with integrated dual-circuit relief bypass."
+                value={formData.description}
+                onChange={e => setFormData({ ...formData, description: e.target.value })}
+                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#F6AF31] resize-none"
               />
             </div>
           </div>
 
-          {/* Part Name */}
-          <div>
-            <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
-              Part Name *
-            </label>
-            <input
-              type="text"
-              required
-              placeholder="e.g. Main Hydraulic Control Valve Assembly"
-              value={formData.name}
-              onChange={e => setFormData({ ...formData, name: e.target.value })}
-              className="w-full bg-[#F7F6F3] border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-[#111111] font-semibold focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
-            />
-          </div>
-
-          {/* Part Description */}
-          <div>
-            <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
-              Description & Technical Notes
-            </label>
-            <textarea
-              rows={2}
-              placeholder="e.g. Heavy-duty variable displacement hydraulic control valve assembly with integrated dual-circuit relief bypass."
-              value={formData.description}
-              onChange={e => setFormData({ ...formData, description: e.target.value })}
-              className="w-full bg-[#F7F6F3] border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#F6AF31] resize-none"
-            />
-          </div>
-
-          {/* Manufacturer / Brand & Category */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            <div>
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
-                Manufacturer / Brand *
-              </label>
-              <select
-                value={formData.brand}
-                onChange={e => setFormData({ ...formData, brand: e.target.value as SparePart['brand'] })}
-                className="w-full bg-[#F7F6F3] border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-bold text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
-              >
-                <option value="Caterpillar">Caterpillar (CAT)</option>
-                <option value="Komatsu">Komatsu</option>
-                <option value="Volvo">Volvo CE</option>
-                <option value="Hitachi">Hitachi Heavy</option>
-                <option value="Hyundai">Hyundai Construction</option>
-                <option value="Doosan">Doosan / Develon</option>
-              </select>
+          {/* Section 2: Model Compatibility & Taxonomy */}
+          <div className="bg-[#F7F6F3]/70 p-4 rounded-2xl border border-slate-200/80 space-y-3">
+            <div className="text-[11px] font-black uppercase text-[#111111]/80 tracking-wider flex items-center gap-1.5">
+              <Cpu className="w-3.5 h-3.5 text-[#111111]" />
+              <span>Model & Heavy Machinery Compatibility</span>
             </div>
 
-            <div>
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
-                Category *
-              </label>
-              <select
-                value={formData.category}
-                onChange={e => setFormData({ ...formData, category: e.target.value })}
-                className="w-full bg-[#F7F6F3] border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-bold text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
-              >
-                <option value="Hydraulics & Cylinders">Hydraulics & Cylinders</option>
-                <option value="Engine & Fuel Injection">Engine & Fuel Injection</option>
-                <option value="Undercarriage & Tracks">Undercarriage & Tracks</option>
-                <option value="Transmission & Final Drive">Transmission & Final Drive</option>
-                <option value="Ground Engaging Tools (GET)">Ground Engaging Tools (GET & Buckets)</option>
-                <option value="Cooling, Radiators & Fans">Cooling, Radiators & Fans</option>
-                <option value="Braking & Air Systems">Braking & Air Systems</option>
-                <option value="Electrical, Sensors & ECUs">Electrical, Sensors & ECUs</option>
-                <option value="Turbochargers & Exhaust">Turbochargers & Exhaust</option>
-                <option value="Filters & PM Service Kits">Filters & PM Service Kits</option>
-                <option value="Seals & Gasket Kits">Seals & Gasket Kits</option>
-                <option value="Cabin & Operator Controls">Cabin, Glass & Controls</option>
-                <option value="Steering, Axles & Differential">Steering, Axles & Differential</option>
-                <option value="Attachments, Breakers & Augers">Attachments, Breakers & Augers</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Initial Stock (min 1), Mini Alert Stock (min 1) & Unit Price */}
-          <div className="grid grid-cols-3 gap-3">
+            {/* Model input */}
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="text-[10px] font-bold uppercase tracking-wider text-[#111111]/70">
-                  Initial Stock *
+                  Machinery Model(s) (MODEL) *
                 </label>
-                <span className="text-[9px] font-bold text-amber-600">Min 1</span>
+                <span className="text-[9px] text-[#111111]/50">Comma separated for multiple models</span>
               </div>
               <input
-                type="number"
-                min="1"
+                type="text"
                 required
-                value={formData.stock_quantity}
-                onChange={e => setFormData({ ...formData, stock_quantity: parseInt(e.target.value) || 0 })}
-                className="w-full bg-[#F7F6F3] border border-slate-200 rounded-xl px-3 py-2 text-xs text-[#111111] font-mono font-bold focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
+                placeholder="e.g. CAT 349D, CAT 336D, CAT 345C"
+                value={formData.machinery_models}
+                onChange={e => setFormData({ ...formData, machinery_models: e.target.value, model: e.target.value.split(',')[0]?.trim() || '' })}
+                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-[#111111] font-medium focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
               />
+
+              {/* Quick suggestions */}
+              <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
+                <span className="text-[10px] text-[#111111]/50 font-medium">Quick add:</span>
+                {quickCompatibilitySuggestions.map((model) => (
+                  <button
+                    key={model}
+                    type="button"
+                    onClick={() => handleAddSuggestion(model)}
+                    className="px-2 py-0.5 rounded-md bg-white hover:bg-amber-100 border border-slate-200 text-[10px] font-mono text-[#111111] transition"
+                  >
+                    + {model}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <div>
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
-                Mini Alert Stock
-              </label>
-              <input
-                type="number"
-                min="1"
-                required
-                value={formData.min_stock_alert}
-                onChange={e => setFormData({ ...formData, min_stock_alert: parseInt(e.target.value) || 1 })}
-                className="w-full bg-[#F7F6F3] border border-slate-200 rounded-xl px-3 py-2 text-xs text-[#111111] font-mono font-bold focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
-                Unit Price ({currency}) *
-              </label>
-              <input
-                type="number"
-                min="0.01"
-                step="any"
-                required
-                value={formData.unit_price}
-                onChange={e => setFormData({ ...formData, unit_price: parseFloat(e.target.value) || 0 })}
-                className="w-full bg-[#F7F6F3] border border-slate-200 rounded-xl px-3 py-2 text-xs text-[#111111] font-mono font-bold focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
-              />
-            </div>
-          </div>
-
-          {/* Compatibility: Compatible Heavy Machinery */}
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 flex items-center gap-1">
-                <Cpu className="w-3 h-3 text-[#111111]/50" />
-                <span>Compatibility (Compatible Heavy Machinery)</span>
-              </label>
-              <span className="text-[9px] text-[#111111]/40">Separate multiple with commas</span>
-            </div>
-            <input
-              type="text"
-              placeholder="e.g. CAT 349D, CAT 336D, CAT 345C, CAT D6T"
-              value={formData.machinery_models}
-              onChange={e => setFormData({ ...formData, machinery_models: e.target.value })}
-              className="w-full bg-[#F7F6F3] border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
-            />
-
-            {/* Quick Compatibility Chips */}
-            <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
-              <span className="text-[10px] text-[#111111]/50 font-medium">Quick add:</span>
-              {quickCompatibilitySuggestions.map((model) => (
-                <button
-                  key={model}
-                  type="button"
-                  onClick={() => handleAddSuggestion(model)}
-                  className="px-2 py-0.5 rounded-md bg-[#F7F6F3] hover:bg-amber-100/70 border border-slate-200 text-[10px] font-mono text-[#111111] transition"
+            {/* Brand, Series & Category */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
+                  Manufacturer Brand *
+                </label>
+                <select
+                  value={formData.brand}
+                  onChange={e => setFormData({ ...formData, brand: e.target.value as SparePart['brand'] })}
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
                 >
-                  + {model}
-                </button>
-              ))}
+                  <option value="Caterpillar">Caterpillar (CAT)</option>
+                  <option value="Komatsu">Komatsu</option>
+                  <option value="Volvo">Volvo CE</option>
+                  <option value="Hitachi">Hitachi Heavy</option>
+                  <option value="Hyundai">Hyundai Construction</option>
+                  <option value="Doosan">Doosan / Develon</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
+                  Series *
+                </label>
+                <select
+                  value={selectedSeries}
+                  onChange={e => handleSeriesChange(e.target.value)}
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
+                >
+                  {SERIES_LIST.map(series => (
+                    <option key={series} value={series}>
+                      {series}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
+                  Category *
+                </label>
+                <select
+                  value={formData.category}
+                  onChange={e => setFormData({ ...formData, category: e.target.value })}
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
+                >
+                  {getCategoriesForSeries(selectedSeries).map(cat => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
 
-          {/* Warehouse Bin Location */}
-          <div>
-            <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
-              Warehouse Storage Bin / Location
-            </label>
-            <input
-              type="text"
-              placeholder="e.g. Aisle 3 - Bay B - Level 2 or Rack 4"
-              value={formData.warehouse_bin}
-              onChange={e => setFormData({ ...formData, warehouse_bin: e.target.value })}
-              className="w-full bg-[#F7F6F3] border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-[#111111] font-mono focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
-            />
+          {/* Section 3: Unit of Measure, Taxes & Date Registered */}
+          <div className="bg-[#F7F6F3]/70 p-4 rounded-2xl border border-slate-200/80 space-y-3">
+            <div className="text-[11px] font-black uppercase text-[#111111]/80 tracking-wider flex items-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-[#111111]" />
+              <span>Unit of Measure, Taxes & Registration Date</span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {/* Unit of measure */}
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
+                  Unit of Measure (UNIT) *
+                </label>
+                <select
+                  value={formData.unit}
+                  onChange={e => setFormData({ ...formData, unit: e.target.value })}
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
+                >
+                  {COMMON_UNITS.map(u => (
+                    <option key={u.value} value={u.value}>
+                      {u.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Taxes */}
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
+                  Taxes (TAXES) *
+                </label>
+                <select
+                  value={formData.taxes}
+                  onChange={e => handleTaxChange(e.target.value)}
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
+                >
+                  {TAX_OPTIONS.map(t => (
+                    <option key={t.value} value={t.value}>
+                      {t.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Date Registered */}
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1 flex items-center gap-1">
+                  <Calendar className="w-3 h-3 text-[#111111]/50" />
+                  <span>Date Registered *</span>
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={formData.registered_date}
+                  onChange={e => setFormData({ ...formData, registered_date: e.target.value })}
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-[#111111] font-mono font-bold focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Section 4: Cost, Clear Selling Price, and Stock */}
+          <div className="bg-[#F7F6F3]/70 p-4 rounded-2xl border border-slate-200/80 space-y-3">
+            <div className="text-[11px] font-black uppercase text-[#111111]/80 tracking-wider flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                <DollarSign className="w-3.5 h-3.5 text-[#111111]" />
+                <span>Pricing & Stock Quantities</span>
+              </span>
+              <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300/50">
+                Direct 1:1 Pricing (No Conversion Rate)
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              {/* COST for ITEM */}
+              <div className="bg-white p-3 rounded-xl border border-slate-200">
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-[#111111]/70">
+                    Cost for Item ({currency}) *
+                  </label>
+                  <span className="text-[9px] text-slate-500 font-medium">Landed / Purchase Cost</span>
+                </div>
+                <input
+                  type="number"
+                  min="0"
+                  step="any"
+                  required
+                  placeholder="e.g. 4200"
+                  value={formData.unit_cost}
+                  onChange={e => setFormData({ ...formData, unit_cost: parseFloat(e.target.value) || 0 })}
+                  className="w-full bg-[#F7F6F3] border border-slate-200 rounded-lg px-3 py-2 text-xs text-[#111111] font-mono font-bold focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
+                />
+                <span className="text-[9px] text-[#111111]/50 mt-1 block">
+                  Original acquisition or import restock cost per unit
+                </span>
+              </div>
+
+              {/* SELLING PRICE on Item */}
+              <div className="bg-white p-3 rounded-xl border border-amber-300/70 bg-amber-50/20">
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-[10px] font-extrabold uppercase tracking-wider text-[#111111]">
+                    Price Put On Item ({currency}) *
+                  </label>
+                  <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                    Systemwide Price
+                  </span>
+                </div>
+                <input
+                  type="number"
+                  min="0.01"
+                  step="any"
+                  required
+                  placeholder="e.g. 6850"
+                  value={formData.unit_price}
+                  onChange={e => setFormData({ ...formData, unit_price: parseFloat(e.target.value) || 0 })}
+                  className="w-full bg-[#F7F6F3] border border-slate-300 rounded-lg px-3 py-2 text-xs text-[#111111] font-mono font-black focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
+                />
+                <span className="text-[9px] text-[#111111]/60 mt-1 block">
+                  This exact amount will display on the product without conversion or multiplier confusion.
+                </span>
+              </div>
+            </div>
+
+            {/* Stock, Min Alert & Bin Location */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-[#111111]/70">
+                    Initial Stock *
+                  </label>
+                  <span className="text-[9px] font-bold text-amber-600">Min 1</span>
+                </div>
+                <input
+                  type="number"
+                  min="1"
+                  required
+                  value={formData.stock_quantity}
+                  onChange={e => setFormData({ ...formData, stock_quantity: parseInt(e.target.value) || 0 })}
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-[#111111] font-mono font-bold focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
+                  Mini Alert Stock *
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  required
+                  value={formData.min_stock_alert}
+                  onChange={e => setFormData({ ...formData, min_stock_alert: parseInt(e.target.value) || 1 })}
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-[#111111] font-mono font-bold focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
+                  Warehouse Bin Location
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Aisle 3 - Bay B - Level 2"
+                  value={formData.warehouse_bin}
+                  onChange={e => setFormData({ ...formData, warehouse_bin: e.target.value })}
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-[#111111] font-mono focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
+                />
+              </div>
+            </div>
           </div>
 
           {/* Submit Action Buttons */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+          <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
             <button
               type="button"
               onClick={() => setAddModalOpen(false)}
@@ -367,10 +553,10 @@ export const AddPartModal: React.FC = () => {
             </button>
             <button
               type="submit"
-              className="px-6 py-2.5 rounded-xl bg-[#F6AF31] hover:bg-[#e5a028] text-[#111111] text-xs font-extrabold transition shadow-xs flex items-center gap-1.5 active:scale-95"
+              className="px-6 py-2.5 rounded-xl bg-[#F6AF31] hover:bg-[#e5a028] text-[#111111] text-xs font-black transition shadow-xs flex items-center gap-1.5 active:scale-95 cursor-pointer"
             >
               <Plus className="w-4 h-4 stroke-[3]" />
-              <span>Save Part to Inventory</span>
+              <span>Register Spare Part</span>
             </button>
           </div>
         </form>

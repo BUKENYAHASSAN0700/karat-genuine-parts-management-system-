@@ -174,10 +174,10 @@ export const Header: React.FC = () => {
                 </div>
                 <div className="min-w-0">
                   <p className="text-xs font-bold text-[#111111] truncate">{currentUser?.name}</p>
-                  {/* <p className="text-[10px] text-[#111111]/60 font-mono truncate">{currentUser?.email}</p> */}
-                  {/* <div className="mt-1 inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[9px] font-bold uppercase bg-[#F6AF31]/20 text-[#111111]">
-                    <ShieldCheck className="w-2.5 h-2.5 text-[#111111]" /> 
-                  </div> */}
+                  <p className="text-[10px] text-[#111111]/60 font-mono truncate">{currentUser?.email}</p>
+                  <div className="mt-1 inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[9px] font-bold uppercase bg-[#F6AF31]/20 text-[#111111]">
+                    <ShieldCheck className="w-2.5 h-2.5 text-[#111111]" /> Master Owner
+                  </div>
                 </div>
               </div>
 

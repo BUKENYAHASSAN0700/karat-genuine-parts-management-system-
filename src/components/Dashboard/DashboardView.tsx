@@ -30,7 +30,6 @@ export const DashboardView: React.FC = () => {
     currentUser, 
     parts, 
     transactions, 
-    inquiries, 
     receipts,
     setAddModalOpen,
     setActiveView,
@@ -42,7 +41,7 @@ export const DashboardView: React.FC = () => {
   } = useInertia();
 
   const [selectedBrand, setSelectedBrand] = useState<'All' | 'Caterpillar' | 'Komatsu' | 'Volvo' | 'Hitachi'>('All');
-  const [activityTab, setActivityTab] = useState<'sold-items' | 'inquiries' | 'transactions'>('sold-items');
+  const [activityTab, setActivityTab] = useState<'sold-items' | 'transactions'>('sold-items');
   const [viewingReceipt, setViewingReceipt] = useState<SaleReceipt | null>(null);
   const [isReceiptOpen, setIsReceiptOpen] = useState(false);
 
@@ -236,17 +235,17 @@ export const DashboardView: React.FC = () => {
           </div>
         </div>
 
-        {/* Card 4: Monthly Sales & Quotations */}
+        {/* Card 4: Monthly Sales & Transactions */}
         <div 
-          onClick={() => setActiveView('sales')}
+          onClick={() => setActiveView('pos')}
           className="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-2xs hover:border-[#111111]/30 transition cursor-pointer group"
         >
           <div className="flex items-center justify-between">
             <div className="w-8 h-8 rounded-xl bg-[#F7F6F3] group-hover:bg-[#F6AF31]/20 flex items-center justify-center text-[#111111] transition">
               <TrendingUp className="w-4 h-4 text-[#111111]" />
             </div>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#F6AF31]/20 text-[#111111] border border-[#F6AF31]/30">
-              {inquiries.length} Quotes
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#22A06B]/15 text-[#22A06B] border border-[#22A06B]/30">
+              {receipts.length} Invoices
             </span>
           </div>
 
@@ -418,15 +417,15 @@ export const DashboardView: React.FC = () => {
                   <ShoppingCart className="w-3.5 h-3.5" />
                 </div>
                 <h2 className="text-base font-black text-[#111111] tracking-tight">
-                  Sales Activity & Orders
+                  Sales Activity & Counter History
                 </h2>
               </div>
               <p className="text-xs text-[#111111]/50 mt-1">
-                Real-time sold products, contractor inquiries, and commercial sales.
+                Real-time sold items, cashier POS receipts, and counter transactions.
               </p>
             </div>
 
-            {/* Toggle Switch between Sold Items, Inquiries and Transactions */}
+            {/* Toggle Switch between Sold Items and Transactions */}
             <div className="flex items-center bg-[#F7F6F3] p-0.5 rounded-full border border-slate-200/70 text-[11px] font-bold shrink-0 flex-wrap">
               <button
                 onClick={() => setActivityTab('sold-items')}
@@ -437,16 +436,6 @@ export const DashboardView: React.FC = () => {
                 }`}
               >
                 Sold Items ({allSoldItems.length})
-              </button>
-              <button
-                onClick={() => setActivityTab('inquiries')}
-                className={`px-3 py-1 rounded-full transition cursor-pointer ${
-                  activityTab === 'inquiries' 
-                    ? 'bg-[#111111] text-white shadow-2xs' 
-                    : 'text-[#111111]/60 hover:text-[#111111]'
-                }`}
-              >
-                Quotes ({inquiries.length})
               </button>
               <button
                 onClick={() => setActivityTab('transactions')}
@@ -527,53 +516,7 @@ export const DashboardView: React.FC = () => {
             </div>
           )}
 
-          {/* Tab 2: Customer Inquiries & Quotes Feed */}
-          {activityTab === 'inquiries' && (
-            <div className="space-y-3">
-              <div className="space-y-3">
-                {inquiries.map(inq => (
-                  <div 
-                    key={inq.id}
-                    className="p-3.5 rounded-2xl bg-[#F7F6F3]/80 border border-slate-200/80 hover:border-[#111111]/30 transition space-y-2"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="font-extrabold text-xs text-[#111111] truncate">
-                        {inq.customer_name}
-                      </span>
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                        inq.status === 'Approved' ? 'bg-[#22A06B]/15 text-[#22A06B]' :
-                        inq.status === 'Sent' ? 'bg-[#F6AF31]/20 text-[#111111]' :
-                        'bg-slate-200 text-[#111111]/70'
-                      }`}>
-                        {inq.status}
-                      </span>
-                    </div>
-
-                    <div className="text-[11px] text-[#111111]/70 leading-snug">
-                      <span className="font-semibold text-[#111111]">{inq.equipment_model}:</span> {inq.parts_requested}
-                    </div>
-
-                    <div className="flex items-center justify-between pt-1 text-[11px] border-t border-slate-200/60 font-mono">
-                      <span className="text-[#111111]/50 text-[10px]">{inq.created_at}</span>
-                      <span className="font-extrabold text-[#111111]">
-                        {formatMoney(inq.quoted_amount)}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <button
-                onClick={() => setActiveView('inquiries')}
-                className="w-full py-2.5 rounded-2xl bg-[#111111] hover:bg-black text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
-              >
-                <span>Manage All Inquiries & Create Quote</span>
-                <ArrowUpRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          )}
-
-          {/* Tab 3: Confirmed Sales Transactions */}
+          {/* Tab 2: Confirmed Sales Transactions */}
           {activityTab === 'transactions' && (
             <div className="space-y-3">
               <div className="space-y-3">
