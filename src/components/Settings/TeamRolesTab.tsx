@@ -265,7 +265,7 @@ export const TeamRolesTab: React.FC = () => {
           <div className="p-3 bg-white rounded-2xl border border-slate-200">
             <span className="font-bold text-[#111111] block">Administrator</span>
             <p className="text-[11px] text-slate-500 mt-1">
-              Full control over financial reports, FX exchange rate pegs, OEM orders, and settings.
+              Full control over inventory catalog, FX exchange rate pegs, OEM restock orders, and settings.
             </p>
           </div>
           <div className="p-3 bg-white rounded-2xl border border-slate-200">
@@ -277,7 +277,7 @@ export const TeamRolesTab: React.FC = () => {
           <div className="p-3 bg-white rounded-2xl border border-slate-200">
             <span className="font-bold text-[#111111] block">Sales Cashier</span>
             <p className="text-[11px] text-slate-500 mt-1">
-              Point-of-sale register, receipt printing, customer inquiry logging, and payment verification.
+              Point-of-sale register, receipt printing, counter sales, and payment verification.
             </p>
           </div>
           <div className="p-3 bg-white rounded-2xl border border-slate-200">

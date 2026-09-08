@@ -23,9 +23,6 @@ export const DepotProfileTab: React.FC = () => {
     dispatchPhone: '+256 700 882194',
     emergencyHotline: '+256 414 290114',
     operatingHours: 'Monday - Saturday: 07:30 - 18:30 EAT',
-    uraTin: '1004829104',
-    vatRegNo: '1004829104-VAT',
-    efrisDeviceId: 'EFRIS-UG-882194',
     ownerName: currentUser?.name || 'Hassan Bukenya',
     ownerTitle: 'Chief Financial Officer & Stores Controller'
   });
@@ -182,63 +179,10 @@ export const DepotProfileTab: React.FC = () => {
         </div>
       </div>
 
-      {/* Tax & Statutory Identifiers */}
-      <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-7 shadow-xs space-y-6">
-        <div className="border-b border-slate-100 pb-3">
-          <span className="text-[10px] font-black uppercase tracking-wider text-purple-700 bg-purple-100 px-2 py-0.5 rounded-md">
-            Statutory Compliance
-          </span>
-          <h3 className="text-base font-black text-[#111111] tracking-tight mt-1">
-            Uganda Revenue Authority (URA) & EFRIS Numbers
-          </h3>
-          <p className="text-xs text-slate-500">
-            These statutory tax numbers are encoded into all printed receipts, credit notes, and commercial invoices.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
-              URA Tax Identification No. (TIN)
-            </label>
-            <input
-              type="text"
-              value={formData.uraTin}
-              onChange={e => setFormData({ ...formData, uraTin: e.target.value })}
-              className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 text-xs font-mono font-black text-[#111111]"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
-              VAT Registration Number
-            </label>
-            <input
-              type="text"
-              value={formData.vatRegNo}
-              onChange={e => setFormData({ ...formData, vatRegNo: e.target.value })}
-              className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 text-xs font-mono font-black text-[#111111]"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
-              EFRIS Device Hardware ID
-            </label>
-            <input
-              type="text"
-              value={formData.efrisDeviceId}
-              onChange={e => setFormData({ ...formData, efrisDeviceId: e.target.value })}
-              className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 text-xs font-mono font-black text-[#111111]"
-            />
-          </div>
-        </div>
-      </div>
-
       {/* Save Action Bar */}
       <div className="flex items-center justify-between pt-2">
         <span className="text-xs text-slate-500">
-          Changes will immediately take effect on all receipt headers and quotation forms.
+          Changes will immediately take effect across all depot profiles and store settings.
         </span>
 
         <button

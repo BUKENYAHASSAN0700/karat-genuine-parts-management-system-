@@ -1,5 +1,11 @@
 import * as XLSX from 'xlsx';
 import { SparePart } from '../types';
+import { 
+  SERIES_LIST, 
+  ALL_TAXONOMY_CATEGORIES, 
+  getSeriesForCategory, 
+  normalizeCategoryName 
+} from '../data/partTaxonomy';
 
 export interface ValidationError {
   productName: string;
@@ -14,6 +20,7 @@ export interface ParsedPartRow {
   name: string;
   oem_number: string;
   brand: SparePart['brand'];
+  series?: string;
   category: string;
   description: string;
   stock_quantity: number;
@@ -37,11 +44,12 @@ export interface SpreadsheetValidationResult {
 // Sample real-world heavy machinery inventory data for the official template
 export const SAMPLE_TEMPLATE_DATA = [
   {
-    'Part Name': 'Main Hydraulic Control Valve Assembly',
+    'Part Name': 'Main Hydraulic Pump HPV145 Assembly',
     'OEM Part Number': 'CAT-349D-HYD',
     'Manufacturer Brand': 'Caterpillar',
-    'Category': 'Hydraulics & Cylinders',
-    'Technical Description': 'High-pressure multi-spool main hydraulic control valve with integrated pilot relief valves for 45-ton crawler excavators.',
+    'Series': 'Hydraulic Pump Parts Series',
+    'Category': 'Pump',
+    'Technical Description': 'High-pressure variable displacement hydraulic piston pump assembly for 45-ton crawler excavators.',
     'Initial Stock Qty': 4,
     'Mini Alert Stock': 2,
     'Unit Price USD': 3850,
@@ -50,11 +58,12 @@ export const SAMPLE_TEMPLATE_DATA = [
     'Product ID (Optional)': 'KA113',
   },
   {
-    'Part Name': 'Common Rail Fuel Injector G3',
+    'Part Name': 'KST 24V Heavy Duty Starter Motor',
     'OEM Part Number': '6754-11-3011',
     'Manufacturer Brand': 'Komatsu',
-    'Category': 'Engine & Fuel Injection',
-    'Technical Description': 'Genuine high-pressure common rail electro-magnetic fuel injector for SAA6D107E Tier-3 diesel engine.',
+    'Series': 'Motor Series',
+    'Category': 'KST Starter Motor Series',
+    'Technical Description': 'Genuine 24V 7.5kW heavy-duty starter motor with reduction gear for SAA6D107E diesel engine.',
     'Initial Stock Qty': 12,
     'Mini Alert Stock': 4,
     'Unit Price USD': 620,
@@ -63,49 +72,53 @@ export const SAMPLE_TEMPLATE_DATA = [
     'Product ID (Optional)': 'KA114',
   },
   {
-    'Part Name': 'Final Drive Travel Motor Reduction Gearbox',
+    'Part Name': 'Planetary Sun Gear Final Drive',
     'OEM Part Number': 'VOE14528731',
     'Manufacturer Brand': 'Volvo',
-    'Category': 'Transmission & Final Drive',
-    'Technical Description': 'Planetary gear final drive reduction transmission motor with mechanical automatic parking brake.',
+    'Series': 'Gear Parts Series',
+    'Category': 'Sun Gear',
+    'Technical Description': 'Induction-hardened high-strength alloy steel sun gear for planetary final drive reduction gearbox.',
     'Initial Stock Qty': 3,
     'Mini Alert Stock': 1,
-    'Unit Price USD': 4920,
+    'Unit Price USD': 920,
     'Compatible Machinery': 'Volvo EC480D, EC380D, EC360B',
     'Warehouse Bin Location': 'Heavy Bay 4 - Floor Pallet 02',
     'Product ID (Optional)': 'KA115',
   },
   {
-    'Part Name': 'Heavy Duty Track Link Assembly (49 Links)',
+    'Part Name': 'Single Flange Track Roller Assembly',
     'OEM Part Number': '9239845-T',
     'Manufacturer Brand': 'Hitachi',
-    'Category': 'Undercarriage & Tracks',
-    'Technical Description': 'Sealed and lubricated heavy-duty track chain assembly with induction-hardened master pins and links.',
+    'Series': 'Chassis Parts Series',
+    'Category': 'Track Roller',
+    'Technical Description': 'Forged steel induction-hardened track bottom roller with mechanical duo-cone seal kit.',
     'Initial Stock Qty': 6,
     'Mini Alert Stock': 2,
-    'Unit Price USD': 2450,
+    'Unit Price USD': 340,
     'Compatible Machinery': 'Hitachi ZX350-5G, ZX330-3, ZX370',
     'Warehouse Bin Location': 'Undercarriage Yard - Rack 12',
     'Product ID (Optional)': 'KA116',
   },
   {
-    'Part Name': 'Hydraulic Pilot Joystick Controller',
+    'Part Name': 'JCB Boom Cylinder Hydraulic Seal Kit',
     'OEM Part Number': 'XKAH-00042',
     'Manufacturer Brand': 'Hyundai',
-    'Category': 'Cabin & Operator Controls',
-    'Technical Description': 'Dual-axis precision proportional hydraulic pilot valve joystick with 4-button horn & auxiliary attachment toggle.',
+    'Series': 'Seal Series',
+    'Category': 'JCB Cylinder Seal Kit',
+    'Technical Description': 'High-pressure polyurethane rod seal, buffer ring, and wiper kit for excavator boom cylinders.',
     'Initial Stock Qty': 8,
     'Mini Alert Stock': 3,
-    'Unit Price USD': 480,
+    'Unit Price USD': 180,
     'Compatible Machinery': 'Hyundai R300LC-9, R330LC-9, R210-7',
     'Warehouse Bin Location': 'Aisle 2 - Shelf A - Bin 18',
     'Product ID (Optional)': 'KA117',
   },
   {
-    'Part Name': 'Twin-Scroll Turbocharger Wastegated',
+    'Part Name': 'Heavy Duty Turbo-charger Series Assembly',
     'OEM Part Number': 'K1004273A',
     'Manufacturer Brand': 'Doosan',
-    'Category': 'Turbochargers & Exhaust',
+    'Series': 'Motor Series',
+    'Category': 'Turbo-charger Series',
     'Technical Description': 'Water-cooled twin-scroll exhaust turbocharger with pneumatic wastegate actuator for DL08 diesel engine.',
     'Initial Stock Qty': 5,
     'Mini Alert Stock': 2,
@@ -127,6 +140,7 @@ export const downloadExcelTemplate = () => {
     { wch: 38 }, // Part Name
     { wch: 20 }, // OEM Part Number
     { wch: 20 }, // Manufacturer Brand
+    { wch: 26 }, // Series
     { wch: 26 }, // Category
     { wch: 55 }, // Technical Description
     { wch: 18 }, // Initial Stock Qty
@@ -150,6 +164,7 @@ export const downloadCsvTemplate = () => {
     'Part Name',
     'OEM Part Number',
     'Manufacturer Brand',
+    'Series',
     'Category',
     'Technical Description',
     'Initial Stock Qty',
@@ -164,6 +179,7 @@ export const downloadCsvTemplate = () => {
     `"${item['Part Name']}"`,
     `"${item['OEM Part Number']}"`,
     `"${item['Manufacturer Brand']}"`,
+    `"${item['Series']}"`,
     `"${item['Category']}"`,
     `"${item['Technical Description'].replace(/"/g, '""')}"`,
     item['Initial Stock Qty'],
@@ -264,6 +280,8 @@ export const parseAndValidateSpreadsheet = (
         colMap['oem_number'] = C;
       } else if (headerText.includes('brand') || headerText.includes('manufacturer') || headerText.includes('make')) {
         colMap['brand'] = C;
+      } else if (headerText.includes('series') || headerText.includes('partseries')) {
+        colMap['series'] = C;
       } else if (headerText.includes('category') || headerText.includes('system')) {
         colMap['category'] = C;
       } else if (headerText.includes('description') || headerText.includes('spec') || headerText.includes('detail') || headerText.includes('tech')) {
@@ -292,6 +310,7 @@ export const parseAndValidateSpreadsheet = (
   const colIndexName = getColIndex('name', 0);
   const colIndexOem = getColIndex('oem_number', 1);
   const colIndexBrand = getColIndex('brand', 2);
+  const colIndexSeries = getColIndex('series', -1);
   const colIndexCat = getColIndex('category', 3);
   const colIndexDesc = getColIndex('description', 4);
   const colIndexStock = getColIndex('stock_quantity', 5);
@@ -383,16 +402,73 @@ export const parseAndValidateSpreadsheet = (
       });
     }
 
-    // 4. Category
+    // 4. Series & Category Validation with PART_TAXONOMY
     const catData = getCellValue(colIndexCat);
-    if (!catData.strVal) {
+    const seriesData = colIndexSeries >= 0 ? getCellValue(colIndexSeries) : { val: undefined, strVal: '', cellRef: '' };
+    const rawCategory = catData.strVal;
+    let validatedCategory = '';
+    let validatedSeries = '';
+
+    if (!rawCategory) {
       errors.push({
         productName,
         cell: catData.cellRef,
-        missingField: 'Category',
+        missingField: 'Category (Must match one of the 9 KARAT Taxonomy Series)',
         formattedMessage: `${productName} in cell ${catData.cellRef} is missing Category`,
         rowNumber,
         columnKey: catData.cellRef.replace(/[0-9]/g, ''),
+      });
+    } else {
+      const normalizedCat = normalizeCategoryName(rawCategory);
+      // Check exact / direct match against taxonomy categories
+      const directCat = ALL_TAXONOMY_CATEGORIES.find(
+        c => c.toLowerCase() === rawCategory.toLowerCase() || c.toLowerCase() === normalizedCat.toLowerCase()
+      );
+
+      if (directCat) {
+        validatedCategory = directCat;
+        validatedSeries = seriesData.strVal && SERIES_LIST.some(s => s.toLowerCase() === seriesData.strVal.toLowerCase())
+          ? (SERIES_LIST.find(s => s.toLowerCase() === seriesData.strVal.toLowerCase()) || getSeriesForCategory(directCat))
+          : getSeriesForCategory(directCat);
+      } else {
+        // Check partial or fuzzy match
+        const partialCat = ALL_TAXONOMY_CATEGORIES.find(c =>
+          c.toLowerCase().includes(rawCategory.toLowerCase()) ||
+          rawCategory.toLowerCase().includes(c.toLowerCase())
+        );
+        if (partialCat) {
+          validatedCategory = partialCat;
+          validatedSeries = seriesData.strVal && SERIES_LIST.some(s => s.toLowerCase() === seriesData.strVal.toLowerCase())
+            ? (SERIES_LIST.find(s => s.toLowerCase() === seriesData.strVal.toLowerCase()) || getSeriesForCategory(partialCat))
+            : getSeriesForCategory(partialCat);
+        } else {
+          // Check if user entered a Series name as category
+          const seriesMatch = SERIES_LIST.find(s => s.toLowerCase() === rawCategory.toLowerCase());
+          if (seriesMatch) {
+            validatedSeries = seriesMatch;
+            validatedCategory = seriesMatch;
+          } else {
+            errors.push({
+              productName,
+              cell: catData.cellRef,
+              missingField: 'Valid Taxonomy Category',
+              formattedMessage: `${productName} in cell ${catData.cellRef} has unrecognized Category "${rawCategory}". Please use one of the valid categories from the 9 KARAT series (e.g. Starter Motor, Alternator, Turbo-charger, Radiator, Sun Gear, Seal Kit, Pump, Track Roller, etc.).`,
+              rowNumber,
+              columnKey: catData.cellRef.replace(/[0-9]/g, ''),
+            });
+          }
+        }
+      }
+    }
+
+    if (seriesData.strVal && !SERIES_LIST.some(s => s.toLowerCase() === seriesData.strVal.toLowerCase())) {
+      errors.push({
+        productName,
+        cell: seriesData.cellRef,
+        missingField: 'Valid KARAT Series (Must be one of the 9 official series)',
+        formattedMessage: `${productName} in cell ${seriesData.cellRef} has invalid Series "${seriesData.strVal}". Allowed series: ${SERIES_LIST.join(', ')}`,
+        rowNumber,
+        columnKey: seriesData.cellRef.replace(/[0-9]/g, ''),
       });
     }
 
@@ -485,13 +561,14 @@ export const parseAndValidateSpreadsheet = (
     }
 
     // If this row has no errors, push to candidate list
-    if (rawName && oemData.strVal && parsedBrand && catData.strVal && descData.strVal && !isNaN(parsedStock) && parsedStock >= 1 && !isNaN(parsedMinAlert) && parsedMinAlert >= 1 && !isNaN(parsedPrice) && parsedPrice > 0 && machineryData.strVal && binData.strVal) {
+    if (rawName && oemData.strVal && parsedBrand && validatedCategory && descData.strVal && !isNaN(parsedStock) && parsedStock >= 1 && !isNaN(parsedMinAlert) && parsedMinAlert >= 1 && !isNaN(parsedPrice) && parsedPrice > 0 && machineryData.strVal && binData.strVal) {
       const modelsArray = machineryData.strVal.split(',').map(s => s.trim()).filter(Boolean);
       validParts.push({
         name: rawName,
         oem_number: oemData.strVal,
         brand: parsedBrand,
-        category: catData.strVal,
+        series: validatedSeries || getSeriesForCategory(validatedCategory),
+        category: validatedCategory,
         description: descData.strVal,
         stock_quantity: parsedStock,
         min_stock_alert: parsedMinAlert,

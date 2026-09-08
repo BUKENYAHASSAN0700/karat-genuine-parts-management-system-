@@ -33,13 +33,19 @@ export interface SparePart {
   oem_number: string;
   name: string;
   description?: string;
+  series?: string;
   category: string;
   machinery_models: string[];
+  model?: string;
   brand: 'Caterpillar' | 'Komatsu' | 'Volvo' | 'Hitachi' | 'Hyundai' | 'Doosan';
+  unit?: string; // Unit of measure: PCS, SET, KIT, ASSY, PAIR, MTR, KG, BOX, etc.
+  taxes?: string; // e.g. "18% VAT", "0% Exempt"
+  tax_rate?: number;
   stock_quantity: number;
   min_stock_alert: number;
-  unit_cost: number;
-  unit_price: number;
+  unit_cost: number; // Cost for Item
+  unit_price: number; // Selling Price put on item
+  registered_date?: string; // Date registered in the system (YYYY-MM-DD)
   warehouse_bin: string;
   status: 'In Stock' | 'Low Stock' | 'Out of Stock' | 'On Order';
 }
@@ -190,6 +196,7 @@ export interface SaleReceiptItem {
   oem_number: string;
   name: string;
   brand: string;
+  series?: string;
   category: string;
   quantity: number;
   unit_price: number;

@@ -34,6 +34,7 @@ import {
 import { useInertia } from '../../context/InertiaContext';
 import { SparePart, SaleReceiptItem, SaleReceipt } from '../../types';
 import { ReceiptModal } from './ReceiptModal';
+import { SERIES_LIST, getSeriesForCategory, getCategoriesForSeries } from '../../data/partTaxonomy';
 
 interface CartItem {
   part: SparePart;
@@ -62,6 +63,7 @@ export const SalesTerminalView: React.FC = () => {
   // Catalog filtering & searching
   const [catalogSearch, setCatalogSearch] = useState('');
   const [selectedBrand, setSelectedBrand] = useState<string>('All');
+  const [selectedSeries, setSelectedSeries] = useState<string>('All');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [inStockOnly, setInStockOnly] = useState(true);
 
@@ -130,6 +132,8 @@ export const SalesTerminalView: React.FC = () => {
     return parts.filter(p => {
       if (inStockOnly && p.stock_quantity <= 0) return false;
       if (selectedBrand !== 'All' && p.brand !== selectedBrand) return false;
+      const partSeries = p.series || getSeriesForCategory(p.category);
+      if (selectedSeries !== 'All' && partSeries !== selectedSeries) return false;
       if (selectedCategory !== 'All' && p.category !== selectedCategory) return false;
 
       if (!catalogSearch.trim()) return true;
@@ -138,18 +142,22 @@ export const SalesTerminalView: React.FC = () => {
         p.name.toLowerCase().includes(q) ||
         p.part_number.toLowerCase().includes(q) ||
         p.oem_number.toLowerCase().includes(q) ||
+        (p.series && p.series.toLowerCase().includes(q)) ||
         p.category.toLowerCase().includes(q) ||
         p.brand.toLowerCase().includes(q) ||
         p.machinery_models.some(m => m.toLowerCase().includes(q)) ||
         p.warehouse_bin.toLowerCase().includes(q)
       );
     });
-  }, [parts, catalogSearch, selectedBrand, selectedCategory, inStockOnly]);
+  }, [parts, catalogSearch, selectedBrand, selectedSeries, selectedCategory, inStockOnly]);
 
   const categories = useMemo(() => {
+    if (selectedSeries !== 'All') {
+      return ['All', ...getCategoriesForSeries(selectedSeries)];
+    }
     const set = new Set(parts.map(p => p.category));
     return ['All', ...Array.from(set)];
-  }, [parts]);
+  }, [parts, selectedSeries]);
 
   const brands = ['All', 'Caterpillar', 'Komatsu', 'Volvo', 'Hitachi', 'Hyundai', 'Doosan'];
 
@@ -234,13 +242,6 @@ export const SalesTerminalView: React.FC = () => {
   const taxableAmount = Math.max(0, subtotal - discountAmount);
   const taxAmount = (taxableAmount * taxRate) / 100;
   const grandTotal = taxableAmount + taxAmount;
-
-  // Estimated gross margin for seller awareness
-  const totalCost = useMemo(() => {
-    return cart.reduce((acc, item) => acc + (item.part.unit_cost * item.quantity), 0);
-  }, [cart]);
-  const grossProfit = Math.max(0, grandTotal - totalCost);
-  const marginPercent = grandTotal > 0 ? ((grossProfit / grandTotal) * 100).toFixed(1) : '0';
 
   // Cash change calculation
   const numericTendered = parseFloat(cashTendered) || 0;
@@ -543,6 +544,40 @@ export const SalesTerminalView: React.FC = () => {
               ))}
             </div>
 
+            {/* Series and Category Cascading Filter Dropdowns */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-0.5">
+              <div>
+                <label className="text-[10px] font-bold text-slate-500 block mb-1">Filter by Series</label>
+                <select
+                  value={selectedSeries}
+                  onChange={(e) => {
+                    setSelectedSeries(e.target.value);
+                    setSelectedCategory('All');
+                  }}
+                  className="w-full bg-[#F7F6F3] hover:bg-slate-100/80 border border-slate-200/90 rounded-xl px-3 py-2 text-xs font-bold text-[#111111] outline-none cursor-pointer"
+                >
+                  <option value="All">All 9 Series</option>
+                  {SERIES_LIST.map(s => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold text-slate-500 block mb-1">Filter by Category</label>
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="w-full bg-[#F7F6F3] hover:bg-slate-100/80 border border-slate-200/90 rounded-xl px-3 py-2 text-xs font-bold text-[#111111] outline-none cursor-pointer"
+                >
+                  <option value="All">All Categories</option>
+                  {categories.filter(c => c !== 'All').map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
             {/* Parts Catalog Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[640px] overflow-y-auto pr-1 no-scrollbar">
               {filteredParts.length === 0 ? (
@@ -553,6 +588,7 @@ export const SalesTerminalView: React.FC = () => {
                     onClick={() => {
                       setCatalogSearch('');
                       setSelectedBrand('All');
+                      setSelectedSeries('All');
                       setSelectedCategory('All');
                       setInStockOnly(false);
                     }}
@@ -594,13 +630,23 @@ export const SalesTerminalView: React.FC = () => {
                           {part.name}
                         </h3>
 
-                        {/* OEM & Category */}
-                        <div className="text-[10px] font-mono text-[#111111]/60 mt-0.5 flex items-center gap-1.5 truncate">
+                        {/* Series & Category Badges */}
+                        <div className="flex items-center gap-1.5 flex-wrap mt-1">
+                          <span className="text-[9px] font-bold text-amber-900 bg-amber-100/70 px-1.5 py-0.5 rounded">
+                            {part.series || getSeriesForCategory(part.category)}
+                          </span>
+                          <span className="text-[9px] text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded font-medium">
+                            {part.category}
+                          </span>
+                        </div>
+
+                        {/* OEM Code */}
+                        <div className="text-[10px] font-mono text-[#111111]/60 mt-1 flex items-center gap-1.5 truncate">
                           <span>OEM: {part.oem_number}</span>
                         </div>
 
                         {/* Bin Location */}
-                        <div className="text-[9px] text-[#111111]/50 mt-1 flex items-center gap-1 truncate">
+                        <div className="text-[9px] text-[#111111]/50 mt-0.5 flex items-center gap-1 truncate">
                           <span className="font-semibold text-[#111111]/70">Bin:</span> {part.warehouse_bin}
                         </div>
                       </div>
@@ -969,8 +1015,8 @@ export const SalesTerminalView: React.FC = () => {
                 <div className="pt-2 flex justify-between items-baseline">
                   <div>
                     <span className="text-sm font-black uppercase text-[#111111]">Grand Total Due:</span>
-                    <span className="text-[10px] text-[#111111]/50 block">
-                      Profit Margin: ~{marginPercent}% ({formatMoney(grossProfit)} profit)
+                    <span className="text-[10px] text-[#111111]/50 block font-medium">
+                      Exact item pricing • Total across {cart.reduce((a, b) => a + b.quantity, 0)} items
                     </span>
                   </div>
                   <span className="text-2xl font-black font-mono text-[#111111]">

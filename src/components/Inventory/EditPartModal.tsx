@@ -1,7 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { X, Edit3, Save, Cpu, Warehouse, DollarSign, Package } from 'lucide-react';
+import { X, Edit3, Save, Cpu, Warehouse, DollarSign, Package, Calendar, Tag, ShieldCheck } from 'lucide-react';
 import { useInertia } from '../../context/InertiaContext';
 import { SparePart } from '../../types';
+import { SERIES_LIST, getCategoriesForSeries, getSeriesForCategory } from '../../data/partTaxonomy';
+
+const COMMON_UNITS = [
+  { value: 'PCS', label: 'PCS - Pieces' },
+  { value: 'SET', label: 'SET - Full Set' },
+  { value: 'KIT', label: 'KIT - Overhaul / Seal Kit' },
+  { value: 'ASSY', label: 'ASSY - Complete Assembly' },
+  { value: 'PAIR', label: 'PAIR - Paired Components' },
+  { value: 'MTR', label: 'MTR - Meters' },
+  { value: 'KG', label: 'KG - Kilograms' },
+  { value: 'BOX', label: 'BOX - Boxed Package' },
+  { value: 'ROLL', label: 'ROLL - Continuous Roll' },
+];
+
+const TAX_OPTIONS = [
+  { value: '18% VAT', label: '18% VAT (Standard EFRIS)', rate: 18 },
+  { value: 'Exempt (0%)', label: 'Exempt (0% Statutory)', rate: 0 },
+  { value: 'Zero Rated (0%)', label: 'Zero Rated (0% Export)', rate: 0 },
+  { value: '6% WHT', label: '6% Withholding Tax', rate: 6 },
+];
 
 interface EditPartModalProps {
   part: SparePart | null;
@@ -12,17 +32,24 @@ interface EditPartModalProps {
 export const EditPartModal: React.FC<EditPartModalProps> = ({ part, isOpen, onClose }) => {
   const { updatePart, currency } = useInertia();
 
+  const [selectedSeries, setSelectedSeries] = useState<string>('Motor Series');
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     oem_number: '',
     brand: 'Caterpillar' as SparePart['brand'],
-    category: 'Hydraulics & Cylinders',
+    series: 'Motor Series',
+    category: 'KST Starter Motor Series',
+    model: '',
+    machinery_models: '',
+    unit: 'PCS',
+    taxes: '18% VAT',
+    tax_rate: 18,
     stock_quantity: 1,
     min_stock_alert: 1,
     unit_cost: 0,
     unit_price: 0,
-    machinery_models: '',
+    registered_date: '2026-03-01',
     warehouse_bin: '',
   });
 
@@ -30,22 +57,49 @@ export const EditPartModal: React.FC<EditPartModalProps> = ({ part, isOpen, onCl
 
   useEffect(() => {
     if (part) {
+      const partSeries = part.series || getSeriesForCategory(part.category);
+      setSelectedSeries(partSeries);
       setFormData({
         name: part.name || '',
         description: part.description || '',
         oem_number: part.oem_number || '',
         brand: part.brand || 'Caterpillar',
-        category: part.category || 'Hydraulics & Cylinders',
+        series: partSeries,
+        category: part.category || (getCategoriesForSeries(partSeries)[0] || ''),
+        model: part.model || (part.machinery_models?.[0] || ''),
+        machinery_models: part.machinery_models ? part.machinery_models.join(', ') : '',
+        unit: part.unit || (part.name?.toLowerCase().includes('kit') ? 'KIT' : part.name?.toLowerCase().includes('set') ? 'SET' : 'PCS'),
+        taxes: part.taxes || '18% VAT',
+        tax_rate: part.tax_rate ?? 18,
         stock_quantity: part.stock_quantity ?? 1,
         min_stock_alert: part.min_stock_alert ?? 1,
-        unit_cost: part.unit_cost || 0,
+        unit_cost: part.unit_cost !== undefined ? part.unit_cost : Math.round((part.unit_price || 0) * 0.65),
         unit_price: part.unit_price || 0,
-        machinery_models: part.machinery_models ? part.machinery_models.join(', ') : '',
+        registered_date: part.registered_date || '2026-03-01',
         warehouse_bin: part.warehouse_bin || '',
       });
       setError(null);
     }
   }, [part]);
+
+  const handleSeriesChange = (newSeries: string) => {
+    setSelectedSeries(newSeries);
+    const availableCats = getCategoriesForSeries(newSeries);
+    setFormData(prev => ({
+      ...prev,
+      series: newSeries,
+      category: availableCats[0] || '',
+    }));
+  };
+
+  const handleTaxChange = (taxValue: string) => {
+    const selected = TAX_OPTIONS.find(t => t.value === taxValue);
+    setFormData(prev => ({
+      ...prev,
+      taxes: taxValue,
+      tax_rate: selected ? selected.rate : 18,
+    }));
+  };
 
   if (!isOpen || !part) return null;
 
@@ -61,6 +115,7 @@ export const EditPartModal: React.FC<EditPartModalProps> = ({ part, isOpen, onCl
       setFormData({
         ...formData,
         machinery_models: current.length > 0 ? `${formData.machinery_models}, ${model}` : model,
+        model: formData.model ? formData.model : model,
       });
     }
   };
@@ -86,7 +141,13 @@ export const EditPartModal: React.FC<EditPartModalProps> = ({ part, isOpen, onCl
 
     const price = Number(formData.unit_price);
     if (isNaN(price) || price < 0) {
-      setError('Unit price must be a valid positive amount.');
+      setError('Price on item must be a valid positive amount.');
+      return;
+    }
+
+    const itemCost = Number(formData.unit_cost);
+    if (isNaN(itemCost) || itemCost < 0) {
+      setError('Cost for item cannot be negative.');
       return;
     }
 
@@ -107,12 +168,18 @@ export const EditPartModal: React.FC<EditPartModalProps> = ({ part, isOpen, onCl
       description: formData.description.trim(),
       oem_number: formData.oem_number.trim() || part.oem_number,
       brand: formData.brand,
+      series: formData.series,
       category: formData.category,
+      model: formData.model.trim() || (modelsArray[0] || 'Universal Fleet'),
+      machinery_models: modelsArray.length > 0 ? modelsArray : ['Universal Equipment'],
+      unit: formData.unit || 'PCS',
+      taxes: formData.taxes || '18% VAT',
+      tax_rate: formData.tax_rate,
       stock_quantity: stockQty,
       min_stock_alert: minAlert,
-      unit_cost: formData.unit_cost || (price * 0.65),
+      unit_cost: itemCost,
       unit_price: price,
-      machinery_models: modelsArray.length > 0 ? modelsArray : ['Universal Equipment'],
+      registered_date: formData.registered_date || part.registered_date || '2026-03-01',
       warehouse_bin: formData.warehouse_bin.trim() || part.warehouse_bin,
       status: partStatus,
     };
@@ -123,12 +190,12 @@ export const EditPartModal: React.FC<EditPartModalProps> = ({ part, isOpen, onCl
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in">
-      <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-7 max-w-xl w-full shadow-2xl space-y-5 max-h-[92vh] overflow-y-auto no-scrollbar">
+      <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-7 max-w-2xl w-full shadow-2xl space-y-5 max-h-[92vh] overflow-y-auto no-scrollbar">
         {/* Modal Header */}
         <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 sticky -top-6 bg-white z-10 pt-1">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-[#111111] text-[#F6AF31] flex items-center justify-center shadow-xs">
-              <Edit3 className="w-4 h-4 text-[#F6AF31]" />
+            <div className="w-9 h-9 rounded-xl bg-[#111111] text-[#F6AF31] flex items-center justify-center shadow-xs">
+              <Edit3 className="w-5 h-5 text-[#F6AF31]" />
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -137,7 +204,9 @@ export const EditPartModal: React.FC<EditPartModalProps> = ({ part, isOpen, onCl
                   {part.id || part.part_number}
                 </span>
               </div>
-              <p className="text-[11px] text-[#111111]/50">Modify product specifications and inventory parameters</p>
+              <p className="text-[11px] text-[#111111]/60">
+                Direct item pricing — whatever price is entered here appears systemwide without rate conversions.
+              </p>
             </div>
           </div>
           <button
@@ -155,188 +224,329 @@ export const EditPartModal: React.FC<EditPartModalProps> = ({ part, isOpen, onCl
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* OEM Code & Product Name */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          {/* Section 1: Identification & Codes */}
+          <div className="bg-[#F7F6F3]/70 p-4 rounded-2xl border border-slate-200/80 space-y-3">
+            <div className="text-[11px] font-black uppercase text-[#111111]/80 tracking-wider flex items-center gap-1.5">
+              <Tag className="w-3.5 h-3.5 text-[#111111]" />
+              <span>Product Identification & Part Numbers</span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              {/* Product ID (Read-only) */}
+              <div className="p-3 bg-white border border-slate-200 rounded-xl">
+                <span className="text-[10px] uppercase font-bold text-[#111111]/50 block">Product ID (Part No)</span>
+                <span className="font-mono font-black text-sm text-[#111111]">{part.id || part.part_number}</span>
+              </div>
+
+              {/* OEM Part Number */}
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
+                  OEM Part NO *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. CAT-349D-HYD or VOE21340611"
+                  value={formData.oem_number}
+                  onChange={e => setFormData({ ...formData, oem_number: e.target.value })}
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-[#111111] font-mono focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
+                />
+              </div>
+            </div>
+
+            {/* Part Name */}
             <div>
               <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
-                OEM Code / OEM Part #
+                Part Name / Title *
               </label>
               <input
                 type="text"
-                placeholder="e.g. CAT-349D-HYD or VOE21340611"
-                value={formData.oem_number}
-                onChange={e => setFormData({ ...formData, oem_number: e.target.value })}
-                className="w-full bg-[#F7F6F3] border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-[#111111] font-mono focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
+                required
+                placeholder="e.g. Main Hydraulic Control Valve Assembly"
+                value={formData.name}
+                onChange={e => setFormData({ ...formData, name: e.target.value })}
+                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-[#111111] font-semibold focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
               />
             </div>
 
+            {/* Description */}
             <div>
               <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
-                Manufacturer / Brand *
+                Description (DESC) & Technical Specifications
               </label>
-              <select
-                value={formData.brand}
-                onChange={e => setFormData({ ...formData, brand: e.target.value as SparePart['brand'] })}
-                className="w-full bg-[#F7F6F3] border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-bold text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
-              >
-                <option value="Caterpillar">Caterpillar (CAT)</option>
-                <option value="Komatsu">Komatsu</option>
-                <option value="Volvo">Volvo CE</option>
-                <option value="Hitachi">Hitachi Heavy</option>
-                <option value="Hyundai">Hyundai Construction</option>
-                <option value="Doosan">Doosan / Develon</option>
-              </select>
+              <textarea
+                rows={2}
+                placeholder="e.g. Heavy-duty variable displacement hydraulic control valve assembly with integrated dual-circuit relief bypass."
+                value={formData.description}
+                onChange={e => setFormData({ ...formData, description: e.target.value })}
+                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#F6AF31] resize-none"
+              />
             </div>
           </div>
 
-          {/* Part Name */}
-          <div>
-            <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
-              Part Name *
-            </label>
-            <input
-              type="text"
-              required
-              placeholder="e.g. Main Hydraulic Control Valve Assembly"
-              value={formData.name}
-              onChange={e => setFormData({ ...formData, name: e.target.value })}
-              className="w-full bg-[#F7F6F3] border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-[#111111] font-semibold focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
-            />
-          </div>
+          {/* Section 2: Model & Taxonomy */}
+          <div className="bg-[#F7F6F3]/70 p-4 rounded-2xl border border-slate-200/80 space-y-3">
+            <div className="text-[11px] font-black uppercase text-[#111111]/80 tracking-wider flex items-center gap-1.5">
+              <Cpu className="w-3.5 h-3.5 text-[#111111]" />
+              <span>Model & Heavy Machinery Compatibility</span>
+            </div>
 
-          {/* Part Description */}
-          <div>
-            <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
-              Description & Technical Notes
-            </label>
-            <textarea
-              rows={2}
-              placeholder="e.g. Heavy-duty variable displacement hydraulic control valve assembly with integrated dual-circuit relief bypass."
-              value={formData.description}
-              onChange={e => setFormData({ ...formData, description: e.target.value })}
-              className="w-full bg-[#F7F6F3] border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#F6AF31] resize-none"
-            />
-          </div>
-
-          {/* Category */}
-          <div>
-            <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
-              Category *
-            </label>
-            <select
-              value={formData.category}
-              onChange={e => setFormData({ ...formData, category: e.target.value })}
-              className="w-full bg-[#F7F6F3] border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-bold text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
-            >
-              <option value="Hydraulics & Cylinders">Hydraulics & Cylinders</option>
-              <option value="Engine & Fuel Injection">Engine & Fuel Injection</option>
-              <option value="Undercarriage & Tracks">Undercarriage & Tracks</option>
-              <option value="Transmission & Final Drive">Transmission & Final Drive</option>
-              <option value="Ground Engaging Tools (GET)">Ground Engaging Tools (GET & Buckets)</option>
-              <option value="Cooling, Radiators & Fans">Cooling, Radiators & Fans</option>
-              <option value="Braking & Air Systems">Braking & Air Systems</option>
-              <option value="Electrical, Sensors & ECUs">Electrical, Sensors & ECUs</option>
-              <option value="Turbochargers & Exhaust">Turbochargers & Exhaust</option>
-              <option value="Filters & PM Service Kits">Filters & PM Service Kits</option>
-              <option value="Seals & Gasket Kits">Seals & Gasket Kits</option>
-              <option value="Cabin & Operator Controls">Cabin, Glass & Controls</option>
-              <option value="Steering, Axles & Differential">Steering, Axles & Differential</option>
-              <option value="Attachments, Breakers & Augers">Attachments, Breakers & Augers</option>
-            </select>
-          </div>
-
-          {/* Stock, Mini Alert & Unit Price */}
-          <div className="grid grid-cols-3 gap-3">
+            {/* Model input */}
             <div>
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
-                Current Stock
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-[#111111]/70">
+                  Machinery Model(s) (MODEL) *
+                </label>
+                <span className="text-[9px] text-[#111111]/50">Comma separated for multiple models</span>
+              </div>
               <input
-                type="number"
-                min="0"
-                value={formData.stock_quantity}
-                onChange={e => setFormData({ ...formData, stock_quantity: parseInt(e.target.value) || 0 })}
-                className="w-full bg-[#F7F6F3] border border-slate-200 rounded-xl px-3 py-2 text-xs text-[#111111] font-mono font-bold focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
+                type="text"
+                required
+                placeholder="e.g. CAT 349D, CAT 336D, CAT 345C"
+                value={formData.machinery_models}
+                onChange={e => setFormData({ ...formData, machinery_models: e.target.value, model: e.target.value.split(',')[0]?.trim() || '' })}
+                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-[#111111] font-medium focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
               />
+
+              {/* Quick suggestions */}
+              <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
+                <span className="text-[10px] text-[#111111]/50 font-medium">Quick add:</span>
+                {quickCompatibilitySuggestions.map((model) => (
+                  <button
+                    key={model}
+                    type="button"
+                    onClick={() => handleAddSuggestion(model)}
+                    className="px-2 py-0.5 rounded-md bg-white hover:bg-amber-100 border border-slate-200 text-[10px] font-mono text-[#111111] transition"
+                  >
+                    + {model}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <div>
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
-                Mini Alert Stock
-              </label>
-              <input
-                type="number"
-                min="1"
-                value={formData.min_stock_alert}
-                onChange={e => setFormData({ ...formData, min_stock_alert: parseInt(e.target.value) || 1 })}
-                className="w-full bg-[#F7F6F3] border border-slate-200 rounded-xl px-3 py-2 text-xs text-[#111111] font-mono font-bold focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
-                Unit Price ({currency})
-              </label>
-              <input
-                type="number"
-                min="0"
-                step="any"
-                value={formData.unit_price}
-                onChange={e => setFormData({ ...formData, unit_price: parseFloat(e.target.value) || 0 })}
-                className="w-full bg-[#F7F6F3] border border-slate-200 rounded-xl px-3 py-2 text-xs text-[#111111] font-mono font-bold focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
-              />
-            </div>
-          </div>
-
-          {/* Compatibility: Compatible Heavy Machinery */}
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 flex items-center gap-1">
-                <Cpu className="w-3 h-3 text-[#111111]/50" />
-                <span>Compatibility (Compatible Heavy Machinery)</span>
-              </label>
-              <span className="text-[9px] text-[#111111]/40">Separate multiple with commas</span>
-            </div>
-            <input
-              type="text"
-              placeholder="e.g. CAT 349D, CAT 336D, CAT 345C, CAT D6T"
-              value={formData.machinery_models}
-              onChange={e => setFormData({ ...formData, machinery_models: e.target.value })}
-              className="w-full bg-[#F7F6F3] border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
-            />
-
-            {/* Quick Compatibility Chips */}
-            <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
-              <span className="text-[10px] text-[#111111]/50 font-medium">Quick add:</span>
-              {quickCompatibilitySuggestions.map((model) => (
-                <button
-                  key={model}
-                  type="button"
-                  onClick={() => handleAddSuggestion(model)}
-                  className="px-2 py-0.5 rounded-md bg-[#F7F6F3] hover:bg-amber-100/70 border border-slate-200 text-[10px] font-mono text-[#111111] transition"
+            {/* Brand, Series & Category */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
+                  Manufacturer Brand *
+                </label>
+                <select
+                  value={formData.brand}
+                  onChange={e => setFormData({ ...formData, brand: e.target.value as SparePart['brand'] })}
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
                 >
-                  + {model}
-                </button>
-              ))}
+                  <option value="Caterpillar">Caterpillar (CAT)</option>
+                  <option value="Komatsu">Komatsu</option>
+                  <option value="Volvo">Volvo CE</option>
+                  <option value="Hitachi">Hitachi Heavy</option>
+                  <option value="Hyundai">Hyundai Construction</option>
+                  <option value="Doosan">Doosan / Develon</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
+                  Series *
+                </label>
+                <select
+                  value={selectedSeries}
+                  onChange={e => handleSeriesChange(e.target.value)}
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
+                >
+                  {SERIES_LIST.map(series => (
+                    <option key={series} value={series}>
+                      {series}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
+                  Category *
+                </label>
+                <select
+                  value={formData.category}
+                  onChange={e => setFormData({ ...formData, category: e.target.value })}
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
+                >
+                  {getCategoriesForSeries(selectedSeries).map(cat => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
 
-          {/* Warehouse Bin Location */}
-          <div>
-            <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
-              Warehouse Storage Bin / Location
-            </label>
-            <input
-              type="text"
-              placeholder="e.g. Aisle 3 - Bay B - Level 2 or Rack 4"
-              value={formData.warehouse_bin}
-              onChange={e => setFormData({ ...formData, warehouse_bin: e.target.value })}
-              className="w-full bg-[#F7F6F3] border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-[#111111] font-mono focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
-            />
+          {/* Section 3: Unit, Taxes & Registration Date */}
+          <div className="bg-[#F7F6F3]/70 p-4 rounded-2xl border border-slate-200/80 space-y-3">
+            <div className="text-[11px] font-black uppercase text-[#111111]/80 tracking-wider flex items-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-[#111111]" />
+              <span>Unit of Measure, Taxes & Registration Date</span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {/* Unit of measure */}
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
+                  Unit of Measure (UNIT) *
+                </label>
+                <select
+                  value={formData.unit}
+                  onChange={e => setFormData({ ...formData, unit: e.target.value })}
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
+                >
+                  {COMMON_UNITS.map(u => (
+                    <option key={u.value} value={u.value}>
+                      {u.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Taxes */}
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
+                  Taxes (TAXES) *
+                </label>
+                <select
+                  value={formData.taxes}
+                  onChange={e => handleTaxChange(e.target.value)}
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
+                >
+                  {TAX_OPTIONS.map(t => (
+                    <option key={t.value} value={t.value}>
+                      {t.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Date Registered */}
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1 flex items-center gap-1">
+                  <Calendar className="w-3 h-3 text-[#111111]/50" />
+                  <span>Date Registered *</span>
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={formData.registered_date}
+                  onChange={e => setFormData({ ...formData, registered_date: e.target.value })}
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-[#111111] font-mono font-bold focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
+                />
+              </div>
+            </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+          {/* Section 4: Cost, Clear Selling Price, and Stock */}
+          <div className="bg-[#F7F6F3]/70 p-4 rounded-2xl border border-slate-200/80 space-y-3">
+            <div className="text-[11px] font-black uppercase text-[#111111]/80 tracking-wider flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                <DollarSign className="w-3.5 h-3.5 text-[#111111]" />
+                <span>Pricing & Stock Quantities</span>
+              </span>
+              <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300/50">
+                Direct 1:1 Pricing (No Conversion Rate)
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              {/* COST for ITEM */}
+              <div className="bg-white p-3 rounded-xl border border-slate-200">
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-[#111111]/70">
+                    Cost for Item ({currency}) *
+                  </label>
+                  <span className="text-[9px] text-slate-500 font-medium">Landed / Purchase Cost</span>
+                </div>
+                <input
+                  type="number"
+                  min="0"
+                  step="any"
+                  required
+                  value={formData.unit_cost}
+                  onChange={e => setFormData({ ...formData, unit_cost: parseFloat(e.target.value) || 0 })}
+                  className="w-full bg-[#F7F6F3] border border-slate-200 rounded-lg px-3 py-2 text-xs text-[#111111] font-mono font-bold focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
+                />
+                <span className="text-[9px] text-[#111111]/50 mt-1 block">
+                  Original acquisition or import restock cost per unit
+                </span>
+              </div>
+
+              {/* SELLING PRICE on Item */}
+              <div className="bg-white p-3 rounded-xl border border-amber-300/70 bg-amber-50/20">
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-[10px] font-extrabold uppercase tracking-wider text-[#111111]">
+                    Price Put On Item ({currency}) *
+                  </label>
+                  <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                    Systemwide Price
+                  </span>
+                </div>
+                <input
+                  type="number"
+                  min="0"
+                  step="any"
+                  required
+                  value={formData.unit_price}
+                  onChange={e => setFormData({ ...formData, unit_price: parseFloat(e.target.value) || 0 })}
+                  className="w-full bg-[#F7F6F3] border border-slate-300 rounded-lg px-3 py-2 text-xs text-[#111111] font-mono font-black focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
+                />
+                <span className="text-[9px] text-[#111111]/60 mt-1 block">
+                  This exact amount will display on the product without conversion or multiplier confusion.
+                </span>
+              </div>
+            </div>
+
+            {/* Stock, Min Alert & Bin Location */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
+                  Current Stock
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={formData.stock_quantity}
+                  onChange={e => setFormData({ ...formData, stock_quantity: parseInt(e.target.value) || 0 })}
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-[#111111] font-mono font-bold focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
+                  Mini Alert Stock *
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  required
+                  value={formData.min_stock_alert}
+                  onChange={e => setFormData({ ...formData, min_stock_alert: parseInt(e.target.value) || 1 })}
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-[#111111] font-mono font-bold focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
+                  Warehouse Storage Bin
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Aisle 3 - Bay B - Level 2"
+                  value={formData.warehouse_bin}
+                  onChange={e => setFormData({ ...formData, warehouse_bin: e.target.value })}
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-[#111111] font-mono focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Submit Action Buttons */}
+          <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
             <button
               type="button"
               onClick={onClose}
@@ -346,10 +556,10 @@ export const EditPartModal: React.FC<EditPartModalProps> = ({ part, isOpen, onCl
             </button>
             <button
               type="submit"
-              className="px-6 py-2.5 rounded-xl bg-[#F6AF31] hover:bg-[#e5a028] text-[#111111] text-xs font-extrabold transition shadow-xs flex items-center gap-1.5 active:scale-95"
+              className="px-6 py-2.5 rounded-xl bg-[#F6AF31] hover:bg-[#e5a028] text-[#111111] text-xs font-black transition shadow-xs flex items-center gap-1.5 active:scale-95 cursor-pointer"
             >
               <Save className="w-4 h-4 stroke-[2.5]" />
-              <span>Save Changes</span>
+              <span>Update Product Details</span>
             </button>
           </div>
         </form>

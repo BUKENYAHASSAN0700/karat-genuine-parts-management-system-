@@ -16,10 +16,8 @@ import { useInertia } from '../../context/InertiaContext';
 export const SystemMaintenanceTab: React.FC = () => {
   const { 
     parts, 
-    orders, 
     oemOrders, 
     receipts, 
-    inquiries, 
     resetAllDataToDefaults, 
     setFlashMessage 
   } = useInertia();
@@ -39,10 +37,8 @@ export const SystemMaintenanceTab: React.FC = () => {
           version: '2.4.0-PROD'
         },
         inventory: parts,
-        commercialOrders: orders,
         oemPurchaseOrders: oemOrders,
-        posReceipts: receipts,
-        inquiries: inquiries
+        posReceipts: receipts
       };
 
       const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
@@ -125,11 +121,11 @@ export const SystemMaintenanceTab: React.FC = () => {
                 </div>
                 <div>
                   <h4 className="text-xs font-black text-[#111111]">Full System JSON Snapshot</h4>
-                  <span className="text-[11px] text-slate-500">Complete parts, POs, receipts, and orders</span>
+                  <span className="text-[11px] text-slate-500">Complete parts, POs, and till receipts</span>
                 </div>
               </div>
               <p className="text-[11px] text-slate-600 mt-3 leading-relaxed">
-                Includes all {parts.length} spare parts, {oemOrders.length} OEM factory shipments, {receipts.length} POS till slips, and commercial quotes with metadata.
+                Includes all {parts.length} spare parts, {oemOrders.length} OEM factory shipments, and {receipts.length} POS till slips with metadata.
               </p>
             </div>
 
@@ -178,7 +174,7 @@ export const SystemMaintenanceTab: React.FC = () => {
         <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">
           Telemetry & Operational Diagnostics
         </span>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
           <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200">
             <span className="text-slate-500 block text-[11px]">Parts in Catalog</span>
             <span className="font-mono font-black text-sm text-[#111111]">{parts.length} SKUs</span>
@@ -190,10 +186,6 @@ export const SystemMaintenanceTab: React.FC = () => {
           <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200">
             <span className="text-slate-500 block text-[11px]">POS Cash Receipts</span>
             <span className="font-mono font-black text-sm text-[#111111]">{receipts.length} Slips</span>
-          </div>
-          <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200">
-            <span className="text-slate-500 block text-[11px]">Commercial Quotes</span>
-            <span className="font-mono font-black text-sm text-[#111111]">{orders.length} Accounts</span>
           </div>
         </div>
       </div>
@@ -208,7 +200,7 @@ export const SystemMaintenanceTab: React.FC = () => {
         </div>
 
         <p className="text-xs text-red-800 leading-relaxed max-w-2xl">
-          Reset all inventory levels, customer inquiries, commercial invoices, and OEM purchase orders back to default clean factory demo seed state. This cannot be undone once executed.
+          Reset all inventory levels, POS sales receipts, and OEM purchase orders back to default clean factory demo seed state. This cannot be undone once executed.
         </p>
 
         <div>

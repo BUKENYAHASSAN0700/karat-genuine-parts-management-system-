@@ -38,6 +38,7 @@ import { useInertia } from '../../context/InertiaContext';
 import { SparePart } from '../../types';
 import { EditPartModal } from './EditPartModal';
 import { BulkUploadModal } from './BulkUploadModal';
+import { SERIES_LIST, getSeriesForCategory, getCategoriesForSeries } from '../../data/partTaxonomy';
 
 export interface InventoryTableProps {
   initialSearchQuery?: string;
@@ -61,6 +62,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
   // Search & Filter States
   const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
   const [selectedBrand, setSelectedBrand] = useState<string>('all');
+  const [selectedSeries, setSelectedSeries] = useState<string>('all');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedStockStatus, setSelectedStockStatus] = useState<string>('all');
 
@@ -97,9 +99,12 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
   }, [parts]);
 
   const categoryOptions = useMemo(() => {
+    if (selectedSeries !== 'all') {
+      return ['all', ...getCategoriesForSeries(selectedSeries)];
+    }
     const categories = Array.from(new Set(parts.map(p => p.category)));
     return ['all', ...categories];
-  }, [parts]);
+  }, [parts, selectedSeries]);
 
   // Handle Sort Toggle
   const handleSort = (field: SortField) => {
@@ -147,10 +152,13 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
           part.warehouse_bin.toLowerCase().includes(q) ||
           part.machinery_models.some(m => m.toLowerCase().includes(q)) ||
           part.brand.toLowerCase().includes(q) ||
+          (part.series && part.series.toLowerCase().includes(q)) ||
           part.category.toLowerCase().includes(q)
         );
 
         const matchesBrand = selectedBrand === 'all' || part.brand === selectedBrand;
+        const partSeries = part.series || getSeriesForCategory(part.category);
+        const matchesSeries = selectedSeries === 'all' || partSeries === selectedSeries;
         const matchesCategory = selectedCategory === 'all' || part.category === selectedCategory;
         
         let matchesStatus = true;
@@ -164,7 +172,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
           matchesStatus = part.status === 'On Order';
         }
 
-        return matchesSearch && matchesBrand && matchesCategory && matchesStatus;
+        return matchesSearch && matchesBrand && matchesSeries && matchesCategory && matchesStatus;
       })
       .sort((a, b) => {
         let aVal: any = a[sortField];
@@ -290,7 +298,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
             {/* Quick Filters */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center flex-wrap gap-2 w-full lg:w-auto">
               {/* Brand Filter */}
-              <div className="flex-1 min-w-[130px]">
+              <div className="flex-1 min-w-[120px]">
                 <select
                   value={selectedBrand}
                   onChange={e => setSelectedBrand(e.target.value)}
@@ -299,6 +307,23 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                   <option value="all">All OEM Brands</option>
                   {brandOptions.filter(b => b !== 'all').map(brand => (
                     <option key={brand} value={brand}>{brand}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Series Filter */}
+              <div className="flex-1 min-w-[130px]">
+                <select
+                  value={selectedSeries}
+                  onChange={e => {
+                    setSelectedSeries(e.target.value);
+                    setSelectedCategory('all');
+                  }}
+                  className="w-full bg-[#F7F6F3] hover:bg-slate-100/80 border border-slate-200/90 rounded-xl px-3 py-2 text-xs font-bold text-[#111111] outline-none cursor-pointer"
+                >
+                  <option value="all">All 9 Series</option>
+                  {SERIES_LIST.map(series => (
+                    <option key={series} value={series}>{series}</option>
                   ))}
                 </select>
               </div>
@@ -487,7 +512,15 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                     <h3 className="font-extrabold text-sm text-[#111111] leading-snug">
                       {part.name}
                     </h3>
-                    <div className="text-[11px] text-slate-500 mt-0.5">
+                    <div className="flex items-center gap-1.5 flex-wrap mt-1">
+                      <span className="text-[10px] font-bold text-amber-900 bg-amber-100/70 px-2 py-0.5 rounded-md">
+                        {part.series || getSeriesForCategory(part.category)}
+                      </span>
+                      <span className="text-[10px] text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md font-medium">
+                        {part.category}
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-slate-500 mt-1">
                       Fits: <span className="font-medium text-slate-700">{part.machinery_models.join(', ')}</span>
                     </div>
                   </div>
@@ -600,12 +633,16 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                     <div className="pt-2 text-xs space-y-2 bg-slate-50 p-3 rounded-2xl border border-slate-200 text-slate-700 animate-in fade-in">
                       <div className="grid grid-cols-2 gap-2 text-[11px] font-mono">
                         <div>
-                          <span className="text-slate-400 block">Unit Cost:</span>
-                          <span className="font-bold">{formatMoney(part.unit_cost)}</span>
+                          <span className="text-slate-400 block">Series:</span>
+                          <span className="font-bold text-[#111111]">{part.series || getSeriesForCategory(part.category)}</span>
                         </div>
                         <div>
                           <span className="text-slate-400 block">Category:</span>
                           <span className="font-bold">{part.category}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-400 block">Unit Cost:</span>
+                          <span className="font-bold">{formatMoney(part.unit_cost)}</span>
                         </div>
                         <div>
                           <span className="text-slate-400 block">Min Reorder Alert:</span>
@@ -814,29 +851,40 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                           </div>
                         </td>
 
-                        {/* Part Name & Compatible Models */}
+                        {/* Part Name, MODEL & DESC snippet */}
                         <td className="px-4 py-3.5 min-w-[200px] max-w-sm">
                           <div className="font-extrabold text-xs text-[#111111] leading-snug">
                             {part.name}
                           </div>
-                          <div className="text-[11px] text-[#111111]/50 truncate mt-0.5">
-                            Fits: {part.machinery_models.join(', ')}
+                          <div className="text-[11px] text-[#111111]/70 font-semibold truncate mt-0.5 flex items-center gap-1">
+                            <span className="text-[#111111]/40 font-bold">MODEL:</span>
+                            <span className="text-amber-900 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/60 font-mono text-[10px]">
+                              {part.model || part.machinery_models[0] || 'Universal'}
+                            </span>
                           </div>
+                          {part.description && (
+                            <div className="text-[10px] text-[#111111]/50 truncate mt-0.5">
+                              {part.description}
+                            </div>
+                          )}
                         </td>
 
-                        {/* Brand & Category */}
+                        {/* Brand, Series & Category */}
                         <td className="px-4 py-3.5">
-                          <div className="flex flex-col gap-1 items-start">
+                          <div className="flex flex-col gap-0.5 items-start max-w-[190px]">
                             <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${getBrandBadge(part.brand)}`}>
                               {part.brand}
                             </span>
-                            <span className="text-[10px] text-[#111111]/60 font-semibold truncate">
+                            <span className="text-[10px] font-extrabold text-[#111111]/80 truncate">
+                              {part.series || getSeriesForCategory(part.category)}
+                            </span>
+                            <span className="text-[10px] text-slate-500 font-medium truncate">
                               {part.category}
                             </span>
                           </div>
                         </td>
 
-                        {/* Stock Level & Bin Location */}
+                        {/* Stock Level, UNIT & Bin Location */}
                         <td className="px-4 py-3.5 whitespace-nowrap">
                           <div className="space-y-1">
                             {/* Stock Quantity & Stepper Controls */}
@@ -849,16 +897,16 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                                   : 'bg-[#22A06B]/15 text-[#22A06B] border border-[#22A06B]/30'
                               }`}>
                                 {isOutOfStock ? (
-                                  <span>0 Units</span>
+                                  <span>0 {part.unit || 'PCS'}</span>
                                 ) : isLowStock ? (
                                   <>
                                     <AlertTriangle className="w-3 h-3 text-[#DC2626] shrink-0" />
-                                    <span>{part.stock_quantity} Units</span>
+                                    <span>{part.stock_quantity} {part.unit || 'PCS'}</span>
                                   </>
                                 ) : (
                                   <>
                                     <CheckCircle2 className="w-3 h-3 text-[#22A06B] shrink-0" />
-                                    <span>{part.stock_quantity} in stock</span>
+                                    <span>{part.stock_quantity} {part.unit || 'PCS'} in stock</span>
                                   </>
                                 )}
                               </div>
@@ -891,18 +939,23 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                                 {part.warehouse_bin}
                               </span>
                               <span className="text-[#111111]/30">&bull;</span>
-                              <span>Min: {part.min_stock_alert}</span>
+                              <span>Min: {part.min_stock_alert} {part.unit || 'PCS'}</span>
                             </div>
                           </div>
                         </td>
 
-                        {/* Price Column */}
+                        {/* Price & Taxes Column */}
                         <td className="px-4 py-3.5 whitespace-nowrap">
                           <div className="font-mono font-black text-xs text-[#111111]">
                             {formatMoney(part.unit_price)}
                           </div>
-                          <div className="text-[10px] text-[#111111]/50 font-mono mt-0.5">
-                            Per unit
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className="text-[10px] text-[#111111]/60 font-mono">
+                              Per {part.unit || 'PCS'}
+                            </span>
+                            <span className="text-[9px] font-bold text-slate-600 bg-slate-100 px-1.5 py-0.2 rounded border border-slate-200">
+                              {part.taxes || '18% VAT'}
+                            </span>
                           </div>
                         </td>
 
@@ -974,15 +1027,15 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                         <tr className="bg-amber-50/20 border-b border-slate-200">
                           <td colSpan={8} className="px-6 py-4">
                             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs text-xs">
-                              {/* Product ID & OEM Specifications */}
+                              {/* Product ID, OEM & Registration Date */}
                               <div className="space-y-1.5">
                                 <div className="text-[10px] font-bold uppercase text-[#111111]/50 tracking-wider">
-                                  Product & OEM Details
+                                  Part Numbers & Registration
                                 </div>
                                 <div className="font-mono text-xs space-y-1">
-                                  <div><span className="text-[#111111]/50">Product ID:</span> <strong className="text-[#111111] px-1.5 py-0.5 rounded bg-[#111111] text-[#F6AF31]">{displayId}</strong></div>
+                                  <div><span className="text-[#111111]/50">Product ID (Part No):</span> <strong className="text-[#111111] px-1.5 py-0.5 rounded bg-[#111111] text-[#F6AF31]">{displayId}</strong></div>
                                   <div className="flex items-center gap-1.5">
-                                    <span className="text-[#111111]/50">OEM:</span>
+                                    <span className="text-[#111111]/50">OEM Part NO:</span>
                                     <strong className="text-[#111111]">{part.oem_number}</strong>
                                     <button
                                       type="button"
@@ -994,45 +1047,15 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                                     </button>
                                   </div>
                                   <div><span className="text-[#111111]/50">Brand:</span> <strong className="text-[#111111]">{part.brand}</strong></div>
+                                  <div><span className="text-[#111111]/50">Date Registered:</span> <strong className="text-[#111111]">{part.registered_date || '2026-03-01'}</strong></div>
                                 </div>
                               </div>
 
-                              {/* Warehouse & Storage Logistics */}
-                              <div className="space-y-1.5">
-                                <div className="text-[10px] font-bold uppercase text-[#111111]/50 tracking-wider">
-                                  Warehouse Storage
-                                </div>
-                                <div className="text-xs">
-                                  <div className="font-semibold text-[#111111] flex items-center gap-1">
-                                    <Warehouse className="w-3 h-3 text-[#111111]/50" />
-                                    {part.warehouse_bin}
-                                  </div>
-                                  <div className="text-[11px] text-[#111111]/60 font-mono mt-0.5">
-                                    Min Reorder Threshold: <strong>{part.min_stock_alert} units</strong>
-                                  </div>
-                                  <div className="text-[11px] text-[#111111]/60 font-mono">
-                                    Current Status: <strong className={isLowStock ? 'text-[#DC2626]' : 'text-[#22A06B]'}>{part.status}</strong>
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Commercial Financials & Valuations */}
-                              <div className="space-y-1.5">
-                                <div className="text-[10px] font-bold uppercase text-[#111111]/50 tracking-wider">
-                                  Commercial Pricing
-                                </div>
-                                <div className="space-y-0.5 font-mono text-xs">
-                                  <div><span className="text-[#111111]/50">Customer Price:</span> <strong className="text-[#111111]">{formatMoney(part.unit_price)}</strong></div>
-                                  <div><span className="text-[#111111]/50">Stock Quantity:</span> <strong>{part.stock_quantity} units</strong></div>
-                                  <div><span className="text-[#111111]/50">Total Bin Asset Value:</span> <strong className="text-[#111111]">{formatMoney(part.stock_quantity * part.unit_price)}</strong></div>
-                                </div>
-                              </div>
-
-                              {/* Machine Compatibility Fleet */}
+                              {/* MODEL & Specifications (DESC) */}
                               <div className="space-y-1.5">
                                 <div className="text-[10px] font-bold uppercase text-[#111111]/50 tracking-wider flex items-center gap-1">
                                   <Cpu className="w-3 h-3 text-[#111111]/40" />
-                                  <span>Compatible Heavy Machinery</span>
+                                  <span>Machinery Model(s) (MODEL)</span>
                                 </div>
                                 <div className="flex flex-wrap gap-1">
                                   {part.machinery_models.map((model, idx) => (
@@ -1043,10 +1066,41 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                                 </div>
                                 {part.description && (
                                   <div className="pt-2 mt-2 border-t border-slate-100 text-[11px] text-[#111111]/70 leading-relaxed">
-                                    <span className="font-bold text-[#111111]">Description: </span>
+                                    <span className="font-bold text-[#111111]">DESC: </span>
                                     {part.description}
                                   </div>
                                 )}
+                              </div>
+
+                              {/* Unit of Measure & Taxes */}
+                              <div className="space-y-1.5">
+                                <div className="text-[10px] font-bold uppercase text-[#111111]/50 tracking-wider">
+                                  Unit, Taxes & Storage
+                                </div>
+                                <div className="text-xs space-y-1 font-mono">
+                                  <div><span className="text-[#111111]/50">Unit of Measure (UNIT):</span> <strong className="text-[#111111]">{part.unit || 'PCS'}</strong></div>
+                                  <div><span className="text-[#111111]/50">Taxes (TAXES):</span> <strong className="text-amber-900 bg-amber-50 px-1 py-0.2 rounded border border-amber-200/60 text-[10px]">{part.taxes || '18% VAT'}</strong></div>
+                                  <div className="text-[11px] text-[#111111]/60 mt-1">
+                                    Warehouse Bin: <strong>{part.warehouse_bin}</strong>
+                                  </div>
+                                  <div className="text-[11px] text-[#111111]/60">
+                                    Safety Threshold: <strong>{part.min_stock_alert} {part.unit || 'PCS'}</strong>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Commercial Financials (Direct Pricing) */}
+                              <div className="space-y-1.5">
+                                <div className="text-[10px] font-bold uppercase text-[#111111]/50 tracking-wider flex items-center justify-between">
+                                  <span>Commercial Pricing</span>
+                                  <span className="text-[9px] text-emerald-700 bg-emerald-50 px-1 rounded border border-emerald-200">Direct 1:1</span>
+                                </div>
+                                <div className="space-y-0.5 font-mono text-xs">
+                                  <div><span className="text-[#111111]/50">Cost for Item:</span> <strong className="text-[#111111]">{formatMoney(part.unit_cost)}</strong></div>
+                                  <div><span className="text-[#111111]/50">Price on Item:</span> <strong className="text-[#111111]">{formatMoney(part.unit_price)}</strong></div>
+                                  <div><span className="text-[#111111]/50">Stock Quantity:</span> <strong>{part.stock_quantity} {part.unit || 'PCS'}</strong></div>
+                                  <div><span className="text-[#111111]/50">Total Bin Asset:</span> <strong className="text-[#111111]">{formatMoney(part.stock_quantity * part.unit_price)}</strong></div>
+                                </div>
                               </div>
                             </div>
                           </td>
@@ -1268,10 +1322,10 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
 
             {/* Complete Product Details */}
             <div className="space-y-3.5 text-xs">
-              {/* Product ID & OEM Code */}
-              <div className="grid grid-cols-2 gap-3">
+              {/* Product ID, OEM Part NO & Date Registered */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="p-3 bg-[#F7F6F3] rounded-2xl border border-slate-200/80">
-                  <span className="text-[10px] uppercase font-bold text-[#111111]/50 block">Product ID (Internal)</span>
+                  <span className="text-[10px] uppercase font-bold text-[#111111]/50 block">Product ID (Part No)</span>
                   <div className="font-mono font-black text-sm text-[#111111] mt-0.5">
                     {detailModalPart.id || detailModalPart.part_number}
                   </div>
@@ -1279,7 +1333,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
 
                 <div className="p-3 bg-[#F7F6F3] rounded-2xl border border-slate-200/80">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] uppercase font-bold text-[#111111]/50 block">OEM Code</span>
+                    <span className="text-[10px] uppercase font-bold text-[#111111]/50 block">OEM Part NO</span>
                     <button
                       type="button"
                       onClick={() => handleCopyOem(detailModalPart.oem_number)}
@@ -1293,63 +1347,107 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                     {detailModalPart.oem_number}
                   </div>
                 </div>
+
+                <div className="p-3 bg-[#F7F6F3] rounded-2xl border border-slate-200/80">
+                  <span className="text-[10px] uppercase font-bold text-[#111111]/50 block">Date Registered</span>
+                  <div className="font-mono font-bold text-xs text-[#111111] mt-0.5">
+                    {detailModalPart.registered_date || '2026-03-01'}
+                  </div>
+                </div>
               </div>
 
-              {/* Manufacturer & Category */}
-              <div className="grid grid-cols-2 gap-3">
+              {/* Manufacturer, Series & Category */}
+              <div className="grid grid-cols-3 gap-3">
                 <div className="p-3 bg-[#F7F6F3] rounded-2xl border border-slate-200/80">
-                  <span className="text-[10px] uppercase font-bold text-[#111111]/50">Manufacturer / Brand</span>
-                  <div className="font-bold text-sm text-[#111111] mt-0.5">{detailModalPart.brand}</div>
+                  <span className="text-[10px] uppercase font-bold text-[#111111]/50">Brand</span>
+                  <div className="font-bold text-xs text-[#111111] mt-0.5 truncate">{detailModalPart.brand}</div>
+                </div>
+                <div className="p-3 bg-[#F7F6F3] rounded-2xl border border-slate-200/80">
+                  <span className="text-[10px] uppercase font-bold text-[#111111]/50">Series</span>
+                  <div className="font-bold text-xs text-[#111111] mt-0.5 truncate">{detailModalPart.series || getSeriesForCategory(detailModalPart.category)}</div>
                 </div>
                 <div className="p-3 bg-[#F7F6F3] rounded-2xl border border-slate-200/80">
                   <span className="text-[10px] uppercase font-bold text-[#111111]/50">Category</span>
-                  <div className="font-bold text-sm text-[#111111] mt-0.5">{detailModalPart.category}</div>
+                  <div className="font-bold text-xs text-[#111111] mt-0.5 truncate">{detailModalPart.category}</div>
                 </div>
               </div>
 
-              {/* Storage & Inventory Stock */}
+              {/* Packaging (UNIT), Taxes & Storage */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="p-3.5 bg-[#F7F6F3] rounded-2xl border border-slate-200/80 space-y-1.5 font-mono">
+                  <span className="text-[10px] uppercase font-bold text-[#111111]/50 font-sans block">Unit & Tax Statutory Parameters</span>
+                  <div className="flex justify-between">
+                    <span className="text-[#111111]/60">Unit of Measure (UNIT):</span>
+                    <strong className="text-[#111111]">{detailModalPart.unit || 'PCS'}</strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[#111111]/60">Taxes (TAXES):</span>
+                    <strong className="text-amber-900 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200/60 text-[10px]">{detailModalPart.taxes || '18% VAT'}</strong>
+                  </div>
+                </div>
+
+                <div className="p-3.5 bg-[#F7F6F3] rounded-2xl border border-slate-200/80 space-y-1.5 font-mono">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] uppercase font-bold text-[#111111]/50 font-sans">Storage & Status</span>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                      detailModalPart.status === 'In Stock'
+                        ? 'bg-[#22A06B]/15 text-[#22A06B]'
+                        : 'bg-[#DC2626]/15 text-[#DC2626]'
+                    }`}>
+                      {detailModalPart.status}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-[#111111]/60">Warehouse Bin:</span>
+                    <strong className="text-[#111111]">{detailModalPart.warehouse_bin}</strong>
+                  </div>
+                  <div className="flex justify-between text-[11px] text-[#111111]/70">
+                    <span>Balance: <strong className="text-[#111111]">{detailModalPart.stock_quantity} {detailModalPart.unit || 'PCS'}</strong></span>
+                    <span>Min Alert: <strong>{detailModalPart.min_stock_alert} {detailModalPart.unit || 'PCS'}</strong></span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Commercial Pricing: COST for ITEM vs PRICE on Item */}
               <div className="p-3.5 bg-[#F7F6F3] rounded-2xl border border-slate-200/80 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] uppercase font-bold text-[#111111]/50">Warehouse Storage Location</span>
-                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                    detailModalPart.status === 'In Stock'
-                      ? 'bg-[#22A06B]/15 text-[#22A06B]'
-                      : 'bg-[#DC2626]/15 text-[#DC2626]'
-                  }`}>
-                    {detailModalPart.status}
+                  <span className="text-[10px] uppercase font-bold text-[#111111]/50">Commercial Financials (Direct 1:1 Systemwide Pricing)</span>
+                  <span className="text-[9px] font-mono font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                    No Conversion Multiplier
                   </span>
                 </div>
-                <div className="font-mono font-bold text-xs text-[#111111] flex items-center gap-1.5">
-                  <Warehouse className="w-3.5 h-3.5 text-[#111111]/50" />
-                  <span>{detailModalPart.warehouse_bin}</span>
-                </div>
-                <div className="flex justify-between text-[11px] text-[#111111]/70 font-mono pt-1 border-t border-slate-200/60">
-                  <span>Current Balance: <strong className="text-[#111111]">{detailModalPart.stock_quantity} units</strong></span>
-                  <span>Safety Reorder Level: <strong>{detailModalPart.min_stock_alert} units</strong></span>
-                </div>
-              </div>
-
-              {/* Commercial Pricing */}
-              <div className="p-3.5 bg-[#F7F6F3] rounded-2xl border border-slate-200/80 space-y-2">
-                <span className="text-[10px] uppercase font-bold text-[#111111]/50">Commercial Financials</span>
-                <div className="grid grid-cols-2 gap-2 font-mono text-center">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 font-mono text-center">
                   <div className="bg-white p-2.5 rounded-xl border border-slate-200">
-                    <span className="text-[9px] text-[#111111]/40 block">Unit Selling Price</span>
-                    <strong className="text-xs text-[#111111]">{formatMoney(detailModalPart.unit_price)}</strong>
+                    <span className="text-[9px] text-[#111111]/50 block">Cost for Item (COST)</span>
+                    <strong className="text-xs text-[#111111]">{formatMoney(detailModalPart.unit_cost)}</strong>
+                    <span className="text-[8px] text-slate-400 block mt-0.5">Landed restock cost</span>
+                  </div>
+                  <div className="bg-amber-50/60 p-2.5 rounded-xl border border-amber-300">
+                    <span className="text-[9px] font-bold text-[#111111] block">Price Put on Item (PRICE)</span>
+                    <strong className="text-xs text-[#111111] font-black">{formatMoney(detailModalPart.unit_price)}</strong>
+                    <span className="text-[8px] text-amber-800 block mt-0.5">Systemwide selling price</span>
                   </div>
                   <div className="bg-white p-2.5 rounded-xl border border-slate-200">
-                    <span className="text-[9px] text-[#111111]/40 block">Total Bin Asset Value</span>
+                    <span className="text-[9px] text-[#111111]/50 block">Total Bin Asset Value</span>
                     <strong className="text-xs text-[#111111]">{formatMoney(detailModalPart.stock_quantity * detailModalPart.unit_price)}</strong>
+                    <span className="text-[8px] text-slate-400 block mt-0.5">Inventory value</span>
                   </div>
                 </div>
               </div>
 
-              {/* Compatibility: Compatible Heavy Machinery */}
+              {/* MODEL: Compatible Heavy Machinery */}
               <div className="p-3.5 bg-[#F7F6F3] rounded-2xl border border-slate-200/80 space-y-1.5">
-                <span className="text-[10px] uppercase font-bold text-[#111111]/50 flex items-center gap-1">
-                  <Cpu className="w-3.5 h-3.5 text-[#111111]/40" />
-                  <span>Compatible Heavy Machinery (Compatibility)</span>
-                </span>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase font-bold text-[#111111]/50 flex items-center gap-1">
+                    <Cpu className="w-3.5 h-3.5 text-[#111111]/40" />
+                    <span>Machinery Model(s) (MODEL)</span>
+                  </span>
+                  {detailModalPart.model && (
+                    <span className="text-[10px] font-mono font-bold text-amber-900 bg-amber-100/70 px-2 py-0.5 rounded border border-amber-300/60">
+                      Primary: {detailModalPart.model}
+                    </span>
+                  )}
+                </div>
                 <div className="flex flex-wrap gap-1.5 pt-1">
                   {detailModalPart.machinery_models.map((model, i) => (
                     <span key={i} className="px-2.5 py-1 rounded-lg bg-[#111111] text-white text-xs font-mono font-semibold">
@@ -1359,11 +1457,11 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                 </div>
               </div>
 
-              {/* Description & Technical Notes */}
+              {/* Description (DESC) & Technical Notes */}
               {detailModalPart.description && (
                 <div className="p-3.5 bg-[#F7F6F3] rounded-2xl border border-slate-200/80 space-y-1">
-                  <span className="text-[10px] uppercase font-bold text-[#111111]/50 block">Part Description & Specifications</span>
-                  <p className="text-xs text-[#111111]/80 leading-relaxed">{detailModalPart.description}</p>
+                  <span className="text-[10px] uppercase font-bold text-[#111111]/50 block">Description (DESC) & Technical Specifications</span>
+                  <p className="text-xs text-[#111111]/80 leading-relaxed font-sans">{detailModalPart.description}</p>
                 </div>
               )}
             </div>

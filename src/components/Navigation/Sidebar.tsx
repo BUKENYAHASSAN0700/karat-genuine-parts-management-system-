@@ -2,11 +2,8 @@ import React from 'react';
 import { 
   LayoutDashboard, 
   Boxes, 
-  ShoppingCart, 
   Receipt,
   Truck, 
-  BarChart3, 
-  FileText, 
   Settings, 
   LogOut,
   ChevronLeft,
@@ -30,13 +27,10 @@ export const Sidebar: React.FC = () => {
     isMobileMenuOpen,
     closeMobileMenu,
     receipts,
-    inquiries,
-    orders,
     oemOrders
   } = useInertia();
 
   const lowStockCount = parts.filter(p => p.status === 'Low Stock' || p.status === 'Out of Stock' || p.stock_quantity <= p.min_stock_alert).length;
-  const activeInquiriesCount = inquiries.filter(i => i.status !== 'Declined' && i.status !== 'Converted to Order').length;
   const inboundShipmentsCount = oemOrders.filter(o => o.status !== 'Received & Stocked' && o.status !== 'Cancelled').length;
 
   const navigationSections = [
@@ -56,14 +50,6 @@ export const Sidebar: React.FC = () => {
           description: 'CAT, Komatsu, Volvo SKUs',
           badge: lowStockCount > 0 ? `${lowStockCount} Low` : undefined,
           badgeColor: 'bg-[#DC2626] text-white'
-        },
-        { 
-          id: 'inquiries', 
-          icon: FileText, 
-          label: 'Inquiries & Orders', 
-          description: 'Customer requests',
-          badge: activeInquiriesCount > 0 ? `${activeInquiriesCount} Active` : undefined,
-          badgeColor: 'bg-[#F6AF31] text-[#111111]'
         },
       ]
     },
@@ -86,14 +72,6 @@ export const Sidebar: React.FC = () => {
           badge: inboundShipmentsCount > 0 ? `${inboundShipmentsCount} Inbound` : undefined,
           badgeColor: 'bg-blue-600 text-white'
         },
-        { 
-          id: 'reports', 
-          icon: BarChart3, 
-          label: 'Financial Reports', 
-          description: 'P&L, aging & URA taxes',
-          badge: 'P&L',
-          badgeColor: 'bg-emerald-600 text-white'
-        },
       ]
     },
     {
@@ -114,7 +92,7 @@ export const Sidebar: React.FC = () => {
   return (
     <>
       <aside 
-        className={`hidden md:flex flex-col justify-between bg-white border border-slate-200/90 rounded-3xl shadow-xs transition-all duration-300 shrink-0 sticky top-3 sm:top-5 lg:top-6 z-20 h-[calc(100vh-1.5rem)] sm:h-[calc(100vh-2.5rem)] lg:h-[calc(100vh-3rem)] max-h-[calc(100vh-1.5rem)] sm:max-h-[calc(100vh-2.5rem)] lg:max-h-[calc(100vh-3rem)] overflow-hidden ${
+        className={`hidden md:flex flex-col justify-between bg-white border border-slate-200/90 rounded-3xl shadow-xs transition-all duration-300 shrink-0 h-full max-h-full overflow-hidden ${
           isSidebarCollapsed ? 'w-20 p-3' : 'w-64 p-4'
         }`}
       >
