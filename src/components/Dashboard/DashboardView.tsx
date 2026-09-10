@@ -19,7 +19,8 @@ import {
   MinusCircle,
   History,
   Printer,
-  Receipt
+  Receipt,
+  Trash2
 } from 'lucide-react';
 import { useInertia } from '../../context/InertiaContext';
 import { SaleReceipt, SaleReceiptItem } from '../../types';
@@ -29,19 +30,18 @@ export const DashboardView: React.FC = () => {
   const { 
     currentUser, 
     parts, 
-    transactions, 
     receipts,
     setAddModalOpen,
     setActiveView,
     updatePartStock,
     setFlashMessage,
+    deleteReceipt,
     currency,
     formatMoney,
     formatMoneyShort
   } = useInertia();
 
   const [selectedBrand, setSelectedBrand] = useState<'All' | 'Caterpillar' | 'Komatsu' | 'Volvo' | 'Hitachi'>('All');
-  const [activityTab, setActivityTab] = useState<'sold-items' | 'transactions'>('sold-items');
   const [viewingReceipt, setViewingReceipt] = useState<SaleReceipt | null>(null);
   const [isReceiptOpen, setIsReceiptOpen] = useState(false);
 
@@ -91,9 +91,7 @@ export const DashboardView: React.FC = () => {
   const lowStockParts = parts.filter(p => p.status === 'Low Stock' || p.status === 'Out of Stock' || p.stock_quantity <= p.min_stock_alert);
   const lowStockCount = lowStockParts.length;
 
-  const totalSalesRevenue = transactions
-    .filter(t => t.type === 'sale')
-    .reduce((acc, t) => acc + t.amount, 0);
+  const totalSalesTransactions = receipts.length;
 
   // Brand calculations
   const brandStats = (['Caterpillar', 'Komatsu', 'Volvo', 'Hitachi'] as const).map(brand => {
@@ -114,6 +112,17 @@ export const DashboardView: React.FC = () => {
     setFlashMessage('success', `Stock updated to ${nextStock} units`);
   };
 
+  const handleDeleteReceipt = (receipt: SaleReceipt) => {
+    const confirmed = window.confirm(
+      `Delete receipt ${receipt.receipt_number}? This will remove its sold items and restore the deducted stock.`
+    );
+    if (!confirmed) return;
+
+    deleteReceipt(receipt.id);
+    setViewingReceipt(current => current?.id === receipt.id ? null : current);
+    setIsReceiptOpen(current => current && viewingReceipt?.id === receipt.id ? false : current);
+  };
+
   return (
     <div className="space-y-6">
       {/* Top Header Row with Clear Greeting and Primary CTAs */}
@@ -123,18 +132,18 @@ export const DashboardView: React.FC = () => {
             Welcome Back, {currentUser?.name || 'Shop Owner'}
           </h1>
           <p className="text-xs text-[#111111]/60 mt-0.5">
-            Karat Heavy Machinery Spare Parts &bull; Live Inventory & Commercial Command Center
+            Karat Heavy Machinery Spare Parts
           </p>
         </div>
 
         <div className="flex items-center gap-2.5 self-start sm:self-auto flex-wrap">
-          {/* Quick POS Sell Action */}
+          {/* Quick Sell Action */}
           <button
             onClick={() => setActiveView('pos')}
             className="px-4 py-2 rounded-full bg-white hover:bg-slate-50 text-[#111111] border border-slate-200/90 text-xs font-extrabold flex items-center gap-1.5 shadow-xs transition cursor-pointer active:scale-95"
           >
             <ShoppingCart className="w-3.5 h-3.5 text-[#F6AF31]" />
-            <span>Point of Sale Register</span>
+            <span>Sales Register</span>
           </button>
 
           {/* Primary Action Button: + Add New Part */}
@@ -251,10 +260,10 @@ export const DashboardView: React.FC = () => {
 
           <div className="mt-3">
             <div className="text-[10px] font-bold uppercase tracking-wider text-[#111111]/50">
-              Sales Revenue
+              Sales Transactions
             </div>
-            <div className="text-xl font-black text-[#111111] font-mono tracking-tight mt-0.5 truncate">
-              {formatMoney(totalSalesRevenue)}
+            <div className="text-xl font-black text-[#111111] font-mono tracking-tight mt-0.5">
+              {totalSalesTransactions} <span className="text-[11px] font-normal text-[#111111]/50">Transactions</span>
             </div>
           </div>
         </div>
@@ -278,9 +287,6 @@ export const DashboardView: React.FC = () => {
                   Machinery Fleet Inventory & Stock Movements
                 </h2>
               </div>
-              <p className="text-xs text-[#111111]/50 mt-1">
-                Real-time stock allocation and quick adjustments across heavy OEM machinery.
-              </p>
             </div>
 
             {/* Brand Filter Pills */}
@@ -406,10 +412,10 @@ export const DashboardView: React.FC = () => {
           </div>
         </div>
 
-        {/* ================= BIG CARD 2: LIVE COMMERCIAL INQUIRIES & RECENT TRANSACTIONS (5 COLS) ================= */}
+        {/* ================= BIG CARD 2: LIVE SOLD ITEMS & RECEIPTS (5 COLS) ================= */}
         <div className="lg:col-span-5 bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-6 shadow-xs space-y-6">
           
-          {/* Card Header & Toggle Switch */}
+          {/* Card Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
             <div>
               <div className="flex items-center gap-2">
@@ -417,46 +423,22 @@ export const DashboardView: React.FC = () => {
                   <ShoppingCart className="w-3.5 h-3.5" />
                 </div>
                 <h2 className="text-base font-black text-[#111111] tracking-tight">
-                  Sales Activity & Counter History
+                  Sales Activity History
                 </h2>
               </div>
-              <p className="text-xs text-[#111111]/50 mt-1">
-                Real-time sold items, cashier POS receipts, and counter transactions.
-              </p>
             </div>
 
-            {/* Toggle Switch between Sold Items and Transactions */}
-            <div className="flex items-center bg-[#F7F6F3] p-0.5 rounded-full border border-slate-200/70 text-[11px] font-bold shrink-0 flex-wrap">
-              <button
-                onClick={() => setActivityTab('sold-items')}
-                className={`px-3 py-1 rounded-full transition cursor-pointer ${
-                  activityTab === 'sold-items' 
-                    ? 'bg-[#111111] text-white shadow-2xs' 
-                    : 'text-[#111111]/60 hover:text-[#111111]'
-                }`}
-              >
-                Sold Items ({allSoldItems.length})
-              </button>
-              <button
-                onClick={() => setActivityTab('transactions')}
-                className={`px-3 py-1 rounded-full transition cursor-pointer ${
-                  activityTab === 'transactions' 
-                    ? 'bg-[#111111] text-white shadow-2xs' 
-                    : 'text-[#111111]/60 hover:text-[#111111]'
-                }`}
-              >
-                Ledger ({transactions.length})
-              </button>
-            </div>
+            <span className="px-3 py-1 rounded-full bg-[#F7F6F3] border border-slate-200/70 text-[11px] font-bold text-[#111111]/60 shrink-0">
+              Sold Items ({allSoldItems.length})
+            </span>
           </div>
 
-          {/* Tab 1: Live Sold Items Feed */}
-          {activityTab === 'sold-items' && (
-            <div className="space-y-3">
+          {/* Live Sold Items Feed */}
+          <div className="space-y-3">
               <div className="space-y-3">
                 {allSoldItems.length === 0 ? (
                   <div className="p-8 text-center text-xs text-[#111111]/40 bg-[#F7F6F3]/50 rounded-2xl">
-                    No products sold yet. Open the POS terminal to process your first sale!
+                    No products sold yet. Open the sales register to process your first sale!
                   </div>
                 ) : (
                   allSoldItems.slice(0, 4).map(item => (
@@ -510,61 +492,9 @@ export const DashboardView: React.FC = () => {
                 className="w-full py-2.5 rounded-2xl bg-[#111111] hover:bg-black text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
               >
                 <History className="w-3.5 h-3.5 text-[#F6AF31]" />
-                <span>Open Full Point of Sale Terminal</span>
+                <span>Open Full Sales Register</span>
                 <ArrowUpRight className="w-3.5 h-3.5" />
               </button>
-            </div>
-          )}
-
-          {/* Tab 2: Confirmed Sales Transactions */}
-          {activityTab === 'transactions' && (
-            <div className="space-y-3">
-              <div className="space-y-3">
-                {transactions.map(tx => (
-                  <div 
-                    key={tx.id}
-                    className="p-3.5 rounded-2xl bg-[#F7F6F3]/80 border border-slate-200/80 hover:border-[#111111]/30 transition flex items-center justify-between gap-3"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-8 h-8 rounded-xl bg-[#111111] text-[#F6AF31] font-black text-xs flex items-center justify-center shrink-0">
-                        {tx.iconType === 'caterpillar' ? 'CAT' : (currency === 'UGX' ? 'UGX' : '$')}
-                      </div>
-                      <div className="min-w-0">
-                        <div className="text-xs font-extrabold text-[#111111] truncate">{tx.name}</div>
-                        <div className="text-[10px] text-[#111111]/50 font-mono">{tx.date} &bull; {tx.time}</div>
-                      </div>
-                    </div>
-
-                    <div className="text-right shrink-0">
-                      <div className="text-xs font-black font-mono text-[#111111]">
-                        +{formatMoney(tx.amount)}
-                      </div>
-                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#22A06B]">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#22A06B]" />
-                        {tx.status}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <button
-                onClick={() => setActiveView('sales')}
-                className="w-full py-2.5 rounded-2xl bg-[#111111] hover:bg-black text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
-              >
-                <span>View Full Sales Ledger & Invoices</span>
-                <ArrowUpRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          )}
-
-          {/* Quick Summary Pill at bottom of Card 2 */}
-          <div className="p-3.5 rounded-2xl bg-[#F6AF31]/15 border border-[#F6AF31]/30 flex items-center justify-between text-xs">
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-[#111111]" />
-              <span className="font-bold text-[#111111]">Stock & Sales Reconciliation</span>
-            </div>
-            <span className="font-mono font-black text-[#111111]">Synchronized</span>
           </div>
 
         </div>
@@ -602,7 +532,7 @@ export const DashboardView: React.FC = () => {
               className="px-4 py-2 rounded-full bg-[#111111] hover:bg-black text-white text-xs font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer"
             >
               <ShoppingCart className="w-3.5 h-3.5 text-[#F6AF31]" />
-              <span>Launch POS & Sell</span>
+              <span>Launch Sales & Sell</span>
             </button>
           </div>
         </div>
@@ -611,7 +541,7 @@ export const DashboardView: React.FC = () => {
         <div className="block md:hidden divide-y divide-slate-100">
           {allSoldItems.length === 0 ? (
             <div className="py-12 text-center text-[#111111]/40 text-xs">
-              No items sold yet. Use the POS Register to complete product sales.
+              No items sold yet. Use the sales register to complete product sales.
             </div>
           ) : (
             allSoldItems.slice(0, 8).map(item => (
@@ -652,15 +582,25 @@ export const DashboardView: React.FC = () => {
                     <span>{item.date} {item.time}</span>
                   </div>
 
-                  <button
-                    onClick={() => {
-                      setViewingReceipt(item.fullReceipt);
-                      setIsReceiptOpen(true);
-                    }}
-                    className="text-xs font-bold text-[#111111] hover:text-[#F6AF31] underline decoration-slate-300 transition cursor-pointer"
-                  >
-                    Receipt #{item.receipt_number}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        setViewingReceipt(item.fullReceipt);
+                        setIsReceiptOpen(true);
+                      }}
+                      className="text-xs font-bold text-[#111111] hover:text-[#F6AF31] underline decoration-slate-300 transition cursor-pointer"
+                    >
+                      Receipt #{item.receipt_number}
+                    </button>
+                    <button
+                      onClick={() => handleDeleteReceipt(item.fullReceipt)}
+                      className="w-7 h-7 rounded-lg text-[#DC2626] hover:bg-red-50 flex items-center justify-center transition cursor-pointer"
+                      title="Delete receipt and restore stock"
+                      aria-label={`Delete receipt ${item.receipt_number}`}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))
@@ -688,7 +628,7 @@ export const DashboardView: React.FC = () => {
               {allSoldItems.length === 0 ? (
                 <tr>
                   <td colSpan={10} className="py-12 text-center text-[#111111]/40">
-                    No items sold yet. Use the POS Register to complete product sales.
+                    No items sold yet. Use the sales register to complete product sales.
                   </td>
                 </tr>
               ) : (
@@ -760,16 +700,26 @@ export const DashboardView: React.FC = () => {
                     </td>
 
                     <td className="py-3.5 px-3 text-center">
-                      <button
-                        onClick={() => {
-                          setViewingReceipt(item.fullReceipt);
-                          setIsReceiptOpen(true);
-                        }}
-                        className="px-2.5 py-1 rounded-full bg-[#111111] hover:bg-black text-white text-[10px] font-bold flex items-center gap-1 mx-auto transition cursor-pointer"
-                      >
-                        <Printer className="w-3 h-3 text-[#F6AF31]" />
-                        <span>View</span>
-                      </button>
+                      <div className="flex items-center justify-center gap-1.5">
+                        <button
+                          onClick={() => {
+                            setViewingReceipt(item.fullReceipt);
+                            setIsReceiptOpen(true);
+                          }}
+                          className="px-2.5 py-1 rounded-full bg-[#111111] hover:bg-black text-white text-[10px] font-bold flex items-center gap-1 transition cursor-pointer"
+                        >
+                          <Printer className="w-3 h-3 text-[#F6AF31]" />
+                          <span>View</span>
+                        </button>
+                        <button
+                          onClick={() => handleDeleteReceipt(item.fullReceipt)}
+                          className="w-7 h-7 rounded-full text-[#DC2626] hover:bg-red-50 flex items-center justify-center transition cursor-pointer"
+                          title="Delete receipt and restore stock"
+                          aria-label={`Delete receipt ${item.receipt_number}`}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -778,7 +728,7 @@ export const DashboardView: React.FC = () => {
           </table>
         </div>
 
-        {/* View all in POS footer */}
+        {/* View all in sales register footer */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-slate-100 text-xs">
           <span className="text-[#111111]/60">
             Showing {Math.min(8, allSoldItems.length)} of {allSoldItems.length} sold parts transactions recorded in system.
@@ -787,7 +737,7 @@ export const DashboardView: React.FC = () => {
             onClick={() => setActiveView('pos')}
             className="text-xs font-bold text-[#111111] hover:underline flex items-center gap-1 cursor-pointer self-start sm:self-auto"
           >
-            <span>View All Sold Parts in POS Terminal</span>
+            <span>View All Sold Parts in Sales Register</span>
             <ArrowUpRight className="w-3.5 h-3.5" />
           </button>
         </div>

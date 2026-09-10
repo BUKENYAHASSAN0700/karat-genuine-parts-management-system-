@@ -20,7 +20,7 @@ export const TaxationPolicyTab: React.FC = () => {
   const [autoFiscalizePOS, setAutoFiscalizePOS] = useState<boolean>(true);
   const [exemptMiningHolders, setExemptMiningHolders] = useState<boolean>(true);
   const [taxDisclaimer, setTaxDisclaimer] = useState<string>(
-    'All parts supplied are subject to Uganda Revenue Authority 18% VAT and standard EFRIS fiscal documentation. Official e-receipt generated at point of sale.'
+    'All parts supplied are subject to Uganda Revenue Authority 18% VAT and standard EFRIS fiscal documentation. Official e-receipt generated at checkout.'
   );
   const [isSaved, setIsSaved] = useState(false);
   const [isPingingEfris, setIsPingingEfris] = useState(false);
@@ -123,7 +123,7 @@ export const TaxationPolicyTab: React.FC = () => {
             />
             <div>
               <span className="text-xs font-bold text-slate-800 block">
-                Automatic POS Fiscalization on Every Transaction
+                Automatic Fiscalization on Every Transaction
               </span>
               <span className="text-[11px] text-slate-500">
                 Immediately issues an official URA EFRIS receipt without cashier manual intervention.

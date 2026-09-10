@@ -4,8 +4,6 @@ import {
   Boxes, 
   ShoppingBag,
   Receipt,
-  ClipboardList,
-  Truck, 
   Settings, 
   LogOut,
   ChevronLeft,
@@ -30,13 +28,10 @@ export const Sidebar: React.FC = () => {
     toggleSidebar,
     isMobileMenuOpen,
     closeMobileMenu,
-    receipts,
-    oemOrders,
-    inquiries
+    receipts
   } = useInertia();
 
   const lowStockCount = parts.filter(p => p.status === 'Low Stock' || p.status === 'Out of Stock' || p.stock_quantity <= p.min_stock_alert).length;
-  const inboundShipmentsCount = oemOrders.filter(o => o.status !== 'Received & Stocked' && o.status !== 'Cancelled').length;
 
   const navigationSections = [
     {
@@ -68,22 +63,6 @@ export const Sidebar: React.FC = () => {
           description: 'Products & checkout',
           badge: 'Shop',
           badgeColor: 'bg-[#F6AF31] text-[#111111]'
-        },
-        { 
-          id: 'inquiries', 
-          icon: ClipboardList, 
-          label: 'Inquiries & Orders', 
-          description: 'RFQs, Quotes & Orders',
-          badge: inquiries && inquiries.length > 0 ? `${inquiries.length}` : undefined,
-          badgeColor: 'bg-amber-50 text-amber-900 border border-amber-300'
-        },
-        { 
-          id: 'purchases', 
-          icon: Truck, 
-          label: 'OEM Restock', 
-          description: 'Factory POs & Ingest',
-          badge: inboundShipmentsCount > 0 ? `${inboundShipmentsCount} Inbound` : undefined,
-          badgeColor: 'bg-blue-600 text-white'
         },
       ]
     },

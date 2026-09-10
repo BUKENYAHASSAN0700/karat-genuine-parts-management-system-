@@ -89,7 +89,7 @@ export const ProfitAndLossStatement: React.FC<PnLProps> = ({
       [`Operating Currency: ${currency}`],
       [''],
       ['Account Classification', 'Sub-Account', 'Amount'],
-      ['Revenues', 'Over-the-Counter POS Sales', posSalesRevenue],
+      ['Revenues', 'Over-the-Counter Sales', posSalesRevenue],
       ['Revenues', 'Commercial & Fleet Invoiced Orders', commercialOrdersRevenue],
       ['Revenues', 'Field Logistics & Emergency Surcharges', freightSurcharges],
       ['Revenues', 'TOTAL COMMERCIAL REVENUE', grossRevenue],
@@ -196,7 +196,7 @@ export const ProfitAndLossStatement: React.FC<PnLProps> = ({
             {expandRevenue && (
               <div className="bg-white divide-y divide-slate-100">
                 <div className="px-8 py-2.5 flex items-center justify-between text-slate-600 hover:bg-slate-50/50">
-                  <span>Over-the-Counter POS Counter Sales (Walk-ins & Contractors)</span>
+                  <span>Over-the-Counter Sales (Walk-ins & Contractors)</span>
                   <span className="font-mono font-bold text-slate-800">{formatMoney(posSalesRevenue)}</span>
                 </div>
                 <div className="px-8 py-2.5 flex items-center justify-between text-slate-600 hover:bg-slate-50/50">

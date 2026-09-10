@@ -184,7 +184,7 @@ export const FinancialAuditModal: React.FC<FinancialAuditModalProps> = ({
               </thead>
               <tbody className="divide-y divide-slate-100 font-mono">
                 <tr>
-                  <td className="py-2 font-sans font-medium text-slate-800">Commercial Spare Part Sales (POS Walk-ins & Quotations)</td>
+                  <td className="py-2 font-sans font-medium text-slate-800">Commercial Spare Part Sales (Walk-ins & Quotations)</td>
                   <td className="py-2 text-right text-slate-400">-</td>
                   <td className="py-2 text-right font-bold text-[#111111]">{formatMoney(grossRevenue)}</td>
                 </tr>

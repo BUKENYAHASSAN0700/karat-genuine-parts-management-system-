@@ -127,7 +127,7 @@ export const InquiriesOrdersView: React.FC = () => {
     });
   }, [orders, searchQuery, orderStatusFilter]);
 
-  // Quick action: Send inquiry line items to POS
+  // Quick action: Send inquiry line items to sales register
   const handleTransferToPOS = (inquiry: InquiryItem) => {
     if (inquiry.items && inquiry.items.length > 0) {
       const firstItem = inquiry.items[0];
@@ -498,14 +498,14 @@ export const InquiriesOrdersView: React.FC = () => {
                       <span>View / Print Quotation</span>
                     </button>
 
-                    {/* Transfer to POS Button */}
+                    {/* Transfer to sales register button */}
                     <button
                       onClick={() => handleTransferToPOS(inquiry)}
                       className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-semibold text-slate-700 flex items-center gap-1.5 transition cursor-pointer"
-                      title="Load quotation items into Point of Sale register"
+                      title="Load quotation items into sales register"
                     >
                       <ShoppingCart className="w-3.5 h-3.5 text-slate-500" />
-                      <span>Open in POS</span>
+                      <span>Open in Sales</span>
                     </button>
                   </div>
 

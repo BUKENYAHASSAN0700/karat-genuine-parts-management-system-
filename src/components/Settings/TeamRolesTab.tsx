@@ -17,7 +17,7 @@ import { useInertia } from '../../context/InertiaContext';
 export interface TeamMember {
   id: string;
   name: string;
-  role: 'Owner & CFO' | 'Managing Director' | 'Yard Supervisor' | 'Parts Specialist' | 'POS Cashier';
+  role: 'Owner & CFO' | 'Managing Director' | 'Yard Supervisor' | 'Parts Specialist' | 'Sales Cashier';
   accessLevel: 'Administrator' | 'Stores Master' | 'Sales Cashier' | 'Field Technician';
   email: string;
   phone: string;
@@ -74,7 +74,7 @@ const INITIAL_TEAM: TeamMember[] = [
   {
     id: 'usr-5',
     name: 'Grace Akello',
-    role: 'POS Cashier',
+    role: 'Sales Cashier',
     accessLevel: 'Sales Cashier',
     email: 'cashier1@karat.co.ug',
     phone: '+256 702 994012',
@@ -175,7 +175,7 @@ export const TeamRolesTab: React.FC = () => {
               Store Staff & Permission Access Matrix
             </h3>
             <p className="text-xs text-slate-500">
-              Manage authorized operators across Yard 4 receiving bays, sales POS terminal, and finance management.
+              Manage authorized operators across Yard 4 receiving bays, sales register, and finance management.
             </p>
           </div>
 
@@ -338,7 +338,7 @@ export const TeamRolesTab: React.FC = () => {
                   >
                     <option value="Parts Specialist">Parts Specialist</option>
                     <option value="Yard Supervisor">Yard Supervisor</option>
-                    <option value="POS Cashier">POS Cashier</option>
+                    <option value="Sales Cashier">Sales Cashier</option>
                     <option value="Managing Director">Managing Director</option>
                   </select>
                 </div>

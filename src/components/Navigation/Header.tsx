@@ -115,7 +115,7 @@ export const Header: React.FC = () => {
         </form>
       </div>
 
-      {/* Right Controls: POS Terminal, Add Part, Notifications, User Icon */}
+      {/* Right Controls: Sales Register, Add Part, Notifications, User Icon */}
       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
         <button
           type="button"

@@ -240,7 +240,7 @@ export const CurrencyFXTab: React.FC = () => {
             />
             <div>
               <span className="text-xs font-bold text-slate-800 block">
-                Dual-Currency on Printed POS Receipts & Dispatch Notes
+                Dual-Currency on Printed Sales Receipts & Dispatch Notes
               </span>
               <span className="text-[11px] text-slate-500">
                 Automatically prints both the USD figure and converted UGX equivalent on all thermal till slips.

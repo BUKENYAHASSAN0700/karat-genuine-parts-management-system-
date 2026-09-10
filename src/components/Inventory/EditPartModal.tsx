@@ -349,11 +349,11 @@ export const EditPartModal: React.FC<EditPartModalProps> = ({ part, isOpen, onCl
             </div>
           </div>
 
-          {/* Section 3: Unit, Taxes & Registration Date */}
+          {/* Section 3: Unit, Taxes & Date Added */}
           <div className="bg-[#F7F6F3]/70 p-4 rounded-2xl border border-slate-200/80 space-y-3">
             <div className="text-[11px] font-black uppercase text-[#111111]/80 tracking-wider flex items-center gap-1.5">
               <ShieldCheck className="w-3.5 h-3.5 text-[#111111]" />
-              <span>Unit of Measure, Taxes & Registration Date</span>
+              <span>Unit of Measure, Taxes & Date Added</span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -388,11 +388,11 @@ export const EditPartModal: React.FC<EditPartModalProps> = ({ part, isOpen, onCl
                 </div>
               </div>
 
-              {/* Date Registered */}
+              {/* Date Added */}
               <div>
                 <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1 flex items-center gap-1">
                   <Calendar className="w-3 h-3 text-[#111111]/50" />
-                  <span>Date Registered *</span>
+                  <span>Date Added *</span>
                 </label>
                 <input
                   type="date"

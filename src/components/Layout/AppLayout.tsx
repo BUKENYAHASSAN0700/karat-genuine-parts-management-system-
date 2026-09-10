@@ -4,10 +4,8 @@ import { Header } from '../Navigation/Header';
 import { Sidebar } from '../Navigation/Sidebar';
 import { DashboardView } from '../Dashboard/DashboardView';
 import { InventoryPreview } from '../Inventory/InventoryPreview';
-import { OEMRestockView } from '../Restock/OEMRestockView';
 import { SalesTerminalView } from '../Sales/SalesTerminalView';
 import { StoreSettingsView } from '../Settings/StoreSettingsView';
-import { InquiriesOrdersView } from '../Inquiries/InquiriesOrdersView';
 import { AddPartModal } from '../Inventory/AddPartModal';
 import { LoginView } from '../Auth/LoginView';
 import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
@@ -54,12 +52,6 @@ export const AppLayout: React.FC = () => {
       case 'sell':
       case 'sales':
         return <SalesTerminalView />;
-      case 'inquiries':
-      case 'orders':
-        return <InquiriesOrdersView />;
-      case 'purchases':
-      case 'restock':
-        return <OEMRestockView />;
       case 'settings':
         return <StoreSettingsView />;
       default:

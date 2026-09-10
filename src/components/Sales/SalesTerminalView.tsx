@@ -52,6 +52,7 @@ export const SalesTerminalView: React.FC = () => {
     receipts, 
     activeReceipt, 
     setActiveReceipt,
+    deleteReceipt,
     selectedPartForSale,
     clearSelectedPartForSale,
     setFlashMessage
@@ -110,22 +111,6 @@ export const SalesTerminalView: React.FC = () => {
       setIsReceiptOpen(true);
     }
   }, [activeReceipt]);
-
-  // Frequent Customer presets for fast 1-click checkout
-  const frequentClients = [
-    { name: 'Roko Construction Ltd', phone: '+256 772 458 912', equipment: 'CAT 349D Excavator' },
-    { name: 'Victoria Nile Earthworks', phone: '+256 701 883 291', equipment: 'Komatsu PC200-8' },
-    { name: 'Sahara Mining Group', phone: '+256 782 109 443', equipment: 'Volvo EC480D' },
-    { name: 'Titan Earthmoving', phone: '+256 752 901 120', equipment: 'CAT 330D' },
-    { name: 'Walk-in Counter Customer', phone: '', equipment: 'Heavy Equipment' },
-  ];
-
-  const handleSelectClientPreset = (client: typeof frequentClients[0]) => {
-    setCustomerName(client.name);
-    setCustomerPhone(client.phone);
-    setCustomerCompany(client.name === 'Walk-in Counter Customer' ? '' : client.name);
-    setEquipmentModel(client.equipment);
-  };
 
   // Filter Parts for Catalog
   const filteredParts = useMemo(() => {
@@ -405,6 +390,17 @@ export const SalesTerminalView: React.FC = () => {
     return receipts.reduce((acc, r) => acc + r.items.reduce((s, it) => s + it.quantity, 0), 0);
   }, [receipts]);
 
+  const handleDeleteReceipt = (receipt: SaleReceipt) => {
+    const confirmed = window.confirm(
+      `Delete receipt ${receipt.receipt_number}? This will remove its sold items and restore the deducted stock.`
+    );
+    if (!confirmed) return;
+
+    deleteReceipt(receipt.id);
+    setViewingReceipt(current => current?.id === receipt.id ? null : current);
+    setIsReceiptOpen(current => current && viewingReceipt?.id === receipt.id ? false : current);
+  };
+
   return (
     <div className="space-y-5">
       {/* Module Title & Navigation Tabs Bar */}
@@ -416,7 +412,7 @@ export const SalesTerminalView: React.FC = () => {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-xl sm:text-2xl font-black text-[#111111] tracking-tight">
+                <h1 className="text-2xl font-black text-[#111111] tracking-tight font-mono">
                   Shop
                 </h1>
               </div>
@@ -490,7 +486,7 @@ export const SalesTerminalView: React.FC = () => {
                   <span>Spare Parts Catalog</span>
                 </h2>
                 <p className="text-[11px] text-[#111111]/50">
-                  Showing {filteredParts.length} available items • Click to add to customer cart
+                  Showing {filteredParts.length} available items
                 </p>
               </div>
 
@@ -583,19 +579,25 @@ export const SalesTerminalView: React.FC = () => {
               {filteredParts.length === 0 ? (
                 <div className="col-span-full py-12 text-center text-[#111111]/50 space-y-2">
                   <Package className="w-8 h-8 mx-auto text-[#111111]/30 stroke-[1.5]" />
-                  <p className="text-xs font-semibold">No spare parts matching your filter.</p>
-                  <button
-                    onClick={() => {
-                      setCatalogSearch('');
-                      setSelectedBrand('All');
-                      setSelectedSeries('All');
-                      setSelectedCategory('All');
-                      setInStockOnly(false);
-                    }}
-                    className="text-xs font-bold text-[#111111] underline hover:text-[#F6AF31]"
-                  >
-                    Reset all filters
-                  </button>
+                  <p className="text-xs font-semibold">
+                    {parts.length === 0
+                      ? 'No products are available in the catalog.'
+                      : 'No spare parts matching your filter.'}
+                  </p>
+                  {parts.length > 0 && (
+                    <button
+                      onClick={() => {
+                        setCatalogSearch('');
+                        setSelectedBrand('All');
+                        setSelectedSeries('All');
+                        setSelectedCategory('All');
+                        setInStockOnly(false);
+                      }}
+                      className="text-xs font-bold text-[#111111] underline hover:text-[#F6AF31]"
+                    >
+                      Reset all filters
+                    </button>
+                  )}
                 </div>
               ) : (
                 filteredParts.map(part => {
@@ -729,25 +731,6 @@ export const SalesTerminalView: React.FC = () => {
                   <span>Clear Cart</span>
                 </button>
               )}
-            </div>
-
-            {/* Quick Client Autocomplete Presets */}
-            <div>
-              <span className="text-[10px] uppercase font-bold text-[#111111]/50 block mb-1.5">
-                Quick Select Contractor / Fleet Account
-              </span>
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-                {frequentClients.map(client => (
-                  <button
-                    key={client.name}
-                    type="button"
-                    onClick={() => handleSelectClientPreset(client)}
-                    className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#F7F6F3] hover:bg-[#111111] hover:text-white text-[#111111]/80 border border-slate-200 whitespace-nowrap transition cursor-pointer"
-                  >
-                    {client.name}
-                  </button>
-                ))}
-              </div>
             </div>
 
             {/* Customer Details Form */}
@@ -1145,15 +1128,25 @@ export const SalesTerminalView: React.FC = () => {
                       <span>{item.date} {item.time}</span>
                     </div>
 
-                    <button
-                      onClick={() => {
-                        setViewingReceipt(item.fullReceipt);
-                        setIsReceiptOpen(true);
-                      }}
-                      className="text-xs font-bold text-[#111111] hover:text-[#F6AF31] underline decoration-slate-300 transition cursor-pointer"
-                    >
-                      View Receipt #{item.receipt_number}
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          setViewingReceipt(item.fullReceipt);
+                          setIsReceiptOpen(true);
+                        }}
+                        className="text-xs font-bold text-[#111111] hover:text-[#F6AF31] underline decoration-slate-300 transition cursor-pointer"
+                      >
+                        View Receipt #{item.receipt_number}
+                      </button>
+                      <button
+                        onClick={() => handleDeleteReceipt(item.fullReceipt)}
+                        className="w-7 h-7 rounded-lg text-[#DC2626] hover:bg-red-50 flex items-center justify-center transition cursor-pointer"
+                        title="Delete receipt and restore stock"
+                        aria-label={`Delete receipt ${item.receipt_number}`}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))
@@ -1258,16 +1251,26 @@ export const SalesTerminalView: React.FC = () => {
                       </td>
 
                       <td className="py-3.5 px-3 text-center">
-                        <button
-                          onClick={() => {
-                            setViewingReceipt(item.fullReceipt);
-                            setIsReceiptOpen(true);
-                          }}
-                          className="px-2.5 py-1 rounded-full bg-[#111111] hover:bg-black text-white text-[10px] font-bold flex items-center gap-1 mx-auto transition cursor-pointer"
-                        >
-                          <Printer className="w-3 h-3 text-[#F6AF31]" />
-                          <span>Reprint</span>
-                        </button>
+                        <div className="flex items-center justify-center gap-1.5">
+                          <button
+                            onClick={() => {
+                              setViewingReceipt(item.fullReceipt);
+                              setIsReceiptOpen(true);
+                            }}
+                            className="px-2.5 py-1 rounded-full bg-[#111111] hover:bg-black text-white text-[10px] font-bold flex items-center gap-1 transition cursor-pointer"
+                          >
+                            <Printer className="w-3 h-3 text-[#F6AF31]" />
+                            <span>Reprint</span>
+                          </button>
+                          <button
+                            onClick={() => handleDeleteReceipt(item.fullReceipt)}
+                            className="w-7 h-7 rounded-full text-[#DC2626] hover:bg-red-50 flex items-center justify-center transition cursor-pointer"
+                            title="Delete receipt and restore stock"
+                            aria-label={`Delete receipt ${item.receipt_number}`}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -1353,16 +1356,26 @@ export const SalesTerminalView: React.FC = () => {
                       <span>{receipt.date} {receipt.time}</span>
                     </div>
 
-                    <button
-                      onClick={() => {
-                        setViewingReceipt(receipt);
-                        setIsReceiptOpen(true);
-                      }}
-                      className="px-3 py-1.5 rounded-xl bg-[#111111] text-[#F6AF31] hover:bg-black font-extrabold text-xs flex items-center gap-1.5 transition cursor-pointer shadow-2xs"
-                    >
-                      <Printer className="w-3.5 h-3.5 stroke-[2.5]" />
-                      <span>View & Print</span>
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          setViewingReceipt(receipt);
+                          setIsReceiptOpen(true);
+                        }}
+                        className="px-3 py-1.5 rounded-xl bg-[#111111] text-[#F6AF31] hover:bg-black font-extrabold text-xs flex items-center gap-1.5 transition cursor-pointer shadow-2xs"
+                      >
+                        <Printer className="w-3.5 h-3.5 stroke-[2.5]" />
+                        <span>View & Print</span>
+                      </button>
+                      <button
+                        onClick={() => handleDeleteReceipt(receipt)}
+                        className="w-8 h-8 rounded-xl text-[#DC2626] hover:bg-red-50 flex items-center justify-center transition cursor-pointer"
+                        title="Delete receipt and restore stock"
+                        aria-label={`Delete receipt ${receipt.receipt_number}`}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))
@@ -1443,16 +1456,26 @@ export const SalesTerminalView: React.FC = () => {
                       </td>
 
                       <td className="py-3.5 px-3 text-center">
-                        <button
-                          onClick={() => {
-                            setViewingReceipt(receipt);
-                            setIsReceiptOpen(true);
-                          }}
-                          className="px-3 py-1.5 rounded-full bg-[#111111] hover:bg-black text-white text-[11px] font-bold flex items-center gap-1.5 mx-auto transition cursor-pointer"
-                        >
-                          <Printer className="w-3 h-3 text-[#F6AF31]" />
-                          <span>Reprint</span>
-                        </button>
+                        <div className="flex items-center justify-center gap-1.5">
+                          <button
+                            onClick={() => {
+                              setViewingReceipt(receipt);
+                              setIsReceiptOpen(true);
+                            }}
+                            className="px-3 py-1.5 rounded-full bg-[#111111] hover:bg-black text-white text-[11px] font-bold flex items-center gap-1.5 transition cursor-pointer"
+                          >
+                            <Printer className="w-3 h-3 text-[#F6AF31]" />
+                            <span>Reprint</span>
+                          </button>
+                          <button
+                            onClick={() => handleDeleteReceipt(receipt)}
+                            className="w-7 h-7 rounded-full text-[#DC2626] hover:bg-red-50 flex items-center justify-center transition cursor-pointer"
+                            title="Delete receipt and restore stock"
+                            aria-label={`Delete receipt ${receipt.receipt_number}`}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))

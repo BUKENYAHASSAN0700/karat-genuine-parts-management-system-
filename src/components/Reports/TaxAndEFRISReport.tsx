@@ -42,7 +42,7 @@ export const TaxAndEFRISReport: React.FC<TaxReportProps> = ({
       [`TAX PERIOD: ${periodLabel}`],
       [''],
       ['Schedule Box', 'Tax Description', 'Taxable Value', 'VAT Rate', 'VAT Amount'],
-      ['Box 50', 'Standard Rated Supplies (18% Sales & Counter POS)', grossRevenue, '18%', outputVAT],
+      ['Box 50', 'Standard Rated Supplies (18% Sales & Counter)', grossRevenue, '18%', outputVAT],
       ['Box 55', 'Total Output Tax Payable', grossRevenue, '18%', outputVAT],
       [''],
       ['Box 70', 'Standard Rated Imports (OEM Inbound Consignments CIF)', grossRevenue * 0.58, '18%', inputVAT],
@@ -107,7 +107,7 @@ export const TaxAndEFRISReport: React.FC<TaxReportProps> = ({
             {formatMoney(outputVAT)}
           </div>
           <div className="text-[11px] text-slate-500 mt-2">
-            Collected across POS & commercial invoices
+            Collected across sales & commercial invoices
           </div>
         </div>
 

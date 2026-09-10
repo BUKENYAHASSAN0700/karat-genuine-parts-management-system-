@@ -125,7 +125,7 @@ export const SystemMaintenanceTab: React.FC = () => {
                 </div>
               </div>
               <p className="text-[11px] text-slate-600 mt-3 leading-relaxed">
-                Includes all {parts.length} spare parts, {oemOrders.length} OEM factory shipments, and {receipts.length} POS till slips with metadata.
+                Includes all {parts.length} spare parts, {oemOrders.length} OEM factory shipments, and {receipts.length} sales till slips with metadata.
               </p>
             </div>
 
@@ -184,7 +184,7 @@ export const SystemMaintenanceTab: React.FC = () => {
             <span className="font-mono font-black text-sm text-[#111111]">{oemOrders.length} Consignments</span>
           </div>
           <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200">
-            <span className="text-slate-500 block text-[11px]">POS Cash Receipts</span>
+            <span className="text-slate-500 block text-[11px]">Sales Cash Receipts</span>
             <span className="font-mono font-black text-sm text-[#111111]">{receipts.length} Slips</span>
           </div>
         </div>
@@ -200,7 +200,7 @@ export const SystemMaintenanceTab: React.FC = () => {
         </div>
 
         <p className="text-xs text-red-800 leading-relaxed max-w-2xl">
-          Reset all inventory levels, POS sales receipts, and OEM purchase orders back to default clean factory demo seed state. This cannot be undone once executed.
+                Reset all inventory levels, sales receipts, and OEM purchase orders back to default clean factory demo seed state. This cannot be undone once executed.
         </p>
 
         <div>
@@ -228,7 +228,7 @@ export const SystemMaintenanceTab: React.FC = () => {
                 Confirm Factory Reinitialization
               </h3>
               <p className="text-xs text-slate-500 leading-relaxed">
-                This will purge all custom parts, recent POS sales slips, and local overrides. Type <strong className="text-red-600 font-mono">RESET</strong> below to authorize.
+                This will purge all custom parts, recent sales slips, and local overrides. Type <strong className="text-red-600 font-mono">RESET</strong> below to authorize.
               </p>
             </div>
 

@@ -590,7 +590,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                         }`}
                       >
                         <ShoppingCart className="w-3.5 h-3.5" />
-                        <span>Sell / POS</span>
+                        <span>Sell</span>
                       </button>
 
                       <button
@@ -744,7 +744,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                         No spare parts found
                       </div>
                       <p className="text-xs text-[#111111]/50">
-                        Try adjusting your search query, clearing filters, or register a new part into KARAT.
+                        Try adjusting your search query, clearing filters, or add a new product to KARAT.
                       </p>
                       <button
                         onClick={() => {
@@ -903,7 +903,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                         {/* Row Actions: Sticky on right */}
                         <td className="px-4 py-3 text-right whitespace-nowrap sticky right-0 bg-white group-hover:bg-[#F7F6F3] shadow-[-6px_0_12px_rgba(0,0,0,0.04)] z-10 transition-colors">
                           <div className="flex items-center justify-end gap-1.5" onClick={e => e.stopPropagation()}>
-                            {/* Direct Sell in POS Button */}
+                            {/* Direct Sell Button */}
                             <button
                               type="button"
                               onClick={() => startSaleWithPart(part)}
@@ -953,7 +953,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                         <tr className="bg-amber-50/20 border-b border-slate-200">
                           <td colSpan={8} className="px-6 py-4">
                             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs text-xs">
-                              {/* Product ID, Model & Registration Date */}
+                              {/* Product ID, Model & Date Added */}
                               <div className="space-y-1.5">
                                 <div className="text-[10px] font-bold uppercase text-[#111111]/50 tracking-wider">
                                   Part Identification
@@ -962,7 +962,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                                   <div><span className="text-[#111111]/50">Product ID:</span> <strong className="text-[#111111] px-1.5 py-0.5 rounded bg-[#111111] text-[#F6AF31]">{displayId}</strong></div>
                                   <div><span className="text-[#111111]/50">Model:</span> <strong className="text-[#111111]">{part.model || part.machinery_models?.join(', ') || 'Universal'}</strong></div>
                                   <div><span className="text-[#111111]/50">Brand:</span> <strong className="text-[#111111]">{part.brand}</strong></div>
-                                  <div><span className="text-[#111111]/50">Date Registered:</span> <strong className="text-[#111111]">{part.registered_date || '2026-03-01'}</strong></div>
+                                  <div><span className="text-[#111111]/50">Date Added:</span> <strong className="text-[#111111]">{part.registered_date || '2026-03-01'}</strong></div>
                                 </div>
                               </div>
 
@@ -1237,7 +1237,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
 
             {/* Complete Product Details */}
             <div className="space-y-3.5 text-xs">
-              {/* Product ID, Model & Date Registered */}
+              {/* Product ID, Model & Date Added */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="p-3 bg-[#F7F6F3] rounded-2xl border border-slate-200/80">
                   <span className="text-[10px] uppercase font-bold text-[#111111]/50 block">Product ID (Part No)</span>
@@ -1256,7 +1256,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                 </div>
 
                 <div className="p-3 bg-[#F7F6F3] rounded-2xl border border-slate-200/80">
-                  <span className="text-[10px] uppercase font-bold text-[#111111]/50 block">Date Registered</span>
+                  <span className="text-[10px] uppercase font-bold text-[#111111]/50 block">Date Added</span>
                   <div className="font-mono font-bold text-xs text-[#111111] mt-0.5">
                     {detailModalPart.registered_date || '2026-03-01'}
                   </div>

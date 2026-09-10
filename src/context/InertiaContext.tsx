@@ -71,6 +71,7 @@ interface InertiaContextType {
   receipts: SaleReceipt[];
   activeReceipt: SaleReceipt | null;
   setActiveReceipt: (receipt: SaleReceipt | null) => void;
+  deleteReceipt: (receiptId: string) => void;
   selectedPartForSale: SparePart | null;
   startSaleWithPart: (part: SparePart) => void;
   clearSelectedPartForSale: () => void;
@@ -436,7 +437,7 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
       model: newPartData.model || (newPartData.machinery_models?.join(', ') || ''),
     };
     setParts(prev => [newPart, ...prev]);
-    setFlashMessage('success', `Spare part [${newPart.id}] ${newPart.name} registered.`);
+    setFlashMessage('success', `Product [${newPart.id}] ${newPart.name} added.`);
   };
 
   const addMultipleParts = (partsList: Array<Omit<SparePart, 'id'>>) => {
@@ -828,6 +829,33 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return newReceipt;
   };
 
+  const deleteReceipt = (receiptId: string) => {
+    const receipt = receipts.find(item => item.id === receiptId);
+    if (!receipt) return;
+
+    setParts(prevParts => prevParts.map(part => {
+      const restoredQuantity = receipt.items
+        .filter(item => item.part_id === part.id || item.part_number === part.id || item.part_number === part.part_number)
+        .reduce((sum, item) => sum + item.quantity, 0);
+
+      if (restoredQuantity === 0) return part;
+
+      const newStock = part.stock_quantity + restoredQuantity;
+      return {
+        ...part,
+        stock_quantity: newStock,
+        status: newStock <= part.min_stock_alert ? 'Low Stock' : 'In Stock',
+      };
+    }));
+
+    setReceipts(prev => prev.filter(item => item.id !== receiptId));
+    setTransactions(prev => prev.filter(transaction => (
+      transaction.type !== 'sale' || !transaction.subtitle?.includes(receipt.receipt_number)
+    )));
+    setActiveReceipt(current => current?.id === receiptId ? null : current);
+    setFlashMessage('success', `Receipt ${receipt.receipt_number} deleted and stock restored.`);
+  };
+
   const resetAllDataToDefaults = () => {
     try {
       localStorage.removeItem('karat_parts');
@@ -875,6 +903,7 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
         receipts,
         activeReceipt,
         setActiveReceipt,
+        deleteReceipt,
         selectedPartForSale,
         startSaleWithPart,
         clearSelectedPartForSale,

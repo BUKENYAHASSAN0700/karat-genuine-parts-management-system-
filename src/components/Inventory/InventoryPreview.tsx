@@ -64,18 +64,12 @@ export const InventoryPreview: React.FC = () => {
             <div>
               <span className="font-extrabold">{lowStockCount} spare {lowStockCount === 1 ? 'part is' : 'parts are'}</span> currently below safety reorder threshold.
               <span className="hidden sm:inline text-[#111111]/60 font-normal ml-1.5">
-                Restock orders recommended with OEM suppliers.
+                Review stock levels before the next dispatch.
               </span>
             </div>
           </div>
 
           <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
-            <button
-              onClick={() => setActiveView('purchases')}
-              className="px-3.5 py-1.5 rounded-xl bg-[#DC2626] hover:bg-red-700 text-white font-bold text-[11px] transition shadow-2xs"
-            >
-              Initiate OEM Restock &rarr;
-            </button>
             <button
               onClick={() => setIsAlertDismissed(true)}
               className="w-7 h-7 rounded-xl bg-[#DC2626]/15 hover:bg-[#DC2626]/25 text-[#DC2626] flex items-center justify-center transition"
