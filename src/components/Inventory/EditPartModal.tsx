@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { X, Edit3, Save, Cpu, Warehouse, DollarSign, Package, Calendar, Tag, ShieldCheck } from 'lucide-react';
 import { useInertia } from '../../context/InertiaContext';
 import { SparePart } from '../../types';
-import { SERIES_LIST, getCategoriesForSeries, getSeriesForCategory } from '../../data/partTaxonomy';
+import { SERIES_LIST, getCategoriesForSeries, getSeriesForCategory, MANUFACTURER_BRANDS } from '../../data/partTaxonomy';
+import { SearchableCombobox } from '../Common/SearchableCombobox';
 
 const COMMON_UNITS = [
   { value: 'PCS', label: 'PCS - Pieces' },
@@ -314,55 +315,36 @@ export const EditPartModal: React.FC<EditPartModalProps> = ({ part, isOpen, onCl
             {/* Brand, Series & Category */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
-                  Manufacturer Brand *
-                </label>
-                <select
+                <SearchableCombobox
+                  label="Manufacturer Brand"
+                  required
                   value={formData.brand}
-                  onChange={e => setFormData({ ...formData, brand: e.target.value as SparePart['brand'] })}
-                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
-                >
-                  <option value="Caterpillar">Caterpillar (CAT)</option>
-                  <option value="Komatsu">Komatsu</option>
-                  <option value="Volvo">Volvo CE</option>
-                  <option value="Hitachi">Hitachi Heavy</option>
-                  <option value="Hyundai">Hyundai Construction</option>
-                  <option value="Doosan">Doosan / Develon</option>
-                </select>
+                  onChange={val => setFormData({ ...formData, brand: val })}
+                  options={MANUFACTURER_BRANDS.map(b => ({ value: b, label: b }))}
+                  placeholder="Type or select brand (CAT, Komatsu...)"
+                />
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
-                  Series *
-                </label>
-                <select
+                <SearchableCombobox
+                  label="Series"
+                  required
                   value={selectedSeries}
-                  onChange={e => handleSeriesChange(e.target.value)}
-                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
-                >
-                  {SERIES_LIST.map(series => (
-                    <option key={series} value={series}>
-                      {series}
-                    </option>
-                  ))}
-                </select>
+                  onChange={handleSeriesChange}
+                  options={SERIES_LIST.map(s => ({ value: s, label: s }))}
+                  placeholder="Type or select series..."
+                />
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
-                  Category *
-                </label>
-                <select
+                <SearchableCombobox
+                  label="Category"
+                  required
                   value={formData.category}
-                  onChange={e => setFormData({ ...formData, category: e.target.value })}
-                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
-                >
-                  {getCategoriesForSeries(selectedSeries).map(cat => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                </select>
+                  onChange={val => setFormData({ ...formData, category: val })}
+                  options={getCategoriesForSeries(selectedSeries).map(c => ({ value: c, label: c }))}
+                  placeholder="Type or select category..."
+                />
               </div>
             </div>
           </div>
@@ -377,20 +359,14 @@ export const EditPartModal: React.FC<EditPartModalProps> = ({ part, isOpen, onCl
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {/* Unit of measure */}
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
-                  Unit of Measure (UNIT) *
-                </label>
-                <select
+                <SearchableCombobox
+                  label="Unit of Measure (UNIT)"
+                  required
                   value={formData.unit}
-                  onChange={e => setFormData({ ...formData, unit: e.target.value })}
-                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
-                >
-                  {COMMON_UNITS.map(u => (
-                    <option key={u.value} value={u.value}>
-                      {u.label}
-                    </option>
-                  ))}
-                </select>
+                  onChange={val => setFormData({ ...formData, unit: val })}
+                  options={COMMON_UNITS.map(u => ({ value: u.value, label: u.label }))}
+                  placeholder="Type or select unit (PCS, SET...)"
+                />
               </div>
 
               {/* Tax amount */}

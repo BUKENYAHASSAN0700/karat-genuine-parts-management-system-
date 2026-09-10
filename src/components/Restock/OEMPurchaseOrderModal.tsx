@@ -227,7 +227,7 @@ export const OEMPurchaseOrderModal: React.FC<OEMPurchaseOrderModalProps> = ({
                       {item.part_number}
                       {item.oem_number && (
                         <div className="text-[10px] text-slate-500 font-mono">
-                          OEM: {item.oem_number}
+                          Model: {item.oem_number}
                         </div>
                       )}
                     </td>

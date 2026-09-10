@@ -540,7 +540,7 @@ export const NewOEMPurchaseOrderModal: React.FC<NewOEMPurchaseOrderModalProps> =
                   <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
                     type="text"
-                    placeholder="Search by part name, SKU, OEM #, or model..."
+                    placeholder="Search by part name, SKU, or model..."
                     value={partSearch}
                     onChange={e => setPartSearch(e.target.value)}
                     className="w-full pl-9 pr-3 py-2 text-xs rounded-xl bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
@@ -557,7 +557,7 @@ export const NewOEMPurchaseOrderModal: React.FC<NewOEMPurchaseOrderModalProps> =
                       <div>
                         <div className="font-bold text-[#111111]">{part.name}</div>
                         <div className="text-[10px] text-slate-500 font-mono">
-                          SKU: {part.part_number} • OEM: {part.oem_number || 'N/A'} • Brand: {part.brand}
+                          SKU: {part.part_number} • Model: {part.oem_number || 'N/A'} • Brand: {part.brand}
                         </div>
                       </div>
                       <div className="text-right shrink-0">
@@ -580,7 +580,7 @@ export const NewOEMPurchaseOrderModal: React.FC<NewOEMPurchaseOrderModalProps> =
                 <thead className="bg-[#111111] text-white text-[10px] uppercase tracking-wider">
                   <tr>
                     <th className="py-2.5 px-3">Part Description</th>
-                    <th className="py-2.5 px-3">Part # / OEM</th>
+                    <th className="py-2.5 px-3">Part # / Model</th>
                     <th className="py-2.5 px-3 text-center">Brand</th>
                     <th className="py-2.5 px-3 text-center">Target Bin</th>
                     <th className="py-2.5 px-3 text-center w-20">Qty</th>

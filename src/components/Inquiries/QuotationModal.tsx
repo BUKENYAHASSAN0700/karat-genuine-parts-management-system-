@@ -202,7 +202,7 @@ export const QuotationModal: React.FC<QuotationModalProps> = ({
               <thead>
                 <tr className="border-b-2 border-slate-300 text-[10px] uppercase font-black tracking-wider text-[#111111]/60">
                   <th className="py-2.5 px-2">#</th>
-                  <th className="py-2.5 px-3">Part Details / OEM Ref</th>
+                  <th className="py-2.5 px-3">Part Details / Model Ref</th>
                   <th className="py-2.5 px-3">Brand</th>
                   <th className="py-2.5 px-3 text-center">Qty</th>
                   <th className="py-2.5 px-3 text-right">Unit Price</th>
@@ -216,7 +216,7 @@ export const QuotationModal: React.FC<QuotationModalProps> = ({
                     <td className="py-3 px-3">
                       <div className="font-black text-[#111111]">{item.name}</div>
                       <div className="font-mono text-[10px] text-[#111111]/60 mt-0.5">
-                        KA Ref: {item.part_number} {item.oem_number && `• OEM: ${item.oem_number}`}
+                        KA Ref: {item.part_number} {item.oem_number && `• Model: ${item.oem_number}`}
                       </div>
                     </td>
                     <td className="py-3 px-3 font-semibold text-[#111111]/80">{item.brand || 'OEM Heavy Duty'}</td>

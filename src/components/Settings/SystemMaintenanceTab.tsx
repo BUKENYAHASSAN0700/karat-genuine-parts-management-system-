@@ -61,9 +61,9 @@ export const SystemMaintenanceTab: React.FC = () => {
       p.brand,
       p.category,
       p.stock_quantity,
-      p.unit_cost_usd || 0,
-      p.retail_price_usd,
-      p.location || 'Yard 4'
+      p.unit_cost ?? 0,
+      p.unit_price ?? 0,
+      p.warehouse_bin || 'Yard 4'
     ]);
 
     const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');

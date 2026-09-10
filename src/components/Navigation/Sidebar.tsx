@@ -2,7 +2,9 @@ import React from 'react';
 import { 
   LayoutDashboard, 
   Boxes, 
+  ShoppingBag,
   Receipt,
+  ClipboardList,
   Truck, 
   Settings, 
   LogOut,
@@ -29,7 +31,8 @@ export const Sidebar: React.FC = () => {
     isMobileMenuOpen,
     closeMobileMenu,
     receipts,
-    oemOrders
+    oemOrders,
+    inquiries
   } = useInertia();
 
   const lowStockCount = parts.filter(p => p.status === 'Low Stock' || p.status === 'Out of Stock' || p.stock_quantity <= p.min_stock_alert).length;
@@ -48,7 +51,7 @@ export const Sidebar: React.FC = () => {
         { 
           id: 'inventory', 
           icon: Boxes, 
-          label: 'Spare Parts', 
+          label: 'Inventory', 
           description: 'CAT, Komatsu, Volvo SKUs',
           badge: lowStockCount > 0 ? `${lowStockCount} Low` : undefined,
           badgeColor: 'bg-[#DC2626] text-white'
@@ -60,11 +63,19 @@ export const Sidebar: React.FC = () => {
       items: [
         { 
           id: 'pos', 
-          icon: Receipt, 
-          label: 'Sell Parts / POS', 
-          description: 'Register & receipts',
-          badge: 'POS',
+          icon: ShoppingBag, 
+          label: 'Shop', 
+          description: 'Products & checkout',
+          badge: 'Shop',
           badgeColor: 'bg-[#F6AF31] text-[#111111]'
+        },
+        { 
+          id: 'inquiries', 
+          icon: ClipboardList, 
+          label: 'Inquiries & Orders', 
+          description: 'RFQs, Quotes & Orders',
+          badge: inquiries && inquiries.length > 0 ? `${inquiries.length}` : undefined,
+          badgeColor: 'bg-amber-50 text-amber-900 border border-amber-300'
         },
         { 
           id: 'purchases', 

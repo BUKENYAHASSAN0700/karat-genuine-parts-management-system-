@@ -38,7 +38,7 @@ import { useInertia } from '../../context/InertiaContext';
 import { SparePart } from '../../types';
 import { EditPartModal } from './EditPartModal';
 import { BulkUploadModal } from './BulkUploadModal';
-import { SERIES_LIST, getSeriesForCategory, getCategoriesForSeries } from '../../data/partTaxonomy';
+import { SERIES_LIST, getSeriesForCategory, getCategoriesForSeries, MANUFACTURER_BRANDS } from '../../data/partTaxonomy';
 
 export interface InventoryTableProps {
   initialSearchQuery?: string;
@@ -94,7 +94,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
 
   // Unique Brands & Categories for filter dropdowns
   const brandOptions = useMemo(() => {
-    const brands = Array.from(new Set(parts.map(p => p.brand)));
+    const brands = Array.from(new Set([...MANUFACTURER_BRANDS, ...parts.map(p => p.brand)]));
     return ['all', ...brands];
   }, [parts]);
 
@@ -282,7 +282,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                 type="text"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Search spare parts by ID (e.g. KA101), Name, OEM, Category, Location, Machinery..."
+                placeholder="Search spare parts by ID (e.g. KA101), Name, Model, Category, Location, Machinery..."
                 className="w-full bg-[#F7F6F3] focus:bg-white border border-slate-200 focus:border-[#111111] rounded-xl pl-9 pr-8 py-2 text-xs text-[#111111] placeholder:text-[#111111]/40 outline-none transition"
               />
               {searchQuery && (
@@ -304,7 +304,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                   onChange={e => setSelectedBrand(e.target.value)}
                   className="w-full bg-[#F7F6F3] hover:bg-slate-100/80 border border-slate-200/90 rounded-xl px-3 py-2 text-xs font-bold text-[#111111] outline-none cursor-pointer"
                 >
-                  <option value="all">All OEM Brands</option>
+                  <option value="all">All Brands</option>
                   {brandOptions.filter(b => b !== 'all').map(brand => (
                     <option key={brand} value={brand}>{brand}</option>
                   ))}
@@ -321,7 +321,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                   }}
                   className="w-full bg-[#F7F6F3] hover:bg-slate-100/80 border border-slate-200/90 rounded-xl px-3 py-2 text-xs font-bold text-[#111111] outline-none cursor-pointer"
                 >
-                  <option value="all">All 9 Series</option>
+                  <option value="all">All Series</option>
                   {SERIES_LIST.map(series => (
                     <option key={series} value={series}>{series}</option>
                   ))}
@@ -525,26 +525,11 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                     </div>
                   </div>
 
-                  {/* OEM code & Warehouse Bin */}
-                  <div className="flex items-center justify-between gap-2 text-xs bg-[#F7F6F3] p-2.5 rounded-xl border border-slate-200/70">
-                    <div className="flex items-center gap-1 font-mono text-[11px]">
-                      <span className="text-slate-400 font-bold">OEM:</span>
-                      {isOemRevealed ? (
-                        <span className="font-bold text-[#111111] bg-amber-100 px-1.5 py-0.5 rounded">{part.oem_number}</span>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={(e) => toggleOemReveal(part.id, e)}
-                          className="text-amber-700 underline font-semibold cursor-pointer"
-                        >
-                          Show OEM
-                        </button>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-1 text-[11px] text-slate-600 font-mono">
-                      <Warehouse className="w-3 h-3 text-slate-400 shrink-0" />
-                      <span>{part.warehouse_bin}</span>
+                  {/* Model specification */}
+                  <div className="flex items-center justify-between gap-2 text-xs bg-[#F7F6F3] px-3 py-2 rounded-xl border border-slate-200/70">
+                    <div className="text-[11px] text-slate-700 font-medium truncate">
+                      <span className="text-slate-400 font-bold mr-1">Model:</span>
+                      <span className="font-semibold text-[#111111]">{part.model || part.machinery_models?.join(', ') || 'Universal'}</span>
                     </div>
                   </div>
 
@@ -675,28 +660,28 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
             <thead className="bg-[#F7F6F3] border-b border-slate-200 text-[#111111]/70 font-mono text-[11px] uppercase tracking-wider select-none">
               <tr>
                 {/* Expander Column */}
-                <th className="w-10 px-3 py-3.5 text-center">
+                <th className="w-8 px-2 py-3 text-center">
                   <span className="sr-only">Details</span>
                 </th>
 
                 {/* Product ID Column */}
                 <th 
                   onClick={() => handleSort('part_number')}
-                  className="px-4 py-3.5 cursor-pointer hover:text-[#111111] transition group"
+                  className="px-3 py-3 cursor-pointer hover:text-[#111111] transition group whitespace-nowrap"
                 >
-                  <div className="flex items-center gap-1.5 font-bold">
+                  <div className="flex items-center gap-1 font-bold">
                     <span>Product ID</span>
                     {renderSortIndicator('part_number')}
                   </div>
                 </th>
 
-                {/* Name & Machinery Column */}
+                {/* Name & Model Column */}
                 <th 
                   onClick={() => handleSort('name')}
-                  className="px-4 py-3.5 cursor-pointer hover:text-[#111111] transition group"
+                  className="px-3 py-3 cursor-pointer hover:text-[#111111] transition group min-w-[170px]"
                 >
-                  <div className="flex items-center gap-1.5 font-bold">
-                    <span>Part Name & Specifications</span>
+                  <div className="flex items-center gap-1 font-bold">
+                    <span>Part Name & Model</span>
                     {renderSortIndicator('name')}
                   </div>
                 </th>
@@ -704,21 +689,21 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                 {/* Brand & Category Column */}
                 <th 
                   onClick={() => handleSort('brand')}
-                  className="px-4 py-3.5 cursor-pointer hover:text-[#111111] transition group"
+                  className="px-3 py-3 cursor-pointer hover:text-[#111111] transition group whitespace-nowrap"
                 >
-                  <div className="flex items-center gap-1.5 font-bold">
+                  <div className="flex items-center gap-1 font-bold">
                     <span>Brand & Category</span>
                     {renderSortIndicator('brand')}
                   </div>
                 </th>
 
-                {/* Stock Level & Bin Column */}
+                {/* Stock Level Column */}
                 <th 
                   onClick={() => handleSort('stock_quantity')}
-                  className="px-4 py-3.5 cursor-pointer hover:text-[#111111] transition group"
+                  className="px-3 py-3 cursor-pointer hover:text-[#111111] transition group whitespace-nowrap"
                 >
-                  <div className="flex items-center gap-1.5 font-bold">
-                    <span>Stock Level & Location</span>
+                  <div className="flex items-center gap-1 font-bold">
+                    <span>Stock Level</span>
                     {renderSortIndicator('stock_quantity')}
                   </div>
                 </th>
@@ -726,21 +711,21 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                 {/* Unit Price Column */}
                 <th 
                   onClick={() => handleSort('unit_price')}
-                  className="px-4 py-3.5 cursor-pointer hover:text-[#111111] transition group"
+                  className="px-3 py-3 cursor-pointer hover:text-[#111111] transition group whitespace-nowrap"
                 >
-                  <div className="flex items-center gap-1.5 font-bold">
+                  <div className="flex items-center gap-1 font-bold">
                     <span>Unit Price ({currency})</span>
                     {renderSortIndicator('unit_price')}
                   </div>
                 </th>
 
                 {/* Status Badge Column */}
-                <th className="px-4 py-3.5 font-bold">
+                <th className="px-3 py-3 font-bold whitespace-nowrap">
                   Status
                 </th>
 
-                {/* Actions Column */}
-                <th className="px-5 py-3.5 text-right font-bold">
+                {/* Actions Column: Sticky right so it is always reachable without horizontal scrolling */}
+                <th className="px-4 py-3 text-right font-bold whitespace-nowrap sticky right-0 bg-[#F7F6F3] shadow-[-6px_0_12px_rgba(0,0,0,0.04)] z-20">
                   Actions
                 </th>
               </tr>
@@ -786,7 +771,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                   return (
                     <React.Fragment key={part.id}>
                       <tr 
-                        className={`transition-colors duration-150 cursor-pointer ${
+                        className={`group transition-colors duration-150 cursor-pointer ${
                           isExpanded 
                             ? 'bg-amber-50/30' 
                             : isLowStock 
@@ -796,15 +781,15 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                         onClick={() => toggleRow(part.id)}
                       >
                         {/* Expander Arrow */}
-                        <td className="px-3 py-3.5 text-center">
+                        <td className="w-8 px-2 py-3 text-center">
                           <button
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
                               toggleRow(part.id);
                             }}
-                            className="w-6 h-6 rounded-lg bg-[#F7F6F3] hover:bg-slate-200 text-[#111111] flex items-center justify-center transition"
-                            title={isExpanded ? 'Collapse row details' : 'Expand full product details'}
+                            className="w-6 h-6 rounded-lg bg-[#F7F6F3] group-hover:bg-slate-200 text-[#111111] flex items-center justify-center transition"
+                            title={isExpanded ? 'Collapse details' : 'Click to view full specifications and warehouse bin'}
                           >
                             {isExpanded ? (
                               <ChevronUp className="w-3.5 h-3.5" />
@@ -814,154 +799,95 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                           </button>
                         </td>
 
-                        {/* Product ID & Click-to-Reveal OEM Code */}
-                        <td className="px-4 py-3.5 whitespace-nowrap">
-                          <div className="inline-flex items-center gap-1.5">
-                            <span className="font-mono font-black text-xs px-2.5 py-1 rounded-lg bg-[#111111] text-[#F6AF31] tracking-wide">
-                              {displayId}
-                            </span>
-                          </div>
-
-                          {/* OEM Code: Hidden by default, revealed on click */}
-                          <div className="mt-1">
-                            {isOemRevealed ? (
-                              <div className="text-[10px] text-[#111111] font-mono flex items-center gap-1 bg-amber-50/80 px-2 py-0.5 rounded border border-amber-200/70 animate-in fade-in">
-                                <span className="text-[#111111]/50 font-bold">OEM:</span>
-                                <span className="font-bold">{part.oem_number}</span>
-                                <button
-                                  type="button"
-                                  onClick={(e) => toggleOemReveal(part.id, e)}
-                                  className="text-[#111111]/40 hover:text-[#111111] ml-0.5 p-0.5"
-                                  title="Hide OEM Code"
-                                >
-                                  <EyeOff className="w-2.5 h-2.5" />
-                                </button>
-                              </div>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={(e) => toggleOemReveal(part.id, e)}
-                                className="text-[10px] text-[#111111]/50 hover:text-[#111111] font-mono flex items-center gap-1 hover:underline transition"
-                                title="Click to view OEM number"
-                              >
-                                <Eye className="w-2.5 h-2.5 text-[#111111]/40" />
-                                <span>Show OEM</span>
-                              </button>
-                            )}
-                          </div>
+                        {/* Product ID */}
+                        <td className="px-3 py-3 whitespace-nowrap">
+                          <span className="font-mono font-black text-xs px-2.5 py-1 rounded-lg bg-[#111111] text-[#F6AF31] tracking-wide">
+                            {displayId}
+                          </span>
                         </td>
 
-                        {/* Part Name, MODEL & DESC snippet */}
-                        <td className="px-4 py-3.5 min-w-[200px] max-w-sm">
-                          <div className="font-extrabold text-xs text-[#111111] leading-snug">
+                        {/* Part Name & Model */}
+                        <td className="px-3 py-3 min-w-[170px] max-w-[260px]">
+                          <div className="font-extrabold text-xs text-[#111111] truncate" title={part.name}>
                             {part.name}
                           </div>
-                          <div className="text-[11px] text-[#111111]/70 font-semibold truncate mt-0.5 flex items-center gap-1">
-                            <span className="text-[#111111]/40 font-bold">MODEL:</span>
-                            <span className="text-amber-900 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/60 font-mono text-[10px]">
-                              {part.model || part.machinery_models[0] || 'Universal'}
-                            </span>
+                          <div className="text-[11px] text-amber-900 font-medium truncate mt-0.5">
+                            Model: <span className="font-semibold">{part.model || part.machinery_models?.[0] || 'Universal'}</span>
                           </div>
-                          {part.description && (
-                            <div className="text-[10px] text-[#111111]/50 truncate mt-0.5">
-                              {part.description}
-                            </div>
-                          )}
                         </td>
 
-                        {/* Brand, Series & Category */}
-                        <td className="px-4 py-3.5">
-                          <div className="flex flex-col gap-0.5 items-start max-w-[190px]">
+                        {/* Brand & Category */}
+                        <td className="px-3 py-3 whitespace-nowrap">
+                          <div className="flex flex-col gap-0.5 items-start">
                             <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${getBrandBadge(part.brand)}`}>
                               {part.brand}
                             </span>
-                            <span className="text-[10px] font-extrabold text-[#111111]/80 truncate">
-                              {part.series || getSeriesForCategory(part.category)}
-                            </span>
-                            <span className="text-[10px] text-slate-500 font-medium truncate">
+                            <span className="text-[10px] text-slate-500 font-medium truncate max-w-[120px]">
                               {part.category}
                             </span>
                           </div>
                         </td>
 
-                        {/* Stock Level, UNIT & Bin Location */}
-                        <td className="px-4 py-3.5 whitespace-nowrap">
-                          <div className="space-y-1">
-                            {/* Stock Quantity & Stepper Controls */}
-                            <div className="flex items-center gap-2">
-                              <div className={`px-2.5 py-1 rounded-lg text-xs font-black font-mono inline-flex items-center gap-1.5 whitespace-nowrap ${
-                                isOutOfStock
-                                  ? 'bg-[#DC2626] text-white shadow-2xs'
-                                  : isLowStock
-                                  ? 'bg-[#DC2626]/15 text-[#DC2626] border border-[#DC2626]/30'
-                                  : 'bg-[#22A06B]/15 text-[#22A06B] border border-[#22A06B]/30'
-                              }`}>
-                                {isOutOfStock ? (
-                                  <span>0 {part.unit || 'PCS'}</span>
-                                ) : isLowStock ? (
-                                  <>
-                                    <AlertTriangle className="w-3 h-3 text-[#DC2626] shrink-0" />
-                                    <span>{part.stock_quantity} {part.unit || 'PCS'}</span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <CheckCircle2 className="w-3 h-3 text-[#22A06B] shrink-0" />
-                                    <span>{part.stock_quantity} {part.unit || 'PCS'} in stock</span>
-                                  </>
-                                )}
-                              </div>
-
-                              {/* Quick Step +/- buttons */}
-                              <div className="inline-flex items-center bg-[#F7F6F3] rounded-lg border border-slate-200/80 p-0.5">
-                                <button
-                                  type="button"
-                                  onClick={(e) => handleQuickStepStock(part, -1, e)}
-                                  className="w-5 h-5 rounded flex items-center justify-center hover:bg-slate-200 text-[#111111] transition"
-                                  title="Decrease quantity by 1"
-                                >
-                                  <Minus className="w-2.5 h-2.5" />
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={(e) => handleQuickStepStock(part, 1, e)}
-                                  className="w-5 h-5 rounded flex items-center justify-center hover:bg-slate-200 text-[#111111] transition"
-                                  title="Increase quantity by 1"
-                                >
-                                  <Plus className="w-2.5 h-2.5" />
-                                </button>
-                              </div>
+                        {/* Stock Level with Stepper */}
+                        <td className="px-3 py-3 whitespace-nowrap">
+                          <div className="flex items-center gap-1.5">
+                            <div className={`px-2 py-0.5 rounded-lg text-xs font-black font-mono inline-flex items-center gap-1 whitespace-nowrap ${
+                              isOutOfStock
+                                ? 'bg-[#DC2626] text-white shadow-2xs'
+                                : isLowStock
+                                ? 'bg-[#DC2626]/15 text-[#DC2626] border border-[#DC2626]/30'
+                                : 'bg-[#22A06B]/15 text-[#22A06B] border border-[#22A06B]/30'
+                            }`}>
+                              {isOutOfStock ? (
+                                <span>0 {part.unit || 'PCS'}</span>
+                              ) : isLowStock ? (
+                                <>
+                                  <AlertTriangle className="w-2.5 h-2.5 text-[#DC2626] shrink-0" />
+                                  <span>{part.stock_quantity} {part.unit || 'PCS'}</span>
+                                </>
+                              ) : (
+                                <>
+                                  <CheckCircle2 className="w-2.5 h-2.5 text-[#22A06B] shrink-0" />
+                                  <span>{part.stock_quantity} {part.unit || 'PCS'}</span>
+                                </>
+                              )}
                             </div>
 
-                            {/* Warehouse Bin & Min threshold */}
-                            <div className="flex items-center gap-2 text-[10px] text-[#111111]/50 font-mono whitespace-nowrap">
-                              <span className="flex items-center gap-1" title={part.warehouse_bin}>
-                                <Warehouse className="w-2.5 h-2.5 text-[#111111]/40 shrink-0" />
-                                {part.warehouse_bin}
-                              </span>
-                              <span className="text-[#111111]/30">&bull;</span>
-                              <span>Min: {part.min_stock_alert} {part.unit || 'PCS'}</span>
+                            {/* Quick Step +/- buttons */}
+                            <div className="inline-flex items-center bg-[#F7F6F3] rounded-md border border-slate-200/80 p-0.5" onClick={e => e.stopPropagation()}>
+                              <button
+                                type="button"
+                                onClick={(e) => handleQuickStepStock(part, -1, e)}
+                                className="w-4.5 h-4.5 rounded flex items-center justify-center hover:bg-slate-200 text-[#111111] transition"
+                                title="Decrease quantity by 1"
+                              >
+                                <Minus className="w-2.5 h-2.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => handleQuickStepStock(part, 1, e)}
+                                className="w-4.5 h-4.5 rounded flex items-center justify-center hover:bg-slate-200 text-[#111111] transition"
+                                title="Increase quantity by 1"
+                              >
+                                <Plus className="w-2.5 h-2.5" />
+                              </button>
                             </div>
                           </div>
                         </td>
 
-                        {/* Unit Price & Tax Column */}
-                        <td className="px-4 py-3.5 whitespace-nowrap">
+                        {/* Unit Price */}
+                        <td className="px-3 py-3 whitespace-nowrap">
                           <div className="font-mono font-black text-xs text-[#111111]">
                             {formatMoney(part.unit_price)}
                           </div>
-                          <div className="flex items-center gap-1.5 mt-0.5">
-                            <span className="text-[10px] text-[#111111]/60 font-mono">
-                              Per {part.unit || 'PCS'}
-                            </span>
-                            <span className="text-[9px] font-bold text-slate-600 bg-slate-100 px-1.5 py-0.2 rounded border border-slate-200">
-                              Tax: {formatMoney(part.tax_amount || 0)}
-                            </span>
+                          <div className="text-[10px] text-[#111111]/50 font-mono">
+                            per {part.unit || 'PCS'}
                           </div>
                         </td>
 
                         {/* Stock Status Badge */}
-                        <td className="px-4 py-3.5 whitespace-nowrap min-w-[120px]">
-                          <span className={`inline-flex items-center justify-center px-3 py-1 rounded-full text-[11px] font-bold tracking-wide whitespace-nowrap ${
+                        <td className="px-3 py-3 whitespace-nowrap">
+                          <span className={`inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wide whitespace-nowrap ${
                             part.status === 'In Stock'
                               ? 'bg-[#22A06B]/15 text-[#22A06B] border border-[#22A06B]/30'
                               : part.status === 'Low Stock'
@@ -974,8 +900,8 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                           </span>
                         </td>
 
-                        {/* Row Actions */}
-                        <td className="px-5 py-3.5 text-right">
+                        {/* Row Actions: Sticky on right */}
+                        <td className="px-4 py-3 text-right whitespace-nowrap sticky right-0 bg-white group-hover:bg-[#F7F6F3] shadow-[-6px_0_12px_rgba(0,0,0,0.04)] z-10 transition-colors">
                           <div className="flex items-center justify-end gap-1.5" onClick={e => e.stopPropagation()}>
                             {/* Direct Sell in POS Button */}
                             <button
@@ -983,7 +909,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                               onClick={() => startSaleWithPart(part)}
                               disabled={part.stock_quantity <= 0}
                               className="px-2.5 py-1 rounded-lg bg-[#F6AF31] hover:bg-[#e5a028] disabled:bg-slate-200 disabled:text-slate-400 text-[#111111] text-[11px] font-black flex items-center gap-1 transition shadow-2xs cursor-pointer disabled:cursor-not-allowed"
-                              title={part.stock_quantity > 0 ? `Sell ${part.name} in POS terminal` : 'Part is out of stock'}
+                              title={part.stock_quantity > 0 ? `Sell ${part.name}` : 'Part is out of stock'}
                             >
                               <ShoppingCart className="w-3 h-3 stroke-[2.5]" />
                               <span>Sell</span>
@@ -1009,7 +935,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                               <Edit3 className="w-3.5 h-3.5" />
                             </button>
 
-                            {/* Delete Button (triggers confirmation dialog) */}
+                            {/* Delete Button */}
                             <button
                               type="button"
                               onClick={() => setDeleteConfirmPart(part)}
@@ -1022,40 +948,29 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                         </td>
                       </tr>
 
-                      {/* Expandable Row Content: Full Product Specifications Drawer */}
+                      {/* Expandable Row Content: Full Product Specifications Drawer (Revealed on Click) */}
                       {isExpanded && (
                         <tr className="bg-amber-50/20 border-b border-slate-200">
                           <td colSpan={8} className="px-6 py-4">
                             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs text-xs">
-                              {/* Product ID, OEM & Registration Date */}
+                              {/* Product ID, Model & Registration Date */}
                               <div className="space-y-1.5">
                                 <div className="text-[10px] font-bold uppercase text-[#111111]/50 tracking-wider">
-                                  Part Numbers & Registration
+                                  Part Identification
                                 </div>
                                 <div className="font-mono text-xs space-y-1">
-                                  <div><span className="text-[#111111]/50">Product ID (Part No):</span> <strong className="text-[#111111] px-1.5 py-0.5 rounded bg-[#111111] text-[#F6AF31]">{displayId}</strong></div>
-                                  <div className="flex items-center gap-1.5">
-                                    <span className="text-[#111111]/50">OEM Part NO:</span>
-                                    <strong className="text-[#111111]">{part.oem_number}</strong>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleCopyOem(part.oem_number)}
-                                      className="text-[10px] text-[#111111]/40 hover:text-[#111111]"
-                                      title="Copy OEM"
-                                    >
-                                      {copiedOem === part.oem_number ? <Check className="w-2.5 h-2.5 text-emerald-600" /> : <Copy className="w-2.5 h-2.5" />}
-                                    </button>
-                                  </div>
+                                  <div><span className="text-[#111111]/50">Product ID:</span> <strong className="text-[#111111] px-1.5 py-0.5 rounded bg-[#111111] text-[#F6AF31]">{displayId}</strong></div>
+                                  <div><span className="text-[#111111]/50">Model:</span> <strong className="text-[#111111]">{part.model || part.machinery_models?.join(', ') || 'Universal'}</strong></div>
                                   <div><span className="text-[#111111]/50">Brand:</span> <strong className="text-[#111111]">{part.brand}</strong></div>
                                   <div><span className="text-[#111111]/50">Date Registered:</span> <strong className="text-[#111111]">{part.registered_date || '2026-03-01'}</strong></div>
                                 </div>
                               </div>
 
-                              {/* MODEL & Specifications (DESC) */}
+                              {/* Compatible Machinery & Description */}
                               <div className="space-y-1.5">
                                 <div className="text-[10px] font-bold uppercase text-[#111111]/50 tracking-wider flex items-center gap-1">
                                   <Cpu className="w-3 h-3 text-[#111111]/40" />
-                                  <span>Machinery Model(s) (MODEL)</span>
+                                  <span>Compatible Machinery</span>
                                 </div>
                                 <div className="flex flex-wrap gap-1">
                                   {part.machinery_models.map((model, idx) => (
@@ -1066,19 +981,19 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                                 </div>
                                 {part.description && (
                                   <div className="pt-2 mt-2 border-t border-slate-100 text-[11px] text-[#111111]/70 leading-relaxed">
-                                    <span className="font-bold text-[#111111]">DESC: </span>
+                                    <span className="font-bold text-[#111111]">Description: </span>
                                     {part.description}
                                   </div>
                                 )}
                               </div>
 
-                              {/* Unit of Measure & Taxes */}
+                              {/* Unit, Taxes & Storage */}
                               <div className="space-y-1.5">
                                 <div className="text-[10px] font-bold uppercase text-[#111111]/50 tracking-wider">
                                   Unit, Taxes & Storage
                                 </div>
                                 <div className="text-xs space-y-1 font-mono">
-                                  <div><span className="text-[#111111]/50">Unit of Measure (UNIT):</span> <strong className="text-[#111111]">{part.unit || 'PCS'}</strong></div>
+                                  <div><span className="text-[#111111]/50">Unit of Measure:</span> <strong className="text-[#111111]">{part.unit || 'PCS'}</strong></div>
                                   <div><span className="text-[#111111]/50">Tax Amount:</span> <strong className="text-amber-900 bg-amber-50 px-1 py-0.2 rounded border border-amber-200/60 text-[10px]">{formatMoney(part.tax_amount || 0)}</strong></div>
                                   <div><span className="text-[#111111]/50">Transport Cost:</span> <strong className="text-[#111111]">{formatMoney(part.transport_cost || 0)}</strong></div>
                                   <div className="text-[11px] text-[#111111]/60 mt-1">
@@ -1090,11 +1005,10 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                                 </div>
                               </div>
 
-                              {/* Commercial Financials (Direct Pricing) */}
+                              {/* Commercial Financials */}
                               <div className="space-y-1.5">
                                 <div className="text-[10px] font-bold uppercase text-[#111111]/50 tracking-wider flex items-center justify-between">
                                   <span>Commercial Pricing</span>
-                                  <span className="text-[9px] text-emerald-700 bg-emerald-50 px-1 rounded border border-emerald-200">Direct 1:1</span>
                                 </div>
                                 <div className="space-y-0.5 font-mono text-xs">
                                   <div><span className="text-[#111111]/50">Cost for Item:</span> <strong className="text-[#111111]">{formatMoney(part.unit_cost)}</strong></div>
@@ -1323,7 +1237,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
 
             {/* Complete Product Details */}
             <div className="space-y-3.5 text-xs">
-              {/* Product ID, OEM Part NO & Date Registered */}
+              {/* Product ID, Model & Date Registered */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="p-3 bg-[#F7F6F3] rounded-2xl border border-slate-200/80">
                   <span className="text-[10px] uppercase font-bold text-[#111111]/50 block">Product ID (Part No)</span>
@@ -1334,18 +1248,10 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
 
                 <div className="p-3 bg-[#F7F6F3] rounded-2xl border border-slate-200/80">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] uppercase font-bold text-[#111111]/50 block">OEM Part NO</span>
-                    <button
-                      type="button"
-                      onClick={() => handleCopyOem(detailModalPart.oem_number)}
-                      className="text-[10px] text-[#111111]/50 hover:text-[#111111] flex items-center gap-0.5"
-                      title="Copy OEM"
-                    >
-                      {copiedOem === detailModalPart.oem_number ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
-                    </button>
+                    <span className="text-[10px] uppercase font-bold text-[#111111]/50 block">Model</span>
                   </div>
                   <div className="font-mono font-bold text-xs text-[#111111] mt-0.5">
-                    {detailModalPart.oem_number}
+                    {detailModalPart.model || detailModalPart.oem_number || detailModalPart.machinery_models?.[0] || 'Universal'}
                   </div>
                 </div>
 
@@ -1376,9 +1282,9 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
               {/* Packaging (UNIT), Taxes & Storage */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="p-3.5 bg-[#F7F6F3] rounded-2xl border border-slate-200/80 space-y-1.5 font-mono">
-                  <span className="text-[10px] uppercase font-bold text-[#111111]/50 font-sans block">Unit & Tax Statutory Parameters</span>
+                  <span className="text-[10px] uppercase font-bold text-[#111111]/50 font-sans block">Unit & Tax Parameters</span>
                   <div className="flex justify-between">
-                    <span className="text-[#111111]/60">Unit of Measure (UNIT):</span>
+                    <span className="text-[#111111]/60">Unit of Measure:</span>
                     <strong className="text-[#111111]">{detailModalPart.unit || 'PCS'}</strong>
                   </div>
                   <div className="flex justify-between">
@@ -1417,20 +1323,17 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
               <div className="p-3.5 bg-[#F7F6F3] rounded-2xl border border-slate-200/80 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] uppercase font-bold text-[#111111]/50">Commercial Financials</span>
-                  <span className="text-[9px] font-mono font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-                    No Conversion Multiplier
-                  </span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 font-mono text-center">
                   <div className="bg-white p-2.5 rounded-xl border border-slate-200">
-                    <span className="text-[9px] text-[#111111]/50 block">Cost for Item (COST)</span>
+                    <span className="text-[9px] text-[#111111]/50 block">Cost for Item</span>
                     <strong className="text-xs text-[#111111]">{formatMoney(detailModalPart.unit_cost)}</strong>
                     <span className="text-[8px] text-slate-400 block mt-0.5">Landed restock cost</span>
                   </div>
                   <div className="bg-amber-50/60 p-2.5 rounded-xl border border-amber-300">
                     <span className="text-[9px] font-bold text-[#111111] block">Unit Price</span>
                     <strong className="text-xs text-[#111111] font-black">{formatMoney(detailModalPart.unit_price)}</strong>
-                    <span className="text-[8px] text-amber-800 block mt-0.5">Systemwide selling price</span>
+                    <span className="text-[8px] text-amber-800 block mt-0.5">Standard price</span>
                   </div>
                   <div className="bg-white p-2.5 rounded-xl border border-slate-200">
                     <span className="text-[9px] text-[#111111]/50 block">Total Bin Asset Value</span>

@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { X, Boxes, Plus, RefreshCw, Cpu, Layers, DollarSign, Calendar, Tag, ShieldCheck } from 'lucide-react';
 import { useInertia, generateNextKaratId } from '../../context/InertiaContext';
 import { SparePart } from '../../types';
-import { SERIES_LIST, getCategoriesForSeries } from '../../data/partTaxonomy';
+import { SERIES_LIST, getCategoriesForSeries, MANUFACTURER_BRANDS } from '../../data/partTaxonomy';
+import { SearchableCombobox } from '../Common/SearchableCombobox';
 
 const COMMON_UNITS = [
   { value: 'PCS', label: 'PCS - Pieces' },
@@ -303,55 +304,36 @@ export const AddPartModal: React.FC = () => {
             {/* Brand, Series & Category */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
-                  Manufacturer Brand *
-                </label>
-                <select
+                <SearchableCombobox
+                  label="Manufacturer Brand"
+                  required
                   value={formData.brand}
-                  onChange={e => setFormData({ ...formData, brand: e.target.value as SparePart['brand'] })}
-                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
-                >
-                  <option value="Caterpillar">Caterpillar (CAT)</option>
-                  <option value="Komatsu">Komatsu</option>
-                  <option value="Volvo">Volvo CE</option>
-                  <option value="Hitachi">Hitachi Heavy</option>
-                  <option value="Hyundai">Hyundai Construction</option>
-                  <option value="Doosan">Doosan / Develon</option>
-                </select>
+                  onChange={val => setFormData({ ...formData, brand: val })}
+                  options={MANUFACTURER_BRANDS.map(b => ({ value: b, label: b }))}
+                  placeholder="Type or select brand (CAT, Komatsu...)"
+                />
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
-                  Series *
-                </label>
-                <select
+                <SearchableCombobox
+                  label="Series"
+                  required
                   value={selectedSeries}
-                  onChange={e => handleSeriesChange(e.target.value)}
-                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
-                >
-                  {SERIES_LIST.map(series => (
-                    <option key={series} value={series}>
-                      {series}
-                    </option>
-                  ))}
-                </select>
+                  onChange={handleSeriesChange}
+                  options={SERIES_LIST.map(s => ({ value: s, label: s }))}
+                  placeholder="Type or select series..."
+                />
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
-                  Category *
-                </label>
-                <select
+                <SearchableCombobox
+                  label="Category"
+                  required
                   value={formData.category}
-                  onChange={e => setFormData({ ...formData, category: e.target.value })}
-                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
-                >
-                  {getCategoriesForSeries(selectedSeries).map(cat => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                </select>
+                  onChange={val => setFormData({ ...formData, category: val })}
+                  options={getCategoriesForSeries(selectedSeries).map(c => ({ value: c, label: c }))}
+                  placeholder="Type or select category..."
+                />
               </div>
             </div>
           </div>
@@ -366,20 +348,14 @@ export const AddPartModal: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {/* Unit of measure */}
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
-                  Unit of Measure (UNIT) *
-                </label>
-                <select
+                <SearchableCombobox
+                  label="Unit of Measure (UNIT)"
+                  required
                   value={formData.unit}
-                  onChange={e => setFormData({ ...formData, unit: e.target.value })}
-                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
-                >
-                  {COMMON_UNITS.map(u => (
-                    <option key={u.value} value={u.value}>
-                      {u.label}
-                    </option>
-                  ))}
-                </select>
+                  onChange={val => setFormData({ ...formData, unit: val })}
+                  options={COMMON_UNITS.map(u => ({ value: u.value, label: u.label }))}
+                  placeholder="Type or select unit (PCS, SET...)"
+                />
               </div>
 
               {/* Tax amount */}
@@ -395,7 +371,7 @@ export const AddPartModal: React.FC = () => {
                     step="any"
                     value={formData.tax_amount}
                     onChange={e => setFormData({ ...formData, tax_amount: parseFloat(e.target.value) || 0 })}
-                    placeholder="Enter tax amount"
+                    placeholder="Enter manual tax amount"
                     className="w-full bg-white border border-slate-200 rounded-xl pl-12 pr-3 py-2 text-xs font-bold text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
                   />
                 </div>
@@ -403,16 +379,19 @@ export const AddPartModal: React.FC = () => {
 
               {/* Date Registered */}
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1 flex items-center gap-1">
-                  <Calendar className="w-3 h-3 text-[#111111]/50" />
-                  <span>Date Registered *</span>
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 flex items-center gap-1">
+                    <Calendar className="w-3 h-3 text-[#111111]/50" />
+                    <span>Date Registered *</span>
+                  </label>
+                  <span className="text-[9px] text-[#22A06B] font-bold">Auto-Captured</span>
+                </div>
                 <input
                   type="date"
                   required
                   value={formData.registered_date}
                   readOnly
-                  className="w-full bg-slate-100 border border-slate-200 rounded-xl px-3 py-2 text-xs text-[#111111] font-mono font-bold focus:outline-none cursor-not-allowed"
+                  className="w-full bg-slate-100 border border-slate-200 rounded-xl px-3 py-2 text-xs text-[#111111] font-mono font-bold focus:outline-none cursor-default"
                 />
               </div>
             </div>

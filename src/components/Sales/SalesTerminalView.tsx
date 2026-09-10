@@ -34,7 +34,7 @@ import {
 import { useInertia } from '../../context/InertiaContext';
 import { SparePart, SaleReceiptItem, SaleReceipt } from '../../types';
 import { ReceiptModal } from './ReceiptModal';
-import { SERIES_LIST, getSeriesForCategory, getCategoriesForSeries } from '../../data/partTaxonomy';
+import { SERIES_LIST, getSeriesForCategory, getCategoriesForSeries, MANUFACTURER_BRANDS } from '../../data/partTaxonomy';
 
 interface CartItem {
   part: SparePart;
@@ -159,7 +159,9 @@ export const SalesTerminalView: React.FC = () => {
     return ['All', ...Array.from(set)];
   }, [parts, selectedSeries]);
 
-  const brands = ['All', 'Caterpillar', 'Komatsu', 'Volvo', 'Hitachi', 'Hyundai', 'Doosan'];
+  const brands = useMemo(() => {
+    return Array.from(new Set(['All', ...MANUFACTURER_BRANDS, ...parts.map(p => p.brand)]));
+  }, [parts]);
 
   // Add Part to Cart
   const handleAddToCart = (part: SparePart) => {
@@ -280,6 +282,7 @@ export const SalesTerminalView: React.FC = () => {
       quantity: item.quantity,
       unit_price: item.custom_unit_price,
       total_price: item.custom_unit_price * item.quantity,
+      model: item.part.model || item.part.machinery_models?.join(', '),
       warehouse_bin: item.part.warehouse_bin,
     }));
 
@@ -414,14 +417,11 @@ export const SalesTerminalView: React.FC = () => {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-xl sm:text-2xl font-black text-[#111111] tracking-tight">
-                  Point of Sale & Selling Terminal
+                  Shop
                 </h1>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#22A06B]/15 text-[#22A06B]">
-                  Live Register
-                </span>
               </div>
               <p className="text-xs text-[#111111]/60 mt-0.5">
-                Select parts from catalog, verify warehouse stock, apply fleet discounts, and manage real-time sold parts history.
+                Browse products, verify stock, manage customer cart, and complete orders.
               </p>
             </div>
           </div>
@@ -556,7 +556,7 @@ export const SalesTerminalView: React.FC = () => {
                   }}
                   className="w-full bg-[#F7F6F3] hover:bg-slate-100/80 border border-slate-200/90 rounded-xl px-3 py-2 text-xs font-bold text-[#111111] outline-none cursor-pointer"
                 >
-                  <option value="All">All 9 Series</option>
+                  <option value="All">All Series</option>
                   {SERIES_LIST.map(s => (
                     <option key={s} value={s}>{s}</option>
                   ))}
@@ -640,14 +640,10 @@ export const SalesTerminalView: React.FC = () => {
                           </span>
                         </div>
 
-                        {/* OEM Code */}
-                        <div className="text-[10px] font-mono text-[#111111]/60 mt-1 flex items-center gap-1.5 truncate">
-                          <span>OEM: {part.oem_number}</span>
-                        </div>
-
-                        {/* Bin Location */}
-                        <div className="text-[9px] text-[#111111]/50 mt-0.5 flex items-center gap-1 truncate">
-                          <span className="font-semibold text-[#111111]/70">Bin:</span> {part.warehouse_bin}
+                        {/* Machinery Model */}
+                        <div className="text-[10px] text-[#111111]/70 mt-1 flex items-center gap-1 truncate font-medium">
+                          <span className="font-bold text-[#111111]/80">Model:</span>
+                          <span className="truncate">{part.model || (part.machinery_models && part.machinery_models.length > 0 ? part.machinery_models.join(', ') : 'Heavy Fleet')}</span>
                         </div>
                       </div>
 
@@ -721,7 +717,6 @@ export const SalesTerminalView: React.FC = () => {
                 </div>
                 <div>
                   <h2 className="text-base font-extrabold text-[#111111]">Current Customer Order</h2>
-                  <p className="text-[10px] text-[#111111]/50">Invoice & Cash Register</p>
                 </div>
               </div>
 
@@ -807,11 +802,11 @@ export const SalesTerminalView: React.FC = () => {
                     onChange={(e) => setPaymentMethod(e.target.value as any)}
                     className="w-full bg-[#F7F6F3] border border-slate-200 rounded-xl px-3 py-2 text-xs text-[#111111] font-bold outline-none focus:border-[#111111]"
                   >
-                    <option value="Cash">💵 Cash</option>
-                    <option value="Mobile Money">📱 Mobile Money (MTN / Airtel)</option>
-                    <option value="Bank Wire">🏦 Bank Wire / EFT Transfer</option>
-                    <option value="Card">💳 Credit / Debit Card</option>
-                    <option value="Credit Account">📑 Fleet Credit / On Account</option>
+                    <option value="Cash">Cash</option>
+                    <option value="Mobile Money">Mobile Money (MTN / Airtel)</option>
+                    <option value="Bank Wire">Bank Wire / EFT Transfer</option>
+                    <option value="Card">Credit / Debit Card</option>
+                    <option value="Credit Account">Fleet Credit / On Account</option>
                   </select>
                 </div>
               </div>
@@ -1019,7 +1014,7 @@ export const SalesTerminalView: React.FC = () => {
                   <div>
                     <span className="text-sm font-black uppercase text-[#111111]">Grand Total Due:</span>
                     <span className="text-[10px] text-[#111111]/50 block font-medium">
-                      Exact item pricing • Total across {cart.reduce((a, b) => a + b.quantity, 0)} items
+                      Total across {cart.reduce((a, b) => a + b.quantity, 0)} items
                     </span>
                   </div>
                   <span className="text-2xl font-black font-mono text-[#111111]">
@@ -1130,7 +1125,7 @@ export const SalesTerminalView: React.FC = () => {
 
                   <div>
                     <h4 className="font-extrabold text-sm text-[#111111] leading-tight">{item.name}</h4>
-                    <div className="text-[11px] text-slate-500 font-mono mt-0.5">OEM: {item.oem_number}</div>
+                    <div className="text-[11px] text-slate-500 font-medium mt-0.5">Model: {item.model || 'Heavy Machinery'}</div>
                   </div>
 
                   <div className="flex items-center justify-between text-xs bg-[#F7F6F3] p-2.5 rounded-xl border border-slate-200/70">
@@ -1284,7 +1279,7 @@ export const SalesTerminalView: React.FC = () => {
       )}
 
       {/* ===================== TAB 3: RECEIPTS ARCHIVE ===================== */}
-      {(activeTab === 'receipts' || activeTab === 'history') && (
+      {activeTab === 'receipts' && (
         <div className="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xs space-y-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-slate-100">
             <div>

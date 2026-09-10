@@ -13,8 +13,9 @@ import {
   X,
   Coins,
   Check,
-  Receipt
-  ,Sun,
+  Receipt,
+  ShoppingBag,
+  Sun,
   Moon
 } from 'lucide-react';
 import { useInertia } from '../../context/InertiaContext';
@@ -99,7 +100,7 @@ export const Header: React.FC = () => {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search spare parts, SKU, OEM numbers, machinery models..."
+            placeholder="Search spare parts, SKU, model numbers, machinery models..."
             className="w-full bg-[#F7F6F3] hover:bg-slate-100/80 focus:bg-white border border-slate-200/90 focus:border-[#111111] rounded-full pl-10 pr-9 py-2 text-xs text-[#111111] placeholder:text-[#111111]/40 outline-none transition-all shadow-2xs"
           />
           {searchQuery && (
@@ -126,15 +127,14 @@ export const Header: React.FC = () => {
           {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
         </button>
 
-        {/* Sell / POS Terminal Button */}
+        {/* Shop Button */}
         <button
           onClick={() => setActiveView('pos')}
           className="py-2 px-3 sm:px-3.5 rounded-full bg-[#111111] hover:bg-black text-white text-xs font-extrabold flex items-center gap-1.5 shadow-xs transition active:scale-95 cursor-pointer"
-          title="Open Point of Sale / Selling Terminal"
+          title="Open Shop"
         >
-          <Receipt className="w-3.5 h-3.5 text-[#F6AF31]" />
-          <span className="hidden sm:inline">Sell / POS</span>
-          <span className="sm:hidden">Sell</span>
+          <ShoppingBag className="w-3.5 h-3.5 text-[#F6AF31]" />
+          <span>Shop</span>
         </button>
 
         {/* Add New Part Button */}

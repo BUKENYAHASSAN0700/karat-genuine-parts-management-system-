@@ -55,7 +55,7 @@ Equipment: ${receipt.equipment_model || 'N/A'}
 Cashier: ${receipt.cashier_name}
 ----------------------------------------
 ITEMS SOLD:
-${receipt.items.map((it, idx) => `${idx + 1}. [${it.part_number}] ${it.name} (${it.oem_number}) - ${it.quantity}x @ ${formatMoney(it.unit_price)} = ${formatMoney(it.total_price)}`).join('\n')}
+${receipt.items.map((it, idx) => `${idx + 1}. [${it.part_number}] ${it.name} (${it.model || it.oem_number || 'Model'}) - ${it.quantity}x @ ${formatMoney(it.unit_price)} = ${formatMoney(it.total_price)}`).join('\n')}
 ----------------------------------------
 Subtotal: ${formatMoney(receipt.subtotal)}
 Discount: -${formatMoney(receipt.discount_amount)}
@@ -65,7 +65,7 @@ Payment Method: ${receipt.payment_method}
 Payment Status: ${receipt.payment_status}
 ${receipt.notes ? `Notes: ${receipt.notes}\n` : ''}========================================
 Thank you for trusting Karat Heavy Machinery Spare Parts!
-30-Day Warranty on Genuine OEM Parts.
+30-Day Warranty on All Parts.
 `;
     navigator.clipboard.writeText(summary.trim());
     setCopied(true);
@@ -141,7 +141,7 @@ Thank you for trusting Karat Heavy Machinery Spare Parts!
                     </span>
                   </div>
                   <p className="text-xs font-bold text-[#111111]/70 mt-1 uppercase tracking-wider">
-                    Genuine OEM Spare Parts & Fleet Logistics
+                    Heavy Machinery Spare Parts & Fleet Logistics
                   </p>
                   <p className="text-[11px] text-[#111111]/60 mt-1">
                     Plot 44, Jinja Road Industrial Area • Kampala, Uganda
@@ -244,12 +244,9 @@ Thank you for trusting Karat Heavy Machinery Spare Parts!
                       <td className="py-2.5 font-mono text-[10px] text-[#111111]/40">{index + 1}</td>
                       <td className="py-2.5 pr-2">
                         <div className="font-bold text-[#111111]">{item.name}</div>
-                        <div className="text-[10px] font-mono text-[#111111]/60 flex items-center gap-2 mt-0.5">
+                        <div className="text-[10px] text-[#111111]/60 flex items-center gap-2 mt-0.5">
                           <span className="font-bold text-[#111111]">{item.part_number}</span>
-                          <span>• OEM: {item.oem_number}</span>
-                          {item.warehouse_bin && (
-                            <span className="text-[#111111]/40">({item.warehouse_bin})</span>
-                          )}
+                          {item.model && <span>• Model: {item.model}</span>}
                         </div>
                       </td>
                       <td className="py-2.5 text-[11px] font-medium text-[#111111]/80">

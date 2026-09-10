@@ -11,6 +11,35 @@ export interface SeriesDefinition {
   categories: string[];
 }
 
+export const MANUFACTURER_BRANDS = [
+  'Caterpillar',
+  'Komatsu',
+  'Volvo',
+  'Hitachi',
+  'Hyundai',
+  'Doosan',
+  'JCB',
+  'Liebherr',
+  'Sany',
+  'XCMG',
+  'Case',
+  'Bobcat',
+  'Kobelco',
+  'Kubota',
+  'Cummins',
+  'Perkins',
+  'Yanmar',
+  'Isuzu',
+  'Deutz',
+  'Bosch Rexroth',
+  'Donaldson',
+  'Berco',
+  'ITR',
+  'Parker'
+] as const;
+
+export type ManufacturerBrand = typeof MANUFACTURER_BRANDS[number] | string;
+
 export const PART_TAXONOMY: Record<string, string[]> = {
   'Motor Series': [
     'Model List',

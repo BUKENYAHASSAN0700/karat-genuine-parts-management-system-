@@ -25,7 +25,7 @@ export const INITIAL_SPARE_PARTS: SparePart[] = [
     min_stock_alert: 2,
     unit_cost: 4200,
     unit_price: 6850,
-    warehouse_bin: 'Aisle 3 - Bay B - Level 2',
+    warehouse_bin: 'Yard 4 - Shelf B',
     status: 'In Stock',
   },
   {
@@ -724,7 +724,7 @@ export const INITIAL_RECEIPTS: import('../types').SaleReceipt[] = [
         quantity: 1,
         unit_price: 6850,
         total_price: 6850,
-        warehouse_bin: 'Aisle 3 - Bay B - Level 2',
+        warehouse_bin: 'Yard 4 - Shelf B',
       }
     ],
     subtotal: 6850,

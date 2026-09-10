@@ -149,7 +149,7 @@ export const GoodsReceivedNoteModal: React.FC<GoodsReceivedNoteModalProps> = ({
                 <tr>
                   <th className="py-2.5 px-3 text-center w-10">#</th>
                   <th className="py-2.5 px-3">Part Description & Specification</th>
-                  <th className="py-2.5 px-3">OEM / Part #</th>
+                  <th className="py-2.5 px-3">Model / Part #</th>
                   <th className="py-2.5 px-3 text-center">Allocated Bin</th>
                   <th className="py-2.5 px-3 text-center">Qty Ordered</th>
                   <th className="py-2.5 px-3 text-center">Qty Received</th>
@@ -174,7 +174,7 @@ export const GoodsReceivedNoteModal: React.FC<GoodsReceivedNoteModalProps> = ({
                         {item.part_number}
                         {item.oem_number && (
                           <span className="text-[10px] text-slate-400 block font-normal">
-                            OEM: {item.oem_number}
+                            Model: {item.oem_number}
                           </span>
                         )}
                       </td>

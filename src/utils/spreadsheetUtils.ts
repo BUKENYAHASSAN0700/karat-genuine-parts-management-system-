@@ -54,7 +54,7 @@ export const SAMPLE_TEMPLATE_DATA = [
     'Mini Alert Stock': 2,
     'Unit Price USD': 3850,
     'Compatible Machinery': 'CAT 349D, CAT 349E, CAT 336D',
-    'Warehouse Bin Location': 'Aisle 3 - Bay B - Level 2',
+    'Warehouse Bin Location': 'Yard 4 - Shelf B',
     'Product ID (Optional)': 'KA113',
   },
   {
@@ -276,7 +276,7 @@ export const parseAndValidateSpreadsheet = (
       const headerText = String(cell.v).toLowerCase().trim().replace(/[\s_-]+/g, '');
       if (headerText.includes('partname') || headerText.includes('productname') || headerText === 'name' || headerText.includes('itemname')) {
         colMap['name'] = C;
-      } else if (headerText.includes('oem') || headerText.includes('oempart') || headerText.includes('oemnumber') || headerText.includes('oemcode')) {
+      } else if (headerText.includes('model') || headerText.includes('oem') || headerText.includes('oempart') || headerText.includes('oemnumber') || headerText.includes('oemcode')) {
         colMap['oem_number'] = C;
       } else if (headerText.includes('brand') || headerText.includes('manufacturer') || headerText.includes('make')) {
         colMap['brand'] = C;
@@ -366,14 +366,14 @@ export const parseAndValidateSpreadsheet = (
       });
     }
 
-    // 2. OEM Number
+    // 2. OEM / Model Number
     const oemData = getCellValue(colIndexOem);
     if (!oemData.strVal) {
       errors.push({
         productName,
         cell: oemData.cellRef,
-        missingField: 'OEM Code / OEM Part #',
-        formattedMessage: `${productName} in cell ${oemData.cellRef} is missing OEM Code / OEM Part #`,
+        missingField: 'Model Number',
+        formattedMessage: `${productName} in cell ${oemData.cellRef} is missing Model Number`,
         rowNumber,
         columnKey: oemData.cellRef.replace(/[0-9]/g, ''),
       });

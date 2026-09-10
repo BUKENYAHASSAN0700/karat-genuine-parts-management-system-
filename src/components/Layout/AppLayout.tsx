@@ -7,9 +7,10 @@ import { InventoryPreview } from '../Inventory/InventoryPreview';
 import { OEMRestockView } from '../Restock/OEMRestockView';
 import { SalesTerminalView } from '../Sales/SalesTerminalView';
 import { StoreSettingsView } from '../Settings/StoreSettingsView';
+import { InquiriesOrdersView } from '../Inquiries/InquiriesOrdersView';
 import { AddPartModal } from '../Inventory/AddPartModal';
 import { LoginView } from '../Auth/LoginView';
-import { CheckCircle2, AlertCircle, X } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
 
 export const AppLayout: React.FC = () => {
   const { isAuthenticated, activeView, props, clearFlash } = useInertia();
@@ -53,6 +54,9 @@ export const AppLayout: React.FC = () => {
       case 'sell':
       case 'sales':
         return <SalesTerminalView />;
+      case 'inquiries':
+      case 'orders':
+        return <InquiriesOrdersView />;
       case 'purchases':
       case 'restock':
         return <OEMRestockView />;
@@ -80,6 +84,16 @@ export const AppLayout: React.FC = () => {
         <div className="fixed top-5 right-5 z-50 bg-[#DC2626] text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 text-xs font-semibold animate-in fade-in">
           <AlertCircle className="w-4 h-4 text-white" />
           <span>{flash.error}</span>
+          <button onClick={clearFlash} className="ml-2 text-white/70 hover:text-white">
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
+      {flash.info && (
+        <div className="fixed top-5 right-5 z-50 bg-[#111111] text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 text-xs font-semibold animate-in fade-in border border-[#F6AF31]/50">
+          <Info className="w-4 h-4 text-[#F6AF31]" />
+          <span>{flash.info}</span>
           <button onClick={clearFlash} className="ml-2 text-white/70 hover:text-white">
             <X className="w-3.5 h-3.5" />
           </button>

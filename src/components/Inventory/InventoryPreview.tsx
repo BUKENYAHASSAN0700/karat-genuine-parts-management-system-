@@ -25,14 +25,14 @@ export const InventoryPreview: React.FC = () => {
         <div className="space-y-1.5">
           <div className="flex items-center gap-2.5 flex-wrap">
             <h1 className="text-2xl font-black text-[#111111] tracking-tight font-mono">
-              Karat Heavy Machinery Spare Parts Inventory
+              Inventory
             </h1>
             <span className="px-3 py-0.5 rounded-full text-xs font-bold bg-[#F6AF31]/20 text-[#111111] border border-[#F6AF31]/30">
               {parts.length} Heavy SKUs
             </span>
           </div>
           <p className="text-xs text-[#111111]/60">
-            Real-time multi-brand catalog for Caterpillar, Komatsu, Volvo, Hitachi machinery components and warehouse bins.
+            Real-time catalog for heavy machinery spare parts and stock management.
           </p>
         </div>
 

@@ -178,7 +178,7 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({ isOpen, onClos
                 </span>
               </div>
               <p className="text-[11px] text-[#111111]/50">
-                Upload multiple spare parts with initial stock, categories, OEM codes, and commercial pricing at once
+                Upload multiple spare parts with initial stock, categories, model numbers, and commercial pricing at once
               </p>
             </div>
           </div>
@@ -262,7 +262,7 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({ isOpen, onClos
                 </p>
               </div>
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-slate-200 text-[10px] font-mono text-[#111111]/70">
-                <span>Required columns: Name, OEM #, Brand, Category, Specs, Stock (&ge;1), Alert, Price, Models, Bin</span>
+                <span>Required columns: Name, Model #, Brand, Category, Specs, Stock (&ge;1), Alert, Price, Models, Bin</span>
               </div>
             </div>
           </div>
@@ -307,7 +307,7 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({ isOpen, onClos
                   Scanning spreadsheet cells and validating product specifications...
                 </div>
                 <p className="text-[11px] text-[#111111]/50">
-                  Checking required fields, OEM codes, initial stock quantities, and machine compatibility.
+                  Checking required fields, model numbers, initial stock quantities, and machine compatibility.
                 </p>
               </div>
             )}
@@ -340,7 +340,7 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({ isOpen, onClos
                           </div>
 
                           <p className="text-xs text-rose-700 leading-relaxed pt-0.5">
-                            The upload has been terminated. KARAT enforces 100% data integrity before adding items to live inventory. Every product must have valid, complete specifications (Name, OEM #, Brand, Category, Initial Stock &ge; 1, Mini Alert &ge; 1, Price &gt; 0, Models, and Bin Location).
+                            The upload has been terminated. KARAT enforces 100% data integrity before adding items to live inventory. Every product must have valid, complete specifications (Name, Model #, Brand, Category, Initial Stock &ge; 1, Mini Alert &ge; 1, Price &gt; 0, Models, and Bin Location).
                           </p>
                         </div>
                       </div>
@@ -421,7 +421,7 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({ isOpen, onClos
                           </span>
                         </div>
                         <p className="text-xs text-emerald-800">
-                          Every product row was validated with real information, valid stock levels, categories, OEM specifications, and commercial pricing.
+                          Every product row was validated with real information, valid stock levels, categories, model specifications, and commercial pricing.
                         </p>
                       </div>
                     </div>
@@ -482,7 +482,7 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({ isOpen, onClos
                           <thead className="bg-[#F7F6F3]/60 text-[10px] uppercase font-mono text-[#111111]/60 sticky top-0 border-b border-slate-100">
                             <tr>
                               <th className="px-3 py-2">Row</th>
-                              <th className="px-3 py-2">Part Name & OEM</th>
+                              <th className="px-3 py-2">Part Name & Model</th>
                               <th className="px-3 py-2">Brand & Category</th>
                               <th className="px-3 py-2">Stock / Alert</th>
                               <th className="px-3 py-2">Price</th>
@@ -495,7 +495,7 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({ isOpen, onClos
                                 <td className="px-3 py-2 text-[#111111]/40">#{item.rawRowNumber}</td>
                                 <td className="px-3 py-2">
                                   <div className="font-bold text-[#111111] font-sans truncate max-w-xs">{item.name}</div>
-                                  <div className="text-[10px] text-[#111111]/50">OEM: {item.oem_number}</div>
+                                  <div className="text-[10px] text-[#111111]/50">Model: {item.oem_number}</div>
                                 </td>
                                 <td className="px-3 py-2">
                                   <div className="flex items-center gap-1.5 flex-wrap">

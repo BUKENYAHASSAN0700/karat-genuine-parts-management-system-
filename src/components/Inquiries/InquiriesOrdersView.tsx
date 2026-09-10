@@ -116,7 +116,8 @@ export const InquiriesOrdersView: React.FC = () => {
         (order.customer_company && order.customer_company.toLowerCase().includes(q)) ||
         order.equipment_model.toLowerCase().includes(q) ||
         order.delivery_site.toLowerCase().includes(q) ||
-        (order.driver_name && order.driver_name.toLowerCase().includes(q));
+        (order.driver_name && order.driver_name.toLowerCase().includes(q)) ||
+        (order.items && order.items.some(it => it.name.toLowerCase().includes(q) || (it.part_number && it.part_number.toLowerCase().includes(q))));
 
       const matchesStatus = 
         orderStatusFilter === 'all' || 
@@ -695,7 +696,7 @@ export const InquiriesOrdersView: React.FC = () => {
                     <thead>
                       <tr className="border-b border-slate-200 text-[10px] uppercase text-slate-500 font-bold">
                         <th className="py-2 px-3">Item Description</th>
-                        <th className="py-2 px-3">Part # / OEM</th>
+                        <th className="py-2 px-3">Part # / Model</th>
                         <th className="py-2 px-3 text-center">Qty</th>
                         <th className="py-2 px-3 text-right">Unit Price</th>
                         <th className="py-2 px-3 text-right">Line Total</th>

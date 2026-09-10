@@ -13,6 +13,7 @@ export interface User {
 export interface InertiaFlashProps {
   success: string | null;
   error: string | null;
+  info?: string | null;
 }
 
 export interface InertiaAuthProps {
@@ -37,7 +38,7 @@ export interface SparePart {
   category: string;
   machinery_models: string[];
   model?: string;
-  brand: 'Caterpillar' | 'Komatsu' | 'Volvo' | 'Hitachi' | 'Hyundai' | 'Doosan';
+  brand: string;
   unit?: string; // Unit of measure: PCS, SET, KIT, ASSY, PAIR, MTR, KG, BOX, etc.
   taxes?: string; // e.g. "18% VAT", "0% Exempt"
   tax_rate?: number;
@@ -47,6 +48,10 @@ export interface SparePart {
   min_stock_alert: number;
   unit_cost: number; // Cost for Item
   unit_price: number; // Selling Price put on item
+  selling_price?: number; // Optional alias for unit_price
+  unit_cost_usd?: number; // Optional alias for unit_cost
+  retail_price_usd?: number; // Optional alias for unit_price
+  location?: string; // Optional alias for warehouse_bin
   registered_date?: string; // Date registered in the system (YYYY-MM-DD)
   warehouse_bin: string;
   status: 'In Stock' | 'Low Stock' | 'Out of Stock' | 'On Order';
@@ -203,6 +208,7 @@ export interface SaleReceiptItem {
   quantity: number;
   unit_price: number;
   total_price: number;
+  model?: string;
   warehouse_bin?: string;
 }
 

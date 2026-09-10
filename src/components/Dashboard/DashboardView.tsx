@@ -632,7 +632,7 @@ export const DashboardView: React.FC = () => {
 
                 <div>
                   <h4 className="font-extrabold text-sm text-[#111111] leading-tight">{item.name}</h4>
-                  <div className="text-[11px] text-slate-500 font-mono mt-0.5">OEM: {item.oem_number}</div>
+                  <div className="text-[11px] text-slate-500 font-medium mt-0.5">Model: {item.model || 'Heavy Machinery'}</div>
                 </div>
 
                 <div className="flex items-center justify-between text-xs bg-[#F7F6F3] p-2.5 rounded-xl border border-slate-200/70">
@@ -674,7 +674,7 @@ export const DashboardView: React.FC = () => {
               <tr className="border-b border-slate-200 text-[10px] uppercase font-extrabold text-[#111111]/60 tracking-wider">
                 <th className="py-3 px-3">KA ID</th>
                 <th className="py-3 px-3">Sold Spare Part</th>
-                <th className="py-3 px-3">OEM / Brand</th>
+                <th className="py-3 px-3">Brand / Model</th>
                 <th className="py-3 px-3 text-center">Units Sold</th>
                 <th className="py-3 px-3 text-right">Sale Total</th>
                 <th className="py-3 px-3">Customer / Fleet</th>

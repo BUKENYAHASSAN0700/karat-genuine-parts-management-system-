@@ -501,7 +501,7 @@ export const OEMRestockView: React.FC = () => {
 
                     <div className="font-bold text-[#111111]">{item.name}</div>
                     {item.oem_number && (
-                      <div className="text-[10px] text-slate-400 font-mono">OEM: {item.oem_number}</div>
+                      <div className="text-[10px] text-slate-400 font-mono">Model: {item.oem_number}</div>
                     )}
 
                     <div className="flex items-center justify-between text-[11px] pt-1 border-t border-slate-200/60">
@@ -525,7 +525,7 @@ export const OEMRestockView: React.FC = () => {
                     <thead className="bg-slate-50 text-slate-500 text-[10px] uppercase tracking-wider border-b border-slate-200">
                       <tr>
                         <th className="py-2.5 px-3">Part Description</th>
-                        <th className="py-2.5 px-3">Part # / OEM</th>
+                        <th className="py-2.5 px-3">Part # / Model</th>
                         <th className="py-2.5 px-3 text-center">Allocated Bin</th>
                         <th className="py-2.5 px-3 text-center">Qty Ordered</th>
                         <th className="py-2.5 px-3 text-center">Status Ingest</th>
@@ -543,7 +543,7 @@ export const OEMRestockView: React.FC = () => {
                             {item.part_number}
                             {item.oem_number && (
                               <span className="text-[10px] text-slate-400 block font-normal">
-                                OEM: {item.oem_number}
+                                Model: {item.oem_number}
                               </span>
                             )}
                           </td>

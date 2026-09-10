@@ -11,7 +11,9 @@ import {
   SaleReceipt,
   OEMSupplier,
   OEMPurchaseOrder,
-  OEMPurchaseOrderItem
+  OEMPurchaseOrderItem,
+  InquiryItem,
+  CommercialOrder
 } from '../types';
 import { 
   INITIAL_OWNER, 
@@ -20,7 +22,9 @@ import {
   INITIAL_CLIENTS,
   INITIAL_RECEIPTS,
   INITIAL_OEM_SUPPLIERS,
-  INITIAL_OEM_ORDERS
+  INITIAL_OEM_ORDERS,
+  INITIAL_INQUIRIES,
+  INITIAL_ORDERS
 } from '../data/initialData';
 import { getSeriesForCategory } from '../data/partTaxonomy';
 
@@ -94,7 +98,16 @@ interface InertiaContextType {
   updateOEMOrderStatus: (id: string, status: OEMPurchaseOrder['status'], extra?: { tracking_number?: string; eta?: string; notes?: string }) => void;
   receiveOEMOrderShipment: (orderId: string, receiverName?: string) => void;
   deleteOEMOrder: (id: string) => void;
-  setFlashMessage: (type: 'success' | 'error', message: string) => void;
+  inquiries: InquiryItem[];
+  orders: CommercialOrder[];
+  addInquiry: (inquiry: Omit<InquiryItem, 'id' | 'created_at'>) => InquiryItem;
+  updateInquiryStatus: (id: string, status: InquiryItem['status'], extra?: Partial<InquiryItem>) => void;
+  deleteInquiry: (id: string) => void;
+  convertInquiryToOrder: (inquiryId: string) => CommercialOrder;
+  addOrder: (order: Omit<CommercialOrder, 'id' | 'date'>) => CommercialOrder;
+  updateOrderStatus: (id: string, status: CommercialOrder['fulfillment_status'], extra?: Partial<CommercialOrder>) => void;
+  deleteOrder: (id: string) => void;
+  setFlashMessage: (type: 'success' | 'error' | 'info', message: string) => void;
   clearFlash: () => void;
 }
 
@@ -283,6 +296,39 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
       localStorage.setItem('karat_oem_orders', JSON.stringify(oemOrders));
     } catch {}
   }, [oemOrders]);
+
+  const [inquiries, setInquiries] = useState<InquiryItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('karat_inquiries');
+      return saved ? JSON.parse(saved) : INITIAL_INQUIRIES;
+    } catch {
+      return INITIAL_INQUIRIES;
+    }
+  });
+
+  const [orders, setOrders] = useState<CommercialOrder[]>(() => {
+    try {
+      const saved = localStorage.getItem('karat_orders');
+      return saved ? JSON.parse(saved) : INITIAL_ORDERS;
+    } catch {
+      return INITIAL_ORDERS;
+    }
+  });
+
+  // Sync inquiries to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('karat_inquiries', JSON.stringify(inquiries));
+    } catch {}
+  }, [inquiries]);
+
+  // Sync orders to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('karat_orders', JSON.stringify(orders));
+    } catch {}
+  }, [orders]);
+
   const [clients] = useState<ClientAccount[]>(INITIAL_CLIENTS);
   const [addModalOpen, setAddModalOpen] = useState<boolean>(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
@@ -295,6 +341,7 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [flash, setFlash] = useState<InertiaFlashProps>({
     success: null,
     error: null,
+    info: null,
   });
 
   const authProps: InertiaAuthProps = {
@@ -308,21 +355,22 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     errors: {},
   };
 
-  const setFlashMessage = (type: 'success' | 'error', message: string) => {
+  const setFlashMessage = (type: 'success' | 'error' | 'info', message: string) => {
     setFlash({
       success: type === 'success' ? message : null,
       error: type === 'error' ? message : null,
+      info: type === 'info' ? message : null,
     });
   };
 
   const clearFlash = () => {
-    setFlash({ success: null, error: null });
+    setFlash({ success: null, error: null, info: null });
   };
 
   useEffect(() => {
-    if (flash.success || flash.error) {
+    if (flash.success || flash.error || flash.info) {
       const timer = setTimeout(() => {
-        setFlash({ success: null, error: null });
+        setFlash({ success: null, error: null, info: null });
       }, 5000);
       return () => clearTimeout(timer);
     }
@@ -384,7 +432,7 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
       transport_cost: Number(newPartData.transport_cost) || 0,
       unit_cost: Number(newPartData.unit_cost) || 0,
       unit_price: Number(newPartData.unit_price) || 0,
-      registered_date: newPartData.registered_date || new Date().toISOString().slice(0, 10),
+      registered_date: new Date().toISOString().slice(0, 10),
       model: newPartData.model || (newPartData.machinery_models?.join(', ') || ''),
     };
     setParts(prev => [newPart, ...prev]);
@@ -432,7 +480,7 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
         transport_cost: Number(item.transport_cost) || 0,
         unit_cost: Number(item.unit_cost) || 0,
         unit_price: Number(item.unit_price) || 0,
-        registered_date: item.registered_date || new Date().toISOString().slice(0, 10),
+        registered_date: new Date().toISOString().slice(0, 10),
         model: item.model || (item.machinery_models?.join(', ') || ''),
         stock_quantity: stockQty,
         min_stock_alert: minAlert,
@@ -624,6 +672,79 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setFlashMessage('success', `OEM Order ${id} deleted.`);
   };
 
+  const addInquiry = (inquiryData: Omit<InquiryItem, 'id' | 'created_at'>): InquiryItem => {
+    const nextNum = 9480 + inquiries.length + Math.floor(Math.random() * 10);
+    const newInquiry: InquiryItem = {
+      ...inquiryData,
+      id: `INQ-${nextNum}`,
+      created_at: new Date().toISOString().split('T')[0],
+      status: inquiryData.status || 'Draft',
+    };
+    setInquiries(prev => [newInquiry, ...prev]);
+    setFlashMessage('success', `Inquiry ${newInquiry.id} created successfully.`);
+    return newInquiry;
+  };
+
+  const updateInquiryStatus = (id: string, status: InquiryItem['status'], extra?: Partial<InquiryItem>) => {
+    setInquiries(prev => prev.map(inq => inq.id === id ? { ...inq, status, ...extra } : inq));
+    setFlashMessage('success', `Inquiry ${id} status updated to ${status}.`);
+  };
+
+  const deleteInquiry = (id: string) => {
+    setInquiries(prev => prev.filter(inq => inq.id !== id));
+    setFlashMessage('success', `Inquiry ${id} deleted.`);
+  };
+
+  const convertInquiryToOrder = (inquiryId: string): CommercialOrder => {
+    const inq = inquiries.find(i => i.id === inquiryId);
+    const orderNum = `ORD-2026-0${88 + orders.length}`;
+    const newOrder: CommercialOrder = {
+      id: orderNum,
+      po_reference: `PO-${inq?.customer_company?.substring(0, 5).toUpperCase() || 'CUST'}-${Math.floor(1000 + Math.random() * 9000)}`,
+      inquiry_id: inquiryId,
+      customer_name: inq?.customer_name || 'Customer',
+      customer_company: inq?.customer_company,
+      customer_phone: inq?.customer_phone,
+      customer_email: inq?.customer_email,
+      equipment_model: inq?.equipment_model || 'Universal Fleet',
+      delivery_site: inq?.delivery_site || 'Kampala Depot (Yard 4 - Industrial Area)',
+      delivery_method: 'Warehouse Pickup (Yard 4 - Industrial Area)',
+      items: inq?.items || [],
+      subtotal: inq?.quoted_amount || 0,
+      total_amount: inq?.quoted_amount || 0,
+      payment_status: '30-Day Credit Account',
+      fulfillment_status: 'Processing & Packing',
+      date: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+      notes: inq?.notes,
+    };
+    setOrders(prev => [newOrder, ...prev]);
+    setInquiries(prev => prev.map(i => i.id === inquiryId ? { ...i, status: 'Converted to Order', converted_order_id: newOrder.id } : i));
+    setFlashMessage('success', `Inquiry ${inquiryId} converted to Commercial Order ${newOrder.id}.`);
+    return newOrder;
+  };
+
+  const addOrder = (orderData: Omit<CommercialOrder, 'id' | 'date'>): CommercialOrder => {
+    const orderNum = `ORD-2026-0${89 + orders.length}`;
+    const newOrder: CommercialOrder = {
+      ...orderData,
+      id: orderNum,
+      date: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+    };
+    setOrders(prev => [newOrder, ...prev]);
+    setFlashMessage('success', `Commercial Order ${newOrder.id} registered successfully.`);
+    return newOrder;
+  };
+
+  const updateOrderStatus = (id: string, status: CommercialOrder['fulfillment_status'], extra?: Partial<CommercialOrder>) => {
+    setOrders(prev => prev.map(ord => ord.id === id ? { ...ord, fulfillment_status: status, ...extra } : ord));
+    setFlashMessage('success', `Order ${id} status updated to ${status}.`);
+  };
+
+  const deleteOrder = (id: string) => {
+    setOrders(prev => prev.filter(ord => ord.id !== id));
+    setFlashMessage('success', `Order ${id} deleted.`);
+  };
+
   const startSaleWithPart = (part: SparePart) => {
     setSelectedPartForSale(part);
     setActiveView('pos');
@@ -713,12 +834,16 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
       localStorage.removeItem('karat_parts_v3');
       localStorage.removeItem('karat_receipts');
       localStorage.removeItem('karat_oem_orders');
+      localStorage.removeItem('karat_inquiries');
+      localStorage.removeItem('karat_orders');
       localStorage.removeItem('karat_exchange_rate');
       localStorage.removeItem('karat_store_settings');
     } catch {}
     setParts(INITIAL_SPARE_PARTS);
     setReceipts(INITIAL_RECEIPTS);
     setOemOrders(INITIAL_OEM_ORDERS);
+    setInquiries(INITIAL_INQUIRIES);
+    setOrders(INITIAL_ORDERS);
     setExchangeRateState(UGX_EXCHANGE_RATE);
     setFlashMessage('success', 'All system records and inventory reset to factory defaults.');
   };
@@ -777,6 +902,15 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
         updateOEMOrderStatus,
         receiveOEMOrderShipment,
         deleteOEMOrder,
+        inquiries,
+        orders,
+        addInquiry,
+        updateInquiryStatus,
+        deleteInquiry,
+        convertInquiryToOrder,
+        addOrder,
+        updateOrderStatus,
+        deleteOrder,
         setFlashMessage,
         clearFlash,
       }}
