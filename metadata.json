@@ -1,6 +1,6 @@
 {
-  "name": "KARAT - Heavy Machinery & Spare Parts",
-  "description": "Premium shop owner management portal for KARAT heavy machinery spare parts, inventory tracking, POS counter sales, OEM factory restock, and depot operations.",
+  "name": "Karat Heavy Machinery Spare Parts",
+  "description": "Karat Heavy Machinery Spare Parts management system for inventory tracking, POS sales, OEM restocking, and depot operations.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

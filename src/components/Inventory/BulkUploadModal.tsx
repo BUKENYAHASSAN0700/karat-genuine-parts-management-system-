@@ -201,7 +201,7 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({ isOpen, onClos
             </div>
             <div>
               <div className="font-extrabold text-xs text-[#111111]">
-                Official KARAT Inventory Template
+                            Official Karat Heavy Machinery Spare Parts Inventory Template
               </div>
               <p className="text-[11px] text-[#111111]/60">
                 Pre-formatted with real heavy machinery spare parts, column headers, and specifications.

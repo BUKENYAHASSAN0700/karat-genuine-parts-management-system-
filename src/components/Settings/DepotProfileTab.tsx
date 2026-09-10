@@ -5,7 +5,6 @@ import {
   Phone, 
   Mail, 
   Clock, 
-  ShieldCheck, 
   Save, 
   CheckCircle2,
   FileText
@@ -16,9 +15,9 @@ export const DepotProfileTab: React.FC = () => {
   const { currentUser, updateUser, setFlashMessage } = useInertia();
 
   const [formData, setFormData] = useState({
-    shopName: currentUser?.shop_name || 'KARAT Heavy Machinery & Spare Parts Ltd',
-    facilityName: 'Yard 4 Nakawa Heavy Depot & Ingest Bay',
-    physicalAddress: 'Plot 14-16 Jinja Road, Nakawa Industrial Estate, Kampala, Uganda',
+    shopName: currentUser?.shop_name || 'Karat Heavy Machinery Spare Parts',
+    facilityName: 'Yard 4 Industrial Area Heavy Depot & Ingest Bay',
+    physicalAddress: 'Plot 14-16 Jinja Road, Industrial Area Estate, Kampala, Uganda',
     officialEmail: currentUser?.email || 'finance@karat.co.ug',
     dispatchPhone: '+256 700 882194',
     emergencyHotline: '+256 414 290114',
@@ -60,10 +59,6 @@ export const DepotProfileTab: React.FC = () => {
             </p>
           </div>
 
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-[#22A06B] text-xs font-bold">
-            <ShieldCheck className="w-3.5 h-3.5" />
-            <span>Verified Industrial Entity</span>
-          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -76,20 +71,6 @@ export const DepotProfileTab: React.FC = () => {
               type="text"
               value={formData.shopName}
               onChange={e => setFormData({ ...formData, shopName: e.target.value })}
-              className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 text-xs font-bold text-[#111111] focus:bg-white focus:outline-none focus:border-amber-400 transition"
-              required
-            />
-          </div>
-
-          {/* Facility / Yard Name */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
-              Primary Yard & Receiving Bay
-            </label>
-            <input
-              type="text"
-              value={formData.facilityName}
-              onChange={e => setFormData({ ...formData, facilityName: e.target.value })}
               className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 text-xs font-bold text-[#111111] focus:bg-white focus:outline-none focus:border-amber-400 transition"
               required
             />

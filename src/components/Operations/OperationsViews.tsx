@@ -148,14 +148,17 @@ export const SalesView: React.FC = () => {
                 onChange={e => setNewQuote({ ...newQuote, parts_requested: e.target.value })}
                 className="w-full bg-[#F7F6F3] border border-slate-200 rounded-xl px-3.5 py-2.5 text-[#111111] h-20"
               />
-              <input
-                type="number"
-                required
-                placeholder="Quoted Base Amount in USD"
-                value={newQuote.quoted_amount || ''}
-                onChange={e => setNewQuote({ ...newQuote, quoted_amount: parseFloat(e.target.value) || 0 })}
-                className="w-full bg-[#F7F6F3] border border-slate-200 rounded-xl px-3.5 py-2.5 text-[#111111] font-mono"
-              />
+              <div className="relative">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[10px] font-black text-[#111111]/50">USD</span>
+                <input
+                  type="number"
+                  required
+                  placeholder="Quoted Base Amount"
+                  value={newQuote.quoted_amount || ''}
+                  onChange={e => setNewQuote({ ...newQuote, quoted_amount: parseFloat(e.target.value) || 0 })}
+                  className="w-full bg-[#F7F6F3] border border-slate-200 rounded-xl pl-14 pr-3.5 py-2.5 text-[#111111] font-mono"
+                />
+              </div>
               <div className="flex justify-end gap-2 pt-3">
                 <button
                   type="button"

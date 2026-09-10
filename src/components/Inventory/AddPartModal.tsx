@@ -16,13 +16,6 @@ const COMMON_UNITS = [
   { value: 'ROLL', label: 'ROLL - Continuous Roll' },
 ];
 
-const TAX_OPTIONS = [
-  { value: '18% VAT', label: '18% VAT (Standard EFRIS)', rate: 18 },
-  { value: 'Exempt (0%)', label: 'Exempt (0% Statutory)', rate: 0 },
-  { value: 'Zero Rated (0%)', label: 'Zero Rated (0% Export)', rate: 0 },
-  { value: '6% WHT', label: '6% Withholding Tax', rate: 6 },
-];
-
 export const AddPartModal: React.FC = () => {
   const { addModalOpen, setAddModalOpen, addPart, parts, currency } = useInertia();
 
@@ -44,12 +37,14 @@ export const AddPartModal: React.FC = () => {
     unit: 'PCS',
     taxes: '18% VAT',
     tax_rate: 18,
+    tax_amount: 0,
+    transport_cost: 0,
     stock_quantity: 1,
     min_stock_alert: 2,
     unit_cost: 1100,
     unit_price: 1850,
     registered_date: todayStr,
-    warehouse_bin: 'Aisle 3 - Bay B - Level 2',
+    warehouse_bin: '',
   });
 
   const handleSeriesChange = (newSeries: string) => {
@@ -79,15 +74,6 @@ export const AddPartModal: React.FC = () => {
   const handleRegenerateId = () => {
     const randomSuffix = Math.floor(100 + Math.random() * 899);
     setAssignedId(`KA${randomSuffix}`);
-  };
-
-  const handleTaxChange = (taxValue: string) => {
-    const selected = TAX_OPTIONS.find(t => t.value === taxValue);
-    setFormData(prev => ({
-      ...prev,
-      taxes: taxValue,
-      tax_rate: selected ? selected.rate : 18,
-    }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -140,6 +126,8 @@ export const AddPartModal: React.FC = () => {
       unit: formData.unit || 'PCS',
       taxes: formData.taxes || '18% VAT',
       tax_rate: formData.tax_rate,
+      tax_amount: Number(formData.tax_amount) || 0,
+      transport_cost: Number(formData.transport_cost) || 0,
       stock_quantity: stockQty,
       min_stock_alert: minAlert,
       unit_cost: itemCost,
@@ -184,9 +172,6 @@ export const AddPartModal: React.FC = () => {
                   {assignedId}
                 </span>
               </div>
-              <p className="text-[11px] text-[#111111]/60">
-                Direct item pricing — the exact price entered is what appears systemwide.
-              </p>
             </div>
           </div>
           <button
@@ -232,7 +217,7 @@ export const AddPartModal: React.FC = () => {
               {/* OEM Part Number */}
               <div>
                 <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
-                  OEM Part NO *
+                  Model Number *
                 </label>
                 <input
                   type="text"
@@ -397,22 +382,23 @@ export const AddPartModal: React.FC = () => {
                 </select>
               </div>
 
-              {/* Taxes */}
+              {/* Tax amount */}
               <div>
                 <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
-                  Taxes (TAXES) *
+                  Tax Amount ({currency})
                 </label>
-                <select
-                  value={formData.taxes}
-                  onChange={e => handleTaxChange(e.target.value)}
-                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
-                >
-                  {TAX_OPTIONS.map(t => (
-                    <option key={t.value} value={t.value}>
-                      {t.label}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-[#111111]/50">{currency}</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    value={formData.tax_amount}
+                    onChange={e => setFormData({ ...formData, tax_amount: parseFloat(e.target.value) || 0 })}
+                    placeholder="Enter tax amount"
+                    className="w-full bg-white border border-slate-200 rounded-xl pl-12 pr-3 py-2 text-xs font-bold text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
+                  />
+                </div>
               </div>
 
               {/* Date Registered */}
@@ -425,8 +411,8 @@ export const AddPartModal: React.FC = () => {
                   type="date"
                   required
                   value={formData.registered_date}
-                  onChange={e => setFormData({ ...formData, registered_date: e.target.value })}
-                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-[#111111] font-mono font-bold focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
+                  readOnly
+                  className="w-full bg-slate-100 border border-slate-200 rounded-xl px-3 py-2 text-xs text-[#111111] font-mono font-bold focus:outline-none cursor-not-allowed"
                 />
               </div>
             </div>
@@ -439,9 +425,6 @@ export const AddPartModal: React.FC = () => {
                 <DollarSign className="w-3.5 h-3.5 text-[#111111]" />
                 <span>Pricing & Stock Quantities</span>
               </span>
-              <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300/50">
-                Direct 1:1 Pricing (No Conversion Rate)
-              </span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
@@ -453,19 +436,19 @@ export const AddPartModal: React.FC = () => {
                   </label>
                   <span className="text-[9px] text-slate-500 font-medium">Landed / Purchase Cost</span>
                 </div>
-                <input
-                  type="number"
-                  min="0"
-                  step="any"
-                  required
-                  placeholder="e.g. 4200"
-                  value={formData.unit_cost}
-                  onChange={e => setFormData({ ...formData, unit_cost: parseFloat(e.target.value) || 0 })}
-                  className="w-full bg-[#F7F6F3] border border-slate-200 rounded-lg px-3 py-2 text-xs text-[#111111] font-mono font-bold focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
-                />
-                <span className="text-[9px] text-[#111111]/50 mt-1 block">
-                  Original acquisition or import restock cost per unit
-                </span>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-[#111111]/50">{currency}</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    required
+                    placeholder="e.g. 4200"
+                    value={formData.unit_cost}
+                    onChange={e => setFormData({ ...formData, unit_cost: parseFloat(e.target.value) || 0 })}
+                    className="w-full bg-[#F7F6F3] border border-slate-200 rounded-lg pl-12 pr-3 py-2 text-xs text-[#111111] font-mono font-bold focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
+                  />
+                </div>
               </div>
 
               {/* SELLING PRICE on Item */}
@@ -474,23 +457,46 @@ export const AddPartModal: React.FC = () => {
                   <label className="text-[10px] font-extrabold uppercase tracking-wider text-[#111111]">
                     Price Put On Item ({currency}) *
                   </label>
-                  <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-                    Systemwide Price
-                  </span>
                 </div>
-                <input
-                  type="number"
-                  min="0.01"
-                  step="any"
-                  required
-                  placeholder="e.g. 6850"
-                  value={formData.unit_price}
-                  onChange={e => setFormData({ ...formData, unit_price: parseFloat(e.target.value) || 0 })}
-                  className="w-full bg-[#F7F6F3] border border-slate-300 rounded-lg px-3 py-2 text-xs text-[#111111] font-mono font-black focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
-                />
-                <span className="text-[9px] text-[#111111]/60 mt-1 block">
-                  This exact amount will display on the product without conversion or multiplier confusion.
-                </span>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-[#111111]/50">{currency}</span>
+                  <input
+                    type="number"
+                    min="0.01"
+                    step="any"
+                    required
+                    placeholder="e.g. 6850"
+                    value={formData.unit_price}
+                    onChange={e => setFormData({ ...formData, unit_price: parseFloat(e.target.value) || 0 })}
+                    className="w-full bg-[#F7F6F3] border border-slate-300 rounded-lg pl-12 pr-3 py-2 text-xs text-[#111111] font-mono font-black focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
+                  Transport Cost ({currency})
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-[#111111]/50">{currency}</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    value={formData.transport_cost}
+                    onChange={e => setFormData({ ...formData, transport_cost: parseFloat(e.target.value) || 0 })}
+                    placeholder="Cost to bring item to the shop"
+                    className="w-full bg-white border border-slate-200 rounded-xl pl-12 pr-3 py-2 text-xs text-[#111111] font-mono font-bold focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
+                  />
+                </div>
+              </div>
+              <div className="bg-white border border-slate-200 rounded-xl px-3 py-2 flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#111111]/60">Total Stock Selling Value</span>
+                <strong className="text-sm font-black text-[#111111]">
+                  {currency} {(Number(formData.stock_quantity) * Number(formData.unit_price)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </strong>
               </div>
             </div>
 
@@ -527,18 +533,6 @@ export const AddPartModal: React.FC = () => {
                 />
               </div>
 
-              <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
-                  Warehouse Bin Location
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Aisle 3 - Bay B - Level 2"
-                  value={formData.warehouse_bin}
-                  onChange={e => setFormData({ ...formData, warehouse_bin: e.target.value })}
-                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-[#111111] font-mono focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
-                />
-              </div>
             </div>
           </div>
 

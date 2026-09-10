@@ -31,8 +31,8 @@ export const SystemMaintenanceTab: React.FC = () => {
     setTimeout(() => {
       const backupData = {
         metadata: {
-          organization: 'KARAT Heavy Machinery & Spare Parts Ltd',
-          facility: 'Yard 4 Nakawa Industrial Estate, Kampala',
+          organization: 'Karat Heavy Machinery Spare Parts',
+          facility: 'Yard 4 Industrial Area Estate, Kampala',
           exportTimestamp: new Date().toISOString(),
           version: '2.4.0-PROD'
         },

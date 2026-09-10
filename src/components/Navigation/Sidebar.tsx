@@ -15,6 +15,8 @@ import {
 } from 'lucide-react';
 import { useInertia } from '../../context/InertiaContext';
 
+const karatLogo = new URL('../../../karat.svg', import.meta.url).href;
+
 export const Sidebar: React.FC = () => {
   const { 
     activeView, 
@@ -103,18 +105,18 @@ export const Sidebar: React.FC = () => {
       >
         {/* Logo Brand Header */}
         <div className="flex items-center gap-2.5 overflow-hidden select-none">
-          <div className="w-9 h-9 rounded-2xl bg-[#111111] text-[#F6AF31] flex items-center justify-center font-black shrink-0 shadow-xs">
-            <Cpu className="w-4 h-4 text-[#F6AF31]" />
+          <div className="w-9 h-9 rounded-2xl bg-[#F7F6F3] border border-slate-200/80 flex items-center justify-center font-black shrink-0 shadow-xs p-1">
+            <img src={karatLogo} alt="Karat logo" className="w-full h-full object-contain" />
           </div>
           {!isSidebarCollapsed && (
             <div className="truncate">
               <div>
                 <span className="text-sm font-black tracking-tight text-[#111111] font-mono leading-none block truncate">
-                  KARAT GENUINE PARTS
+                  Karat Heavy Machinery Spare Parts
                 </span>
               </div>
               <div className="text-[9px] uppercase font-bold tracking-wider text-[#111111]/40 truncate mt-0.5">
-                Heavy Machinery Depot
+                Spare Parts Depot
               </div>
             </div>
           )}
@@ -264,10 +266,10 @@ export const Sidebar: React.FC = () => {
               </div>
               <div>
                 <span className="text-sm font-black tracking-tight text-[#111111] font-mono leading-none block">
-                  KARAT GENUINE PARTS
+                  Karat Heavy Machinery Spare Parts
                 </span>
                 <div className="text-[9px] uppercase font-bold tracking-wider text-[#111111]/40 mt-0.5">
-                  Heavy Machinery Depot
+                  Spare Parts Depot
                 </div>
               </div>
             </div>

@@ -2,9 +2,6 @@ import React, { useState } from 'react';
 import { 
   Building2, 
   Coins, 
-  Receipt, 
-  TrendingUp, 
-  Users, 
   HardDrive, 
   ArrowRight, 
   Package, 
@@ -15,12 +12,9 @@ import {
 import { useInertia } from '../../context/InertiaContext';
 import { DepotProfileTab } from './DepotProfileTab';
 import { CurrencyFXTab } from './CurrencyFXTab';
-import { TaxationPolicyTab } from './TaxationPolicyTab';
-import { CommercialCreditTab } from './CommercialCreditTab';
-import { TeamRolesTab } from './TeamRolesTab';
 import { SystemMaintenanceTab } from './SystemMaintenanceTab';
 
-type SettingsTab = 'depot' | 'currency' | 'tax' | 'pricing' | 'team' | 'maintenance';
+type SettingsTab = 'depot' | 'currency' | 'maintenance';
 
 export const StoreSettingsView: React.FC = () => {
   const { currentUser, currency, exchangeRate, setActiveView } = useInertia();
@@ -31,7 +25,6 @@ export const StoreSettingsView: React.FC = () => {
       id: 'depot' as SettingsTab,
       label: 'Depot & Identity',
       icon: Building2,
-      badge: 'Nakawa Y4',
       badgeColor: 'bg-slate-100 text-slate-700'
     },
     {
@@ -42,31 +35,9 @@ export const StoreSettingsView: React.FC = () => {
       badgeColor: 'bg-amber-100 text-amber-900'
     },
     {
-      id: 'tax' as SettingsTab,
-      label: 'URA Taxes & EFRIS',
-      icon: Receipt,
-      badge: '18% VAT',
-      badgeColor: 'bg-purple-100 text-purple-900'
-    },
-    {
-      id: 'pricing' as SettingsTab,
-      label: 'Margins & Credit',
-      icon: TrendingUp,
-      badge: 'Net 30',
-      badgeColor: 'bg-emerald-100 text-emerald-900'
-    },
-    {
-      id: 'team' as SettingsTab,
-      label: 'Staff & Roles',
-      icon: Users,
-      badge: '5 Staff',
-      badgeColor: 'bg-blue-100 text-blue-900'
-    },
-    {
       id: 'maintenance' as SettingsTab,
       label: 'Backups & Storage',
       icon: HardDrive,
-      badge: 'Live',
       badgeColor: 'bg-slate-100 text-slate-700'
     },
   ];
@@ -77,20 +48,11 @@ export const StoreSettingsView: React.FC = () => {
       {/* Header Banner */}
       <div className="bg-white border border-slate-200/90 rounded-3xl p-6 sm:p-7 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#111111] text-[#F6AF31]">
-              System Configuration
-            </span>
-            <span className="text-xs text-slate-400 font-medium">
-              • Yard 4 Nakawa Depot & Commercial POS
-            </span>
-          </div>
-
           <h1 className="text-2xl font-black text-[#111111] tracking-tight">
             Store Settings & Operations Control
           </h1>
           <p className="text-xs text-slate-500">
-            Configure enterprise parameters, statutory URA EFRIS compliance, currency peg, staff credentials, and corporate credit limits.
+            Configure enterprise parameters, currency settings, and system storage.
           </p>
         </div>
 
@@ -127,11 +89,13 @@ export const StoreSettingsView: React.FC = () => {
               >
                 <Icon className={`w-4 h-4 ${isActive ? 'text-[#F6AF31]' : 'text-slate-400'}`} />
                 <span>{tab.label}</span>
-                <span className={`text-[10px] font-black px-2 py-0.5 rounded-md ${
-                  isActive ? 'bg-white/20 text-[#F6AF31]' : tab.badgeColor
-                }`}>
-                  {tab.badge}
-                </span>
+                {tab.badge && (
+                  <span className={`text-[10px] font-black px-2 py-0.5 rounded-md ${
+                    isActive ? 'bg-white/20 text-[#F6AF31]' : tab.badgeColor
+                  }`}>
+                    {tab.badge}
+                  </span>
+                )}
               </button>
             );
           })}
@@ -142,9 +106,6 @@ export const StoreSettingsView: React.FC = () => {
       <div>
         {activeTab === 'depot' && <DepotProfileTab />}
         {activeTab === 'currency' && <CurrencyFXTab />}
-        {activeTab === 'tax' && <TaxationPolicyTab />}
-        {activeTab === 'pricing' && <CommercialCreditTab />}
-        {activeTab === 'team' && <TeamRolesTab />}
         {activeTab === 'maintenance' && <SystemMaintenanceTab />}
       </div>
 

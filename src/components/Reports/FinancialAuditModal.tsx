@@ -99,7 +99,7 @@ export const FinancialAuditModal: React.FC<FinancialAuditModalProps> = ({
                 </div>
                 <div>
                   <h1 className="text-2xl font-black text-[#111111] tracking-tight uppercase leading-none">
-                    KARAT Heavy Machinery
+                    Karat Heavy Machinery Spare Parts
                   </h1>
                   <span className="text-xs font-extrabold uppercase tracking-wider text-[#F6AF31] bg-[#111111] px-2 py-0.5 rounded-sm inline-block mt-1">
                     Spare Parts Limited
@@ -107,7 +107,7 @@ export const FinancialAuditModal: React.FC<FinancialAuditModalProps> = ({
                 </div>
               </div>
               <p className="text-[11px] text-slate-600 font-medium pt-1 max-w-sm">
-                Plot 14-16 Jinja Road, Nakawa Industrial Estate, Yard 4 Ingest, Kampala, Uganda.
+                Plot 14-16 Jinja Road, Industrial Area Estate, Yard 4 Ingest, Kampala, Uganda.
               </p>
               <p className="text-[10px] text-slate-500 font-mono">
                 TIN: 1004829104 &bull; VAT No: 1004829104-VAT &bull; EFRIS Fiscal Unit: EFRIS-UG-882194
@@ -249,7 +249,7 @@ export const FinancialAuditModal: React.FC<FinancialAuditModalProps> = ({
           {/* Statutory Declaration & Dual Sign-offs */}
           <div className="pt-6 border-t border-slate-200 space-y-6">
             <p className="text-[11px] text-slate-500 italic leading-relaxed">
-              Certification: I hereby certify that the financial statements, inventory assets, trade receivables, and tax obligations outlined in this report have been accurately extracted from the official inventory and accounting ledgers of KARAT Heavy Machinery & Spare Parts Ltd in accordance with prevailing statutory reporting requirements.
+              Certification: I hereby certify that the financial statements, inventory assets, trade receivables, and tax obligations outlined in this report have been accurately extracted from the official inventory and accounting ledgers of Karat Heavy Machinery Spare Parts in accordance with prevailing statutory reporting requirements.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 pt-4">

@@ -64,7 +64,7 @@ TOTAL PAID: ${formatMoney(receipt.grand_total)}
 Payment Method: ${receipt.payment_method}
 Payment Status: ${receipt.payment_status}
 ${receipt.notes ? `Notes: ${receipt.notes}\n` : ''}========================================
-Thank you for trusting KARAT Heavy Machinery Parts!
+Thank you for trusting Karat Heavy Machinery Spare Parts!
 30-Day Warranty on Genuine OEM Parts.
 `;
     navigator.clipboard.writeText(summary.trim());

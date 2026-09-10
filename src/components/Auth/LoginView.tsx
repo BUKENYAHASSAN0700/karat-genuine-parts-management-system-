@@ -10,6 +10,8 @@ import {
 } from 'lucide-react';
 import { useInertia } from '../../context/InertiaContext';
 
+const karatLogo = new URL('../../../karat.svg', import.meta.url).href;
+
 export const LoginView: React.FC = () => {
   const { login } = useInertia();
   
@@ -66,13 +68,13 @@ export const LoginView: React.FC = () => {
         
         {/* Brand Emblem & Header */}
         <div className="text-center space-y-3 pb-6">
-          <div className="w-12 h-12 rounded-2xl bg-[#F6AF31] text-[#111111] flex items-center justify-center font-black shadow-lg shadow-[#F6AF31]/20 mx-auto">
-            <Cpu className="w-6 h-6 text-[#111111]" />
+          <div className="w-20 h-20 rounded-2xl bg-[#F7F6F3] border border-white/20 flex items-center justify-center shadow-lg shadow-black/20 mx-auto p-2">
+            <img src={karatLogo} alt="Karat logo" className="w-full h-full object-contain" />
           </div>
 
           <div>
             <div className="text-xl font-black tracking-tight text-white font-mono flex items-center justify-center">
-              <span>KARAT GENUINE PARTS</span>
+              <span>Karat Heavy Machinery Spare Parts</span>
             </div>
           </div>
 

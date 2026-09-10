@@ -54,6 +54,8 @@ interface InertiaContextType {
   setCurrency: (currency: CurrencyCode) => void;
   exchangeRate: number;
   setExchangeRate: (rate: number) => void;
+  theme: 'light' | 'dark';
+  toggleTheme: () => void;
   updateUser: (userData: Partial<User>) => void;
   resetAllDataToDefaults: () => void;
   formatMoney: (amountInUSD: number, options?: { showCode?: boolean; round?: boolean }) => string;
@@ -112,7 +114,10 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
     try {
       const savedUser = localStorage.getItem('karat_user');
-      return savedUser ? JSON.parse(savedUser) : INITIAL_OWNER;
+      const parsedUser = savedUser ? JSON.parse(savedUser) : INITIAL_OWNER;
+      return parsedUser?.name === 'KARAT Administrator'
+        ? { ...parsedUser, name: 'Arafat' }
+        : parsedUser;
     } catch {
       return INITIAL_OWNER;
     }
@@ -137,6 +142,25 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
       return UGX_EXCHANGE_RATE;
     }
   });
+
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    try {
+      return localStorage.getItem('karat_theme') === 'dark' ? 'dark' : 'light';
+    } catch {
+      return 'light';
+    }
+  });
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark-theme', theme === 'dark');
+    try {
+      localStorage.setItem('karat_theme', theme);
+    } catch {}
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(currentTheme => currentTheme === 'light' ? 'dark' : 'light');
+  };
 
   const setExchangeRate = (rate: number) => {
     setExchangeRateState(rate);
@@ -315,7 +339,7 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const isKaratAdmin = cleanId === 'karat';
     const ownerUser: User = {
       ...INITIAL_OWNER,
-      name: isKaratAdmin ? 'KARAT Administrator' : INITIAL_OWNER.name,
+      name: isKaratAdmin ? 'Arafat' : INITIAL_OWNER.name,
       email: cleanId.includes('@') ? cleanId : `${cleanId}@karat.co.ug`,
     };
 
@@ -328,7 +352,7 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
       // LocalStorage fallback
     }
 
-    setFlashMessage('success', 'Welcome back to KARAT Heavy Machinery Depot.');
+    setFlashMessage('success', 'Welcome back to Karat Heavy Machinery Spare Parts.');
     return true;
   };
 
@@ -356,6 +380,8 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
       unit: newPartData.unit || 'PCS',
       taxes: newPartData.taxes || '18% VAT',
       tax_rate: newPartData.tax_rate ?? 18,
+      tax_amount: Number(newPartData.tax_amount) || 0,
+      transport_cost: Number(newPartData.transport_cost) || 0,
       unit_cost: Number(newPartData.unit_cost) || 0,
       unit_price: Number(newPartData.unit_price) || 0,
       registered_date: newPartData.registered_date || new Date().toISOString().slice(0, 10),
@@ -402,6 +428,8 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
         unit: item.unit || 'PCS',
         taxes: item.taxes || '18% VAT',
         tax_rate: item.tax_rate ?? 18,
+        tax_amount: Number(item.tax_amount) || 0,
+        transport_cost: Number(item.transport_cost) || 0,
         unit_cost: Number(item.unit_cost) || 0,
         unit_price: Number(item.unit_price) || 0,
         registered_date: item.registered_date || new Date().toISOString().slice(0, 10),
@@ -709,6 +737,8 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setCurrency,
         exchangeRate,
         setExchangeRate,
+        theme,
+        toggleTheme,
         updateUser,
         resetAllDataToDefaults,
         formatMoney,

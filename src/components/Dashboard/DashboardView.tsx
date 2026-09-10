@@ -123,7 +123,7 @@ export const DashboardView: React.FC = () => {
             Welcome Back, {currentUser?.name || 'Shop Owner'}
           </h1>
           <p className="text-xs text-[#111111]/60 mt-0.5">
-            KARAT Heavy Machinery & Spare Parts &bull; Live Inventory & Commercial Command Center
+            Karat Heavy Machinery Spare Parts &bull; Live Inventory & Commercial Command Center
           </p>
         </div>
 

@@ -64,7 +64,7 @@ export const AppLayout: React.FC = () => {
   };
 
   return (
-    <div className="h-screen w-screen max-w-full overflow-hidden bg-[#F7F6F3] text-[#111111] font-sans selection:bg-[#F6AF31] selection:text-[#111111] p-3 sm:p-5 lg:p-6 flex flex-col">
+    <div className="app-shell h-screen w-screen max-w-full overflow-hidden bg-[#F7F6F3] text-[#111111] font-sans selection:bg-[#F6AF31] selection:text-[#111111] p-3 sm:p-5 lg:p-6 flex flex-col">
       {/* Flash Messages */}
       {flash.success && (
         <div className="fixed top-5 right-5 z-50 bg-[#111111] text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 text-xs font-semibold animate-in fade-in border border-slate-700">

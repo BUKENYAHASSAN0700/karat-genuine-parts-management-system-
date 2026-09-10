@@ -93,7 +93,7 @@ export const DeliveryNoteModal: React.FC<DeliveryNoteModalProps> = ({
                 </div>
                 <div>
                   <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#111111] font-mono leading-none">
-                    KARAT LOGISTICS
+                    Karat Heavy Machinery Spare Parts
                   </h1>
                   <span className="text-[10px] uppercase tracking-widest text-[#111111]/60 font-bold block mt-0.5">
                     Fleet Dispatch & Yard Materials Release
@@ -103,7 +103,7 @@ export const DeliveryNoteModal: React.FC<DeliveryNoteModalProps> = ({
               
               <div className="text-xs text-[#111111]/70 leading-relaxed font-medium">
                 Main Yard: Plot 18 Jinja Road Heavy Machinery Industrial Corridor<br />
-                Yard 4 Dispatch Depot: Nakawa Heavy Equipment Hub<br />
+                Yard 4 Dispatch Depot: Industrial Area Heavy Equipment Hub<br />
                 Dispatch Hotline: +256 700 842 100 / +256 772 555 427
               </div>
             </div>
@@ -226,7 +226,7 @@ export const DeliveryNoteModal: React.FC<DeliveryNoteModalProps> = ({
             {/* Dispatch Yard Release Sign-off */}
             <div className="space-y-4">
               <div className="font-bold text-[#111111] uppercase tracking-wider text-[10px]">
-                Dispatched By (KARAT Machinery Yard)
+                Dispatched By (Karat Heavy Machinery Spare Parts)
               </div>
               <div className="h-12 border-b border-dashed border-slate-400"></div>
               <div className="space-y-0.5 text-[11px] text-[#111111]/80">

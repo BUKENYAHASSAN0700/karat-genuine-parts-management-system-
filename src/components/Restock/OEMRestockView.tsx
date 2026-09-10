@@ -149,7 +149,7 @@ export const OEMRestockView: React.FC = () => {
               OEM Global Supply Chain
             </span>
             <span className="text-xs text-slate-400 font-mono font-medium">
-              Kampala Depot • Yard 4 Nakawa Ingest
+              Kampala Depot • Yard 4 Industrial Area Ingest
             </span>
           </div>
           <h1 className="text-2xl font-black text-[#111111] tracking-tight">

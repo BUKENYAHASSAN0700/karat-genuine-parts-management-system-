@@ -19,7 +19,7 @@ interface NewOrderModalProps {
 }
 
 export const NewOrderModal: React.FC<NewOrderModalProps> = ({ isOpen, onClose }) => {
-  const { parts, addOrder, formatMoney } = useInertia();
+  const { parts, addOrder, formatMoney, currency } = useInertia();
 
   const [customerName, setCustomerName] = useState('');
   const [customerCompany, setCustomerCompany] = useState('');
@@ -282,7 +282,7 @@ export const NewOrderModal: React.FC<NewOrderModalProps> = ({ isOpen, onClose })
                   className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-[#22A06B] font-medium"
                 >
                   <option value="Field Van Delivery">Field Van Delivery (Direct to Mine/Site)</option>
-                  <option value="Warehouse Pickup (Yard 4 - Nakawa)">Warehouse Pickup (Yard 4 - Nakawa)</option>
+                  <option value="Warehouse Pickup (Yard 4 - Industrial Area)">Warehouse Pickup (Yard 4 - Industrial Area)</option>
                   <option value="Expedited Air Freight">Expedited Air Freight</option>
                 </select>
               </div>
@@ -429,14 +429,17 @@ export const NewOrderModal: React.FC<NewOrderModalProps> = ({ isOpen, onClose })
 
                     <div className="flex items-center gap-2">
                       <label className="text-[11px] font-bold text-[#111111]/70">Unit Price:</label>
-                      <input
-                        type="number"
-                        min="0"
-                        step="any"
-                        value={it.unit_price}
-                        onChange={e => handleItemChange(idx, 'unit_price', parseFloat(e.target.value) || 0)}
-                        className="w-24 px-2 py-1 text-xs rounded-lg border border-slate-200 bg-white text-right font-mono font-bold"
-                      />
+                      <div className="relative">
+                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[9px] font-black text-[#111111]/50">{currency}</span>
+                        <input
+                          type="number"
+                          min="0"
+                          step="any"
+                          value={it.unit_price}
+                          onChange={e => handleItemChange(idx, 'unit_price', parseFloat(e.target.value) || 0)}
+                          className="w-24 pl-10 pr-2 py-1 text-xs rounded-lg border border-slate-200 bg-white text-right font-mono font-bold"
+                        />
+                      </div>
                     </div>
 
                     <div className="text-right">

@@ -6,7 +6,7 @@ export const INITIAL_OWNER: User = {
   email: 'owner@karat.com',
   role: 'owner',
   phone: '+1 (800) 555-4272',
-  shop_name: 'KARAT Heavy Machinery & Spare Parts',
+  shop_name: 'Karat Heavy Machinery Spare Parts',
   avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
 };
 
@@ -630,8 +630,8 @@ export const INITIAL_ORDERS: CommercialOrder[] = [
     customer_phone: '+256 701 883419',
     customer_email: 'procurement@titan-earthmoving.com',
     equipment_model: 'Komatsu PC400-8 & PC200-8',
-    delivery_site: 'Kampala Depot (Yard 4 - Nakawa)',
-    delivery_method: 'Warehouse Pickup (Yard 4 - Nakawa)',
+    delivery_site: 'Kampala Depot (Yard 4 - Industrial Area)',
+    delivery_method: 'Warehouse Pickup (Yard 4 - Industrial Area)',
     subtotal: 3660,
     total_amount: 3660,
     payment_status: 'Paid in Full',
@@ -1003,8 +1003,8 @@ export const INITIAL_OEM_ORDERS: OEMPurchaseOrder[] = [
     carrier: 'DHL Global Forwarding',
     tracking_number: 'AWB-020-88390112',
     port_of_loading: 'Brussels Zaventem (BRU)',
-    port_of_discharge: 'Yard 4 Nakawa Depot',
-    incoterm: 'DAP Nakawa Yard',
+    port_of_discharge: 'Yard 4 Industrial Area Depot',
+    incoterm: 'DAP Industrial Area Yard',
     payment_terms: 'OEM Net 30',
     payment_status: 'Paid in Full',
     status: 'At Receiving Bay',
@@ -1016,7 +1016,7 @@ export const INITIAL_OEM_ORDERS: OEMPurchaseOrder[] = [
     customs_duty_est: 0,
     total_cost: 7830,
     currency: 'USD',
-    notes: 'Arrived at Yard 4 Nakawa warehouse receiving bay. Boxes undamaged, ready for technician verification.',
+    notes: 'Arrived at Yard 4 Industrial Area warehouse receiving bay. Boxes undamaged, ready for technician verification.',
     items: [
       {
         part_id: 'KA103',

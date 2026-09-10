@@ -107,7 +107,7 @@ export const QuotationModal: React.FC<QuotationModalProps> = ({
                     KARAT
                   </h1>
                   <span className="text-[10px] uppercase tracking-widest text-[#111111]/60 font-bold block mt-0.5">
-                    Heavy Machinery & Spare Parts
+                    Karat Heavy Machinery Spare Parts
                   </span>
                 </div>
               </div>
@@ -117,7 +117,7 @@ export const QuotationModal: React.FC<QuotationModalProps> = ({
                 P.O. Box 7421, Kampala, Uganda<br />
                 TIN: 1009-8422-710 • VAT Reg: UG984102<br />
                 Phone: +256 700 842 100 / +256 772 555 427<br />
-                Email: quotes@karatparts.com • Web: www.karatparts.com
+                Email: quotes@karat.com • Web: www.karat.com
               </div>
             </div>
 
@@ -269,7 +269,7 @@ export const QuotationModal: React.FC<QuotationModalProps> = ({
               </div>
               <div className="text-[11px] text-[#111111]/70 font-mono space-y-0.5 mt-1">
                 <div>Bank: Stanbic Bank Uganda Ltd</div>
-                <div>Account Name: KARAT Machinery Ltd</div>
+                <div>Account Name: Karat Heavy Machinery Spare Parts</div>
                 <div>UGX A/C: 9030018420912</div>
                 <div>USD A/C: 9030018420935 (Swift: SBICUGKX)</div>
               </div>

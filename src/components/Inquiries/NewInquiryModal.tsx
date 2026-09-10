@@ -20,7 +20,7 @@ interface NewInquiryModalProps {
 }
 
 export const NewInquiryModal: React.FC<NewInquiryModalProps> = ({ isOpen, onClose }) => {
-  const { parts, addInquiry, formatMoney } = useInertia();
+  const { parts, addInquiry, formatMoney, currency } = useInertia();
 
   const [customerName, setCustomerName] = useState('');
   const [customerCompany, setCustomerCompany] = useState('');
@@ -385,14 +385,17 @@ export const NewInquiryModal: React.FC<NewInquiryModalProps> = ({ isOpen, onClos
 
                     <div className="flex items-center gap-2">
                       <label className="text-[11px] font-bold text-[#111111]/70">Unit Price:</label>
-                      <input
-                        type="number"
-                        min="0"
-                        step="any"
-                        value={it.unit_price}
-                        onChange={e => handleItemChange(idx, 'unit_price', parseFloat(e.target.value) || 0)}
-                        className="w-24 px-2 py-1 text-xs rounded-lg border border-slate-200 bg-white text-right font-mono font-bold"
-                      />
+                      <div className="relative">
+                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[9px] font-black text-[#111111]/50">{currency}</span>
+                        <input
+                          type="number"
+                          min="0"
+                          step="any"
+                          value={it.unit_price}
+                          onChange={e => handleItemChange(idx, 'unit_price', parseFloat(e.target.value) || 0)}
+                          className="w-24 pl-10 pr-2 py-1 text-xs rounded-lg border border-slate-200 bg-white text-right font-mono font-bold"
+                        />
+                      </div>
                     </div>
 
                     <div className="text-right">

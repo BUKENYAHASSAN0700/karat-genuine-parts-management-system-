@@ -106,10 +106,10 @@ export const OEMPurchaseOrderModal: React.FC<OEMPurchaseOrderModalProps> = ({
                 </span>
               </div>
               <div className="text-xs font-bold text-slate-700 mt-1 uppercase tracking-wide">
-                Heavy Machinery & Genuine Spare Parts Ltd.
+                  Karat Heavy Machinery Spare Parts
               </div>
               <div className="text-[11px] text-slate-500 mt-1 leading-relaxed">
-                Plot 14 Industrial Area, Nakawa Yard 4, Kampala, Uganda<br />
+                Plot 14 Industrial Area, Yard 4, Kampala, Uganda<br />
                 TIN: 1004829104 • VAT No: 99420-UG • Import Reg: URA-IMP-7721<br />
                 Tel: +256 772 555 272 • Email: procurement@karat-machinery.com
               </div>
@@ -174,7 +174,7 @@ export const OEMPurchaseOrderModal: React.FC<OEMPurchaseOrderModalProps> = ({
                 <span>Consignee & Freight Destination</span>
               </div>
               <div className="font-black text-sm text-[#111111]">
-                KARAT Heavy Machinery Depot (Yard 4 Nakawa)
+                Karat Heavy Machinery Spare Parts (Yard 4 Industrial Area)
               </div>
               <div className="text-slate-600">
                 <span className="font-semibold text-slate-700">Shipping Mode:</span> {order.shipping_method}

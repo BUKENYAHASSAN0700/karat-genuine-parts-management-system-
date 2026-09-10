@@ -96,7 +96,7 @@ export const GoodsReceivedNoteModal: React.FC<GoodsReceivedNoteModalProps> = ({
                 Stores Ingest & Quality Assurance Inspection
               </div>
               <div className="text-[11px] text-slate-500 mt-1 leading-relaxed">
-                Plot 14 Industrial Area, Nakawa Yard 4, Kampala, Uganda<br />
+                Plot 14 Industrial Area, Yard 4, Kampala, Uganda<br />
                 Central Heavy Parts Receiving Bay • Dock 3<br />
                 Internal System Code: KARAT-WMS-INGEST
               </div>
@@ -137,7 +137,7 @@ export const GoodsReceivedNoteModal: React.FC<GoodsReceivedNoteModalProps> = ({
 
             <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs space-y-1">
               <div className="text-[10px] uppercase font-black text-slate-400">Storage Location</div>
-              <div className="font-black text-[#111111]">Yard 4 Nakawa Depot</div>
+              <div className="font-black text-[#111111]">Yard 4 Industrial Area Depot</div>
               <div className="text-slate-500 font-medium">Under Bond / Cleared for Shelf Storage</div>
             </div>
           </div>
@@ -226,7 +226,7 @@ export const GoodsReceivedNoteModal: React.FC<GoodsReceivedNoteModalProps> = ({
             <div className="text-right">
               <div className="text-[10px] uppercase font-bold text-slate-400">Inventory Controller / Master:</div>
               <div className="font-bold text-[#111111] mt-1">Hassan</div>
-              <div className="text-[11px] text-slate-500">KARAT Operations & Supply Chain Director</div>
+              <div className="text-[11px] text-slate-500">Karat Heavy Machinery Spare Parts</div>
               <div className="mt-8 border-b border-dashed border-slate-400 w-48 ml-auto"></div>
               <div className="text-[10px] text-slate-400 mt-1">Stock Endorsement Stamp</div>
             </div>

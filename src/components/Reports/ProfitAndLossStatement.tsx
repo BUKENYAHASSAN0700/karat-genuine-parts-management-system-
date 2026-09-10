@@ -83,7 +83,7 @@ export const ProfitAndLossStatement: React.FC<PnLProps> = ({
   // CSV Export
   const handleExportCSV = () => {
     const rows = [
-      ['KARAT HEAVY MACHINERY & SPARE PARTS LTD'],
+      ['KARAT HEAVY MACHINERY SPARE PARTS'],
       ['OFFICIAL STATEMENT OF PROFIT OR LOSS AND COMPREHENSIVE INCOME'],
       [`Reporting Period: ${periodLabel}`],
       [`Operating Currency: ${currency}`],
@@ -103,7 +103,7 @@ export const ProfitAndLossStatement: React.FC<PnLProps> = ({
       ['Summary', 'GROSS PROFIT', grossProfit],
       ['Summary', 'Gross Margin (%)', `${grossMarginPercent.toFixed(2)}%`],
       [''],
-      ['Operating Expenses (OPEX)', 'Yard 4 Nakawa Depot Lease & Storage', -opexDepotLease],
+      ['Operating Expenses (OPEX)', 'Yard 4 Industrial Area Depot Lease & Storage', -opexDepotLease],
       ['Operating Expenses (OPEX)', 'Fleet Logistics & Delivery Transit', -opexLogisticsFleet],
       ['Operating Expenses (OPEX)', 'Master Mechanics & Technical Payroll', -opexSalariesTechnicians],
       ['Operating Expenses (OPEX)', 'Hydraulic Diagnostic Rig & Tool Calibration', -opexDiagnosticTools],
@@ -274,7 +274,7 @@ export const ProfitAndLossStatement: React.FC<PnLProps> = ({
               <div className="flex items-center gap-2">
                 {expandOPEX ? <ChevronDown className="w-4 h-4 text-slate-500" /> : <ChevronRight className="w-4 h-4 text-slate-500" />}
                 <span className="font-black text-[#111111] uppercase tracking-wider text-[11px]">
-                  3. Yard 4 Nakawa Depot & Operating Expenses (OPEX)
+                  3. Yard 4 Industrial Area Depot & Operating Expenses (OPEX)
                 </span>
               </div>
               <span className="font-mono font-black text-sm text-slate-700">
@@ -285,7 +285,7 @@ export const ProfitAndLossStatement: React.FC<PnLProps> = ({
             {expandOPEX && (
               <div className="bg-white divide-y divide-slate-100">
                 <div className="px-8 py-2.5 flex items-center justify-between text-slate-600 hover:bg-slate-50/50">
-                  <span>Yard 4 Nakawa Warehouse Lease, Heavy Aisle Storage & Yard Security</span>
+                  <span>Yard 4 Industrial Area Warehouse Lease, Heavy Aisle Storage & Yard Security</span>
                   <span className="font-mono font-bold text-slate-800">({formatMoney(opexDepotLease)})</span>
                 </div>
                 <div className="px-8 py-2.5 flex items-center justify-between text-slate-600 hover:bg-slate-50/50">

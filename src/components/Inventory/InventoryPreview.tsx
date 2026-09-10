@@ -25,7 +25,7 @@ export const InventoryPreview: React.FC = () => {
         <div className="space-y-1.5">
           <div className="flex items-center gap-2.5 flex-wrap">
             <h1 className="text-2xl font-black text-[#111111] tracking-tight font-mono">
-              KARAT Spare Parts Inventory
+              Karat Heavy Machinery Spare Parts Inventory
             </h1>
             <span className="px-3 py-0.5 rounded-full text-xs font-bold bg-[#F6AF31]/20 text-[#111111] border border-[#F6AF31]/30">
               {parts.length} Heavy SKUs

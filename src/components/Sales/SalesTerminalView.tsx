@@ -955,13 +955,16 @@ export const SalesTerminalView: React.FC = () => {
                         <label className="text-[10px] uppercase font-bold text-[#111111]/50 block mb-1">
                           Cash Tendered ({currency})
                         </label>
-                        <input
-                          type="number"
-                          value={cashTendered}
-                          onChange={(e) => setCashTendered(e.target.value)}
-                          placeholder={grandTotal.toString()}
-                          className="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-mono text-[#111111] outline-none"
-                        />
+                        <div className="relative">
+                          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[9px] font-black text-[#111111]/50">{currency}</span>
+                          <input
+                            type="number"
+                            value={cashTendered}
+                            onChange={(e) => setCashTendered(e.target.value)}
+                            placeholder={grandTotal.toString()}
+                            className="w-full bg-white border border-slate-200 rounded-xl pl-11 pr-2.5 py-1.5 text-xs font-mono text-[#111111] outline-none"
+                          />
+                        </div>
                       </div>
 
                       <div>

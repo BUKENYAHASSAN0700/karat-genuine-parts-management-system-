@@ -14,9 +14,13 @@ import {
   Coins,
   Check,
   Receipt
+  ,Sun,
+  Moon
 } from 'lucide-react';
 import { useInertia } from '../../context/InertiaContext';
 import { CurrencyCode } from '../../types';
+
+const karatLogo = new URL('../../../karat.svg', import.meta.url).href;
 
 export const Header: React.FC = () => {
   const { 
@@ -28,7 +32,9 @@ export const Header: React.FC = () => {
     toggleMobileMenu,
     currency,
     setCurrency,
-    setFlashMessage
+    setFlashMessage,
+    theme,
+    toggleTheme
   } = useInertia();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -76,6 +82,15 @@ export const Header: React.FC = () => {
         <PanelLeft className="w-4 h-4 text-[#111111]" />
       </button>
 
+      {/* Compact brand mark for screens where the sidebar is hidden */}
+      <button
+        onClick={() => setActiveView('dashboard')}
+        className="md:hidden w-9 h-9 rounded-xl bg-[#F7F6F3] border border-slate-200/80 p-1 flex items-center justify-center shrink-0 shadow-xs"
+        title="Karat dashboard"
+      >
+        <img src={karatLogo} alt="Karat logo" className="w-full h-full object-contain" />
+      </button>
+
       {/* Center Search Input - Adapts fluidly whether sidebar is minimized or expanded */}
       <div className="flex-1 max-w-2xl min-w-0">
         <form onSubmit={handleSearchSubmit} className="relative">
@@ -101,6 +116,16 @@ export const Header: React.FC = () => {
 
       {/* Right Controls: POS Terminal, Add Part, Notifications, User Icon */}
       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        <button
+          type="button"
+          onClick={toggleTheme}
+          className="w-9 h-9 rounded-full bg-[#F7F6F3] hover:bg-slate-200/60 text-[#111111] border border-slate-200/80 flex items-center justify-center transition"
+          title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+        >
+          {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+        </button>
+
         {/* Sell / POS Terminal Button */}
         <button
           onClick={() => setActiveView('pos')}

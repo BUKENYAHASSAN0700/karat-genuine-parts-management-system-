@@ -36,9 +36,9 @@ export const TaxAndEFRISReport: React.FC<TaxReportProps> = ({
   const handleExportVATSchedules = () => {
     const rows = [
       ['UGANDA REVENUE AUTHORITY (URA) - VALUE ADDED TAX (VAT) RETURN SCHEDULE'],
-      ['TAXPAYER: KARAT HEAVY MACHINERY & SPARE PARTS LTD'],
+      ['TAXPAYER: KARAT HEAVY MACHINERY SPARE PARTS'],
       ['TIN: 1004829104 | VAT REGISTRATION: 1004829104-VAT'],
-      ['STATION: NAKAWA LARGE TAXPAYERS OFFICE, KAMPALA'],
+      ['STATION: KAMPALA LARGE TAXPAYERS OFFICE, KAMPALA'],
       [`TAX PERIOD: ${periodLabel}`],
       [''],
       ['Schedule Box', 'Tax Description', 'Taxable Value', 'VAT Rate', 'VAT Amount'],

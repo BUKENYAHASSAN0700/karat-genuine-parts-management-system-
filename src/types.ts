@@ -41,6 +41,8 @@ export interface SparePart {
   unit?: string; // Unit of measure: PCS, SET, KIT, ASSY, PAIR, MTR, KG, BOX, etc.
   taxes?: string; // e.g. "18% VAT", "0% Exempt"
   tax_rate?: number;
+  tax_amount?: number;
+  transport_cost?: number;
   stock_quantity: number;
   min_stock_alert: number;
   unit_cost: number; // Cost for Item
@@ -92,7 +94,7 @@ export interface CommercialOrder {
   customer_email?: string;
   equipment_model: string;
   delivery_site: string;
-  delivery_method: 'Field Van Delivery' | 'Warehouse Pickup (Yard 4 - Nakawa)' | 'Expedited Air Freight';
+  delivery_method: 'Field Van Delivery' | 'Warehouse Pickup (Yard 4 - Industrial Area)' | 'Expedited Air Freight';
   items: InquiryLineItem[];
   subtotal: number;
   tax_amount?: number;
@@ -157,7 +159,7 @@ export interface OEMPurchaseOrder {
   carrier?: string;
   port_of_loading: string;
   port_of_discharge: string;
-  incoterm: 'CIF Kampala' | 'FOB Origin' | 'DAP Nakawa Yard' | 'EXW Factory';
+  incoterm: 'CIF Kampala' | 'FOB Origin' | 'DAP Industrial Area Yard' | 'EXW Factory';
   payment_terms: '100% Wire Transfer (T/T)' | 'Letter of Credit (L/C)' | '30% Advance, 70% vs B/L' | 'OEM Net 30';
   payment_status: 'Paid in Full' | 'Advance Paid (30%)' | 'Unpaid / Open Credit';
   order_date: string;

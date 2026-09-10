@@ -41,3 +41,121 @@ html, body, #root {
   scrollbar-width: thin;
   scrollbar-color: rgba(17, 17, 17, 0.12) transparent;
 }
+
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
+}
+
+input[type='number'] {
+  -moz-appearance: textfield;
+}
+
+html.dark-theme,
+html.dark-theme body {
+  background: #111315;
+  color: #f7f6f3;
+}
+
+html.dark-theme .app-shell {
+  background: #111315 !important;
+  color: #f7f6f3 !important;
+}
+
+html.dark-theme .app-shell .bg-white,
+html.dark-theme .app-shell .bg-\[\#F7F6F3\],
+html.dark-theme .app-shell .bg-\[\#F7F6F3\]\/50,
+html.dark-theme .app-shell .bg-\[\#F7F6F3\]\/70,
+html.dark-theme .app-shell .bg-\[\#FAFAF8\],
+html.dark-theme .app-shell .bg-slate-50,
+html.dark-theme .app-shell .bg-slate-100,
+html.dark-theme .app-shell .bg-slate-200\/90 {
+  background-color: #1b1f23 !important;
+}
+
+html.dark-theme .app-shell .bg-white\/5 {
+  background-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+html.dark-theme .app-shell .bg-amber-50,
+html.dark-theme .app-shell .bg-amber-50\/20,
+html.dark-theme .app-shell .bg-emerald-50,
+html.dark-theme .app-shell .bg-blue-50,
+html.dark-theme .app-shell .bg-purple-50,
+html.dark-theme .app-shell .bg-rose-50 {
+  background-color: #252b31 !important;
+}
+
+html.dark-theme .app-shell .text-\[\#111111\],
+html.dark-theme .app-shell .text-\[\#111111\]\/70,
+html.dark-theme .app-shell .text-\[\#111111\]\/60,
+html.dark-theme .app-shell .text-\[\#111111\]\/50,
+html.dark-theme .app-shell .text-\[\#111111\]\/40 {
+  color: #f7f6f3 !important;
+}
+
+html.dark-theme .app-shell .text-slate-800,
+html.dark-theme .app-shell .text-slate-900,
+html.dark-theme .app-shell .text-amber-900,
+html.dark-theme .app-shell .text-emerald-900,
+html.dark-theme .app-shell .text-blue-900,
+html.dark-theme .app-shell .text-purple-900 {
+  color: #f7f6f3 !important;
+}
+
+html.dark-theme .app-shell .border-slate-200,
+html.dark-theme .app-shell .border-slate-200\/80,
+html.dark-theme .app-shell .border-slate-200\/90,
+html.dark-theme .app-shell .border-slate-100,
+html.dark-theme .app-shell .border-slate-200\/70,
+html.dark-theme .app-shell .border-slate-300,
+html.dark-theme .app-shell .border-amber-200,
+html.dark-theme .app-shell .border-amber-300 {
+  border-color: #343a40 !important;
+}
+
+html.dark-theme .app-shell input,
+html.dark-theme .app-shell select,
+html.dark-theme .app-shell textarea {
+  background-color: #24292e !important;
+  color: #f7f6f3 !important;
+  border-color: #343a40 !important;
+}
+
+html.dark-theme .app-shell input::placeholder,
+html.dark-theme .app-shell textarea::placeholder {
+  color: #aab2bb !important;
+}
+
+html.dark-theme .app-shell table,
+html.dark-theme .app-shell th,
+html.dark-theme .app-shell td {
+  border-color: #343a40 !important;
+}
+
+html.dark-theme .app-shell .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
+html.dark-theme .app-shell .divide-slate-200 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #343a40 !important;
+}
+
+html.dark-theme .app-shell .shadow-xs,
+html.dark-theme .app-shell .shadow-2xs,
+html.dark-theme .app-shell .shadow-xl,
+html.dark-theme .app-shell .shadow-2xl {
+  --tw-shadow-color: rgba(0, 0, 0, 0.35) !important;
+}
+
+html.dark-theme .app-shell .hover\:bg-\[\#F7F6F3\]:hover,
+html.dark-theme .app-shell .hover\:bg-slate-100:hover,
+html.dark-theme .app-shell .hover\:bg-slate-200\/60:hover,
+html.dark-theme .app-shell .hover\:bg-slate-200\/80:hover {
+  background-color: #2a3036 !important;
+}
+
+html.dark-theme .app-shell .text-slate-500,
+html.dark-theme .app-shell .text-slate-400,
+html.dark-theme .app-shell .text-slate-600,
+html.dark-theme .app-shell .text-slate-700 {
+  color: #b8c0c8 !important;
+}

@@ -67,7 +67,7 @@ export const InventoryValuationReport: React.FC = () => {
               Warehouse Balance Sheet
             </span>
             <span className="text-xs text-slate-400 font-mono">
-              Nakawa Yard 4 • Heavy Spares Capitalization
+              Industrial Area Yard 4 • Heavy Spares Capitalization
             </span>
           </div>
           <h2 className="text-xl font-black text-[#111111] tracking-tight">

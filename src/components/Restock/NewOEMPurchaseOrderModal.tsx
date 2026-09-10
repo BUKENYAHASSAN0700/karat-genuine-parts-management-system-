@@ -432,7 +432,7 @@ export const NewOEMPurchaseOrderModal: React.FC<NewOEMPurchaseOrderModalProps> =
                 className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 border border-slate-200 font-semibold focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
               >
                 <option value="CIF Kampala">CIF Kampala (Carriage, Ins, Freight)</option>
-                <option value="DAP Nakawa Yard">DAP Nakawa Yard (Delivered at Place)</option>
+                <option value="DAP Industrial Area Yard">DAP Industrial Area Yard (Delivered at Place)</option>
                 <option value="FOB Origin">FOB Origin (Free on Board)</option>
                 <option value="EXW Factory">EXW Factory (Ex Works)</option>
               </select>
@@ -694,7 +694,7 @@ export const NewOEMPurchaseOrderModal: React.FC<NewOEMPurchaseOrderModalProps> =
               <div className="flex items-center justify-between text-slate-600">
                 <span>International Freight:</span>
                 <div className="flex items-center gap-1">
-                  <span className="font-mono text-slate-400">$</span>
+                  <span className="font-mono text-slate-400">USD</span>
                   <input
                     type="number"
                     min="0"
@@ -708,7 +708,7 @@ export const NewOEMPurchaseOrderModal: React.FC<NewOEMPurchaseOrderModalProps> =
               <div className="flex items-center justify-between text-slate-600">
                 <span>Marine / Cargo Transit Insurance:</span>
                 <div className="flex items-center gap-1">
-                  <span className="font-mono text-slate-400">$</span>
+                  <span className="font-mono text-slate-400">USD</span>
                   <input
                     type="number"
                     min="0"
@@ -722,7 +722,7 @@ export const NewOEMPurchaseOrderModal: React.FC<NewOEMPurchaseOrderModalProps> =
               <div className="flex items-center justify-between text-slate-600">
                 <span>Estimated Customs Clearance / Import Duties:</span>
                 <div className="flex items-center gap-1">
-                  <span className="font-mono text-slate-400">$</span>
+                  <span className="font-mono text-slate-400">USD</span>
                   <input
                     type="number"
                     min="0"

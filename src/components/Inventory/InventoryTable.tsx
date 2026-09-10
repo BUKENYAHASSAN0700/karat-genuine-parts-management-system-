@@ -944,7 +944,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                           </div>
                         </td>
 
-                        {/* Price & Taxes Column */}
+                        {/* Unit Price & Tax Column */}
                         <td className="px-4 py-3.5 whitespace-nowrap">
                           <div className="font-mono font-black text-xs text-[#111111]">
                             {formatMoney(part.unit_price)}
@@ -954,7 +954,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                               Per {part.unit || 'PCS'}
                             </span>
                             <span className="text-[9px] font-bold text-slate-600 bg-slate-100 px-1.5 py-0.2 rounded border border-slate-200">
-                              {part.taxes || '18% VAT'}
+                              Tax: {formatMoney(part.tax_amount || 0)}
                             </span>
                           </div>
                         </td>
@@ -1079,7 +1079,8 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                                 </div>
                                 <div className="text-xs space-y-1 font-mono">
                                   <div><span className="text-[#111111]/50">Unit of Measure (UNIT):</span> <strong className="text-[#111111]">{part.unit || 'PCS'}</strong></div>
-                                  <div><span className="text-[#111111]/50">Taxes (TAXES):</span> <strong className="text-amber-900 bg-amber-50 px-1 py-0.2 rounded border border-amber-200/60 text-[10px]">{part.taxes || '18% VAT'}</strong></div>
+                                  <div><span className="text-[#111111]/50">Tax Amount:</span> <strong className="text-amber-900 bg-amber-50 px-1 py-0.2 rounded border border-amber-200/60 text-[10px]">{formatMoney(part.tax_amount || 0)}</strong></div>
+                                  <div><span className="text-[#111111]/50">Transport Cost:</span> <strong className="text-[#111111]">{formatMoney(part.transport_cost || 0)}</strong></div>
                                   <div className="text-[11px] text-[#111111]/60 mt-1">
                                     Warehouse Bin: <strong>{part.warehouse_bin}</strong>
                                   </div>
@@ -1097,7 +1098,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                                 </div>
                                 <div className="space-y-0.5 font-mono text-xs">
                                   <div><span className="text-[#111111]/50">Cost for Item:</span> <strong className="text-[#111111]">{formatMoney(part.unit_cost)}</strong></div>
-                                  <div><span className="text-[#111111]/50">Price on Item:</span> <strong className="text-[#111111]">{formatMoney(part.unit_price)}</strong></div>
+                                  <div><span className="text-[#111111]/50">Unit Price:</span> <strong className="text-[#111111]">{formatMoney(part.unit_price)}</strong></div>
                                   <div><span className="text-[#111111]/50">Stock Quantity:</span> <strong>{part.stock_quantity} {part.unit || 'PCS'}</strong></div>
                                   <div><span className="text-[#111111]/50">Total Bin Asset:</span> <strong className="text-[#111111]">{formatMoney(part.stock_quantity * part.unit_price)}</strong></div>
                                 </div>
@@ -1381,8 +1382,8 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                     <strong className="text-[#111111]">{detailModalPart.unit || 'PCS'}</strong>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-[#111111]/60">Taxes (TAXES):</span>
-                    <strong className="text-amber-900 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200/60 text-[10px]">{detailModalPart.taxes || '18% VAT'}</strong>
+                    <span className="text-[#111111]/60">Tax Amount:</span>
+                    <strong className="text-amber-900 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200/60 text-[10px]">{formatMoney(detailModalPart.tax_amount || 0)}</strong>
                   </div>
                 </div>
 
@@ -1405,13 +1406,17 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                     <span>Balance: <strong className="text-[#111111]">{detailModalPart.stock_quantity} {detailModalPart.unit || 'PCS'}</strong></span>
                     <span>Min Alert: <strong>{detailModalPart.min_stock_alert} {detailModalPart.unit || 'PCS'}</strong></span>
                   </div>
+                  <div className="flex justify-between text-[11px] text-[#111111]/70">
+                    <span>Transport Cost:</span>
+                    <strong className="text-[#111111]">{formatMoney(detailModalPart.transport_cost || 0)}</strong>
+                  </div>
                 </div>
               </div>
 
               {/* Commercial Pricing: COST for ITEM vs PRICE on Item */}
               <div className="p-3.5 bg-[#F7F6F3] rounded-2xl border border-slate-200/80 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] uppercase font-bold text-[#111111]/50">Commercial Financials (Direct 1:1 Systemwide Pricing)</span>
+                  <span className="text-[10px] uppercase font-bold text-[#111111]/50">Commercial Financials</span>
                   <span className="text-[9px] font-mono font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
                     No Conversion Multiplier
                   </span>
@@ -1423,7 +1428,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                     <span className="text-[8px] text-slate-400 block mt-0.5">Landed restock cost</span>
                   </div>
                   <div className="bg-amber-50/60 p-2.5 rounded-xl border border-amber-300">
-                    <span className="text-[9px] font-bold text-[#111111] block">Price Put on Item (PRICE)</span>
+                    <span className="text-[9px] font-bold text-[#111111] block">Unit Price</span>
                     <strong className="text-xs text-[#111111] font-black">{formatMoney(detailModalPart.unit_price)}</strong>
                     <span className="text-[8px] text-amber-800 block mt-0.5">Systemwide selling price</span>
                   </div>
