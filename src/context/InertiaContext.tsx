@@ -113,6 +113,8 @@ interface InertiaContextType {
   setFlashMessage: (type: 'success' | 'error' | 'info', message: string) => void;
   clearFlash: () => void;
   notifications: AppNotification[];
+  notificationsEnabled: boolean;
+  toggleNotificationsEnabled: () => void;
   clearNotification: (id: string) => void;
   clearAllNotifications: () => void;
   markNotificationAsRead: (id: string) => void;
