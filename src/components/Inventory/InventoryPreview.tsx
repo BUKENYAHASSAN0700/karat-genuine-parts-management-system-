@@ -22,33 +22,29 @@ export const InventoryPreview: React.FC = () => {
     <div className="space-y-6">
       {/* Top Header Bento Summary */}
       <div className="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xs flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-2.5 flex-wrap">
-            <h1 className="text-2xl font-black text-[#111111] tracking-tight font-mono">
-              Inventory
-            </h1>
-            <span className="px-3 py-0.5 rounded-full text-xs font-bold bg-[#F6AF31]/20 text-[#111111] border border-[#F6AF31]/30">
-              {parts.length} Heavy SKUs
-            </span>
-          </div>
-          <p className="text-xs text-[#111111]/60">
-            Real-time catalog for heavy machinery spare parts and stock management.
-          </p>
+        <div>
+          <h1 className="text-2xl font-black text-[#111111] tracking-tight font-mono">
+            Inventory
+          </h1>
         </div>
 
         {/* Metric Capsules */}
         <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
-          <div className="px-4 py-2.5 bg-[#F7F6F3] rounded-2xl border border-slate-200/80">
-            <div className="text-[10px] uppercase font-bold text-[#111111]/40">Catalog Valuation</div>
-            <div className="text-base font-black font-mono text-[#111111]">
+          <div className="px-5 py-3 bg-slate-50 rounded-2xl border border-slate-200/90">
+            <div className="text-xl sm:text-2xl font-black font-mono text-[#111111]">
               {formatMoney(totalValuation)}
+            </div>
+            <div className="text-xs font-semibold text-slate-500 mt-0.5">
+              Catalog Valuation
             </div>
           </div>
 
-          <div className="px-4 py-2.5 bg-[#F7F6F3] rounded-2xl border border-slate-200/80">
-            <div className="text-[10px] uppercase font-bold text-[#111111]/40">Total Units in Stock</div>
-            <div className="text-base font-black font-mono text-[#111111]">
-              {totalUnits} <span className="text-xs font-normal text-[#111111]/50">Units</span>
+          <div className="px-5 py-3 bg-slate-50 rounded-2xl border border-slate-200/90">
+            <div className="text-xl sm:text-2xl font-black font-mono text-[#111111]">
+              {totalUnits} <span className="text-xs font-normal text-slate-400">Units</span>
+            </div>
+            <div className="text-xs font-semibold text-slate-500 mt-0.5">
+              Total Units in Stock
             </div>
           </div>
         </div>

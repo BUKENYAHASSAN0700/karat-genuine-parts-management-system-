@@ -1,13 +1,13 @@
-import { SparePart, InquiryItem, RecentTransaction, ClientAccount, User, CommercialOrder, OEMSupplier, OEMPurchaseOrder } from '../types';
+import { SparePart, InquiryItem, RecentTransaction, ClientAccount, User, CommercialOrder, OEMSupplier, OEMPurchaseOrder, AppNotification } from '../types';
 
 export const INITIAL_OWNER: User = {
   id: 1,
-  name: 'Hassan',
-  email: 'owner@karat.com',
+  name: 'Arafat',
+  email: 'karat@karat.co.ug',
   role: 'owner',
-  phone: '+1 (800) 555-4272',
-  shop_name: 'Karat Heavy Machinery Spare Parts',
-  avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+  phone: '+256 700 123456',
+  shop_name: 'Heavy Machinery Spare Parts',
+  avatar: '/karat.svg',
 };
 
 export const INITIAL_SPARE_PARTS: SparePart[] = [
@@ -1098,4 +1098,46 @@ export const INITIAL_OEM_ORDERS: OEMPurchaseOrder[] = [
       }
     ]
   }
+];
+
+export const INITIAL_NOTIFICATIONS: AppNotification[] = [
+  {
+    id: 'notif-1',
+    title: 'Low Stock Alert',
+    message: 'Hydraulic Piston Pump (KA102) has 3 units remaining, reaching min stock alert.',
+    category: 'stock',
+    timestamp: 'Today, 09:30 AM',
+    createdAt: Date.now() - 3600000 * 2,
+    read: false,
+    linkView: 'inventory',
+  },
+  {
+    id: 'notif-2',
+    title: 'Low Stock Alert',
+    message: 'Hydraulic Cylinder Seal Kit (KA104) has 2 units remaining.',
+    category: 'stock',
+    timestamp: 'Today, 08:15 AM',
+    createdAt: Date.now() - 3600000 * 4,
+    read: false,
+    linkView: 'inventory',
+  },
+  {
+    id: 'notif-3',
+    title: 'Sale Completed',
+    message: 'Receipt #REC-2025-089 completed for $1,250.',
+    category: 'sale',
+    timestamp: 'Yesterday, 04:20 PM',
+    createdAt: Date.now() - 86400000,
+    read: true,
+    linkView: 'pos',
+  },
+  {
+    id: 'notif-4',
+    title: 'System Backup',
+    message: 'Catalog and transaction database synchronized.',
+    category: 'system',
+    timestamp: 'Yesterday, 08:00 AM',
+    createdAt: Date.now() - 86400000 * 1.5,
+    read: true,
+  },
 ];

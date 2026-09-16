@@ -13,7 +13,8 @@ import {
   OEMPurchaseOrder,
   OEMPurchaseOrderItem,
   InquiryItem,
-  CommercialOrder
+  CommercialOrder,
+  AppNotification
 } from '../types';
 import { 
   INITIAL_OWNER, 
@@ -24,7 +25,8 @@ import {
   INITIAL_OEM_SUPPLIERS,
   INITIAL_OEM_ORDERS,
   INITIAL_INQUIRIES,
-  INITIAL_ORDERS
+  INITIAL_ORDERS,
+  INITIAL_NOTIFICATIONS
 } from '../data/initialData';
 import { getSeriesForCategory } from '../data/partTaxonomy';
 
@@ -110,6 +112,11 @@ interface InertiaContextType {
   deleteOrder: (id: string) => void;
   setFlashMessage: (type: 'success' | 'error' | 'info', message: string) => void;
   clearFlash: () => void;
+  notifications: AppNotification[];
+  clearNotification: (id: string) => void;
+  clearAllNotifications: () => void;
+  markNotificationAsRead: (id: string) => void;
+  unreadNotificationsCount: number;
 }
 
 const InertiaContext = createContext<InertiaContextType | null>(null);
@@ -129,9 +136,18 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     try {
       const savedUser = localStorage.getItem('karat_user');
       const parsedUser = savedUser ? JSON.parse(savedUser) : INITIAL_OWNER;
-      return parsedUser?.name === 'KARAT Administrator'
-        ? { ...parsedUser, name: 'Arafat' }
-        : parsedUser;
+      if (parsedUser) {
+        if (!parsedUser.name || parsedUser.name === 'KARAT Administrator' || parsedUser.name === 'Hassan') {
+          parsedUser.name = 'Arafat';
+        }
+        if (!parsedUser.email || parsedUser.email === 'owner@karat.com') {
+          parsedUser.email = 'karat@karat.co.ug';
+        }
+        if (!parsedUser.avatar) {
+          parsedUser.avatar = '/karat.svg';
+        }
+      }
+      return parsedUser;
     } catch {
       return INITIAL_OWNER;
     }
@@ -204,7 +220,7 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const getConvertedAmount = (amount: number): number => {
-    // 1:1 direct pricing: the exact price placed on the item is what appears systemwide
+    // 1:1 direct pricing: the exact price placed on the item is what appears across the store
     return amount;
   };
 
@@ -260,6 +276,35 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
       return INITIAL_RECEIPTS;
     }
   });
+
+  const [notifications, setNotifications] = useState<AppNotification[]>(() => {
+    try {
+      const saved = localStorage.getItem('karat_notifications');
+      return saved ? JSON.parse(saved) : INITIAL_NOTIFICATIONS;
+    } catch {
+      return INITIAL_NOTIFICATIONS;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('karat_notifications', JSON.stringify(notifications));
+    } catch {}
+  }, [notifications]);
+
+  const clearNotification = (id: string) => {
+    setNotifications(prev => prev.filter(n => n.id !== id));
+  };
+
+  const clearAllNotifications = () => {
+    setNotifications([]);
+  };
+
+  const markNotificationAsRead = (id: string) => {
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+  };
+
+  const unreadNotificationsCount = notifications.filter(n => !n.read).length;
 
   const [activeReceipt, setActiveReceipt] = useState<SaleReceipt | null>(null);
   const [selectedPartForSale, setSelectedPartForSale] = useState<SparePart | null>(null);
@@ -531,7 +576,7 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const deletePart = (partId: string) => {
-    setParts(prev => prev.filter(p => p.id !== partId));
+    setParts(prev => prev.filter(p => p.id !== partId && String(p.id) !== String(partId) && p.part_number !== partId));
     setFlashMessage('success', `Part ${partId} removed from catalog.`);
   };
 
@@ -830,7 +875,7 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const deleteReceipt = (receiptId: string) => {
-    const receipt = receipts.find(item => item.id === receiptId);
+    const receipt = receipts.find(item => item.id === receiptId || item.receipt_number === receiptId);
     if (!receipt) return;
 
     setParts(prevParts => prevParts.map(part => {
@@ -848,11 +893,11 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
       };
     }));
 
-    setReceipts(prev => prev.filter(item => item.id !== receiptId));
+    setReceipts(prev => prev.filter(item => item.id !== receipt.id && item.receipt_number !== receipt.receipt_number));
     setTransactions(prev => prev.filter(transaction => (
       transaction.type !== 'sale' || !transaction.subtitle?.includes(receipt.receipt_number)
     )));
-    setActiveReceipt(current => current?.id === receiptId ? null : current);
+    setActiveReceipt(current => current?.id === receipt.id || current?.receipt_number === receipt.receipt_number ? null : current);
     setFlashMessage('success', `Receipt ${receipt.receipt_number} deleted and stock restored.`);
   };
 
@@ -866,12 +911,14 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
       localStorage.removeItem('karat_orders');
       localStorage.removeItem('karat_exchange_rate');
       localStorage.removeItem('karat_store_settings');
+      localStorage.removeItem('karat_notifications');
     } catch {}
     setParts(INITIAL_SPARE_PARTS);
     setReceipts(INITIAL_RECEIPTS);
     setOemOrders(INITIAL_OEM_ORDERS);
     setInquiries(INITIAL_INQUIRIES);
     setOrders(INITIAL_ORDERS);
+    setNotifications(INITIAL_NOTIFICATIONS);
     setExchangeRateState(UGX_EXCHANGE_RATE);
     setFlashMessage('success', 'All system records and inventory reset to factory defaults.');
   };
@@ -942,6 +989,11 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
         deleteOrder,
         setFlashMessage,
         clearFlash,
+        notifications,
+        clearNotification,
+        clearAllNotifications,
+        markNotificationAsRead,
+        unreadNotificationsCount,
       }}
     >
       {children}

@@ -22,7 +22,7 @@ interface TaxReportProps {
   periodLabel: string;
 }
 
-export const TaxAndEFRISReport: React.FC<TaxReportProps> = ({
+export const TaxComplianceReport: React.FC<TaxReportProps> = ({
   grossRevenue,
   outputVAT,
   inputVAT,
@@ -72,11 +72,8 @@ export const TaxAndEFRISReport: React.FC<TaxReportProps> = ({
       <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-100 text-purple-900">
-              Statutory Compliance
-            </span>
             <span className="text-xs text-slate-500 font-mono">
-              URA TIN: 1004829104 • EFRIS Electronic Fiscal System
+              URA TIN: 1004829104 • Statutory Tax Compliance
             </span>
           </div>
           <h2 className="text-xl font-black text-[#111111] tracking-tight">
@@ -100,63 +97,46 @@ export const TaxAndEFRISReport: React.FC<TaxReportProps> = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Output VAT */}
         <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-xs">
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-500 block mb-1">
-            18% Output VAT (Sales)
-          </span>
-          <div className="text-2xl font-black text-[#111111] font-mono">
+          <div className="text-2xl sm:text-3xl font-black text-[#111111] font-mono tracking-tight">
             {formatMoney(outputVAT)}
           </div>
-          <div className="text-[11px] text-slate-500 mt-2">
-            Collected across sales & commercial invoices
+          <div className="text-xs font-semibold text-slate-500 mt-1">
+            18% Output VAT (Sales)
           </div>
         </div>
 
         {/* Input VAT */}
         <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-xs">
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-500 block mb-1">
-            18% Input VAT (Imports)
-          </span>
-          <div className="text-2xl font-black text-blue-600 font-mono">
+          <div className="text-2xl sm:text-3xl font-black text-blue-600 font-mono tracking-tight">
             {formatMoney(inputVAT)}
           </div>
-          <div className="text-[11px] text-slate-500 mt-2">
-            Paid at Entebbe / Mombasa customs bond
+          <div className="text-xs font-semibold text-slate-500 mt-1">
+            18% Input VAT (Imports)
           </div>
         </div>
 
         {/* Net VAT Payable */}
-        <div className="p-5 rounded-3xl bg-amber-500/10 border border-amber-300 shadow-xs">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-xs font-black uppercase tracking-wider text-[#111111]">
-              Net VAT Payable to URA
-            </span>
-            <span className="text-[10px] font-black bg-[#F6AF31] text-[#111111] px-1.5 py-0.2 rounded">
-              Due 15th
-            </span>
-          </div>
-          <div className="text-2xl font-black text-[#111111] font-mono">
+        <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-xs">
+          <div className="text-2xl sm:text-3xl font-black text-[#111111] font-mono tracking-tight">
             {formatMoney(netVATPayable)}
           </div>
-          <div className="text-[11px] text-slate-700 mt-2 font-medium">
-            Output VAT minus allowable Input VAT credit
+          <div className="text-xs font-semibold text-slate-500 mt-1">
+            Net VAT Payable to URA
           </div>
         </div>
 
         {/* Withholding Tax 6% */}
         <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-xs">
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-500 block mb-1">
-            Withholding Tax (WHT 6%)
-          </span>
-          <div className="text-2xl font-black text-purple-700 font-mono">
+          <div className="text-2xl sm:text-3xl font-black text-purple-700 font-mono tracking-tight">
             {formatMoney(whtCollected)}
           </div>
-          <div className="text-[11px] text-slate-500 mt-2">
-            Deducted by corporate clients (Credit notes held)
+          <div className="text-xs font-semibold text-slate-500 mt-1">
+            Withholding Tax (WHT 6%)
           </div>
         </div>
       </div>
 
-      {/* EFRIS Electronic Fiscal Receipting Verification Box */}
+      {/* Statutory Tax Compliance Verification Box */}
       <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
           <div className="flex items-center gap-3">
@@ -166,21 +146,21 @@ export const TaxAndEFRISReport: React.FC<TaxReportProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-sm font-black text-[#111111] uppercase tracking-tight">
-                  EFRIS Fiscal Integration Status
+                  Tax Compliance Status
                 </h3>
                 <span className="px-2 py-0.5 bg-emerald-100 text-[#22A06B] text-[10px] font-black rounded-full flex items-center gap-1">
                   <CheckCircle2 className="w-3 h-3" />
-                  <span>ONLINE & SYNCHRONIZED</span>
+                  <span>SYNCHRONIZED</span>
                 </span>
               </div>
               <p className="text-xs text-slate-500 mt-0.5">
-                System connected to URA Central Fiscal Server • Device ID: <strong>EFRIS-UG-882194</strong>
+                System records aligned with statutory tax calculations
               </p>
             </div>
           </div>
 
           <div className="text-right">
-            <span className="text-[10px] font-bold text-slate-400 uppercase block">Total Fiscalized Invoices</span>
+            <span className="text-[10px] font-bold text-slate-400 uppercase block">Invoices Audited</span>
             <span className="font-mono font-black text-sm text-[#111111]">100% Compliant</span>
           </div>
         </div>

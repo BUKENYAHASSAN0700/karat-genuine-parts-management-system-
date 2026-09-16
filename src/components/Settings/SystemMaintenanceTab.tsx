@@ -1,17 +1,6 @@
-import React, { useState } from 'react';
-import { 
-  Database, 
-  Download, 
-  RefreshCw, 
-  AlertTriangle, 
-  HardDrive, 
-  CheckCircle2, 
-  FileSpreadsheet,
-  Trash2,
-  ShieldAlert,
-  Server
-} from 'lucide-react';
+import React, { useState, useEffect } from 'react';
 import { useInertia } from '../../context/InertiaContext';
+import { UIcon } from '../Common/UIcon';
 
 export const SystemMaintenanceTab: React.FC = () => {
   const { 
@@ -25,14 +14,49 @@ export const SystemMaintenanceTab: React.FC = () => {
   const [confirmResetOpen, setConfirmResetOpen] = useState(false);
   const [resetInput, setResetInput] = useState('');
   const [isExporting, setIsExporting] = useState(false);
+  const [backendStatus, setBackendStatus] = useState<'checking' | 'connected' | 'error'>('checking');
+  const [backendLatency, setBackendLatency] = useState<number | null>(null);
+  const [isPingingBackend, setIsPingingBackend] = useState(false);
+
+  const checkBackendConnection = async (showToast = false) => {
+    setIsPingingBackend(true);
+    const start = performance.now();
+    try {
+      const res = await fetch('/api/health');
+      if (res.ok) {
+        await res.json();
+        const latency = Math.round(performance.now() - start);
+        setBackendLatency(latency);
+        setBackendStatus('connected');
+        if (showToast) {
+          setFlashMessage('success', `Backend server connected! HTTP 200 OK (${latency}ms latency)`);
+        }
+      } else {
+        setBackendStatus('error');
+        if (showToast) {
+          setFlashMessage('error', 'Backend returned an invalid status code.');
+        }
+      }
+    } catch {
+      setBackendStatus('error');
+      if (showToast) {
+        setFlashMessage('error', 'Failed to connect to backend server.');
+      }
+    } finally {
+      setIsPingingBackend(false);
+    }
+  };
+
+  useEffect(() => {
+    checkBackendConnection(false);
+  }, []);
 
   const handleExportFullJSON = () => {
     setIsExporting(true);
     setTimeout(() => {
       const backupData = {
         metadata: {
-          organization: 'Karat Heavy Machinery Spare Parts',
-          facility: 'Yard 4 Industrial Area Estate, Kampala',
+          organization: 'Heavy Machinery Spare Parts',
           exportTimestamp: new Date().toISOString(),
           version: '2.4.0-PROD'
         },
@@ -45,11 +69,11 @@ export const SystemMaintenanceTab: React.FC = () => {
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `KARAT_Full_System_Backup_${new Date().toISOString().split('T')[0]}.json`;
+      link.download = `Full_System_Backup_${new Date().toISOString().split('T')[0]}.json`;
       link.click();
       URL.revokeObjectURL(url);
       setIsExporting(false);
-      setFlashMessage('success', 'Full system JSON database snapshot successfully exported.');
+      setFlashMessage('success', 'Full database snapshot successfully exported.');
     }, 600);
   };
 
@@ -63,14 +87,14 @@ export const SystemMaintenanceTab: React.FC = () => {
       p.stock_quantity,
       p.unit_cost ?? 0,
       p.unit_price ?? 0,
-      p.warehouse_bin || 'Yard 4'
+      p.warehouse_bin || 'Main Store'
     ]);
 
     const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `KARAT_Inventory_Catalog_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('download', `Inventory_Catalog_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -92,23 +116,13 @@ export const SystemMaintenanceTab: React.FC = () => {
       
       {/* Database Snapshot & Export Card */}
       <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-7 shadow-xs space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
-          <div>
-            <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md">
-              Data Governance
-            </span>
-            <h3 className="text-base font-black text-[#111111] tracking-tight mt-1">
-              Database Snapshots & Catalog Data Exports
-            </h3>
-            <p className="text-xs text-slate-500">
-              Generate offline audit copies and raw machine-readable datasets for accounting or IT disaster recovery.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-mono font-bold">
-            <Database className="w-3.5 h-3.5 text-slate-500" />
-            <span>5 Data Collections Active</span>
-          </div>
+        <div className="border-b border-slate-100 pb-4">
+          <h3 className="text-base font-black text-[#111111] tracking-tight">
+            Database Snapshots & Catalog Data Exports
+          </h3>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Generate offline audit copies and raw machine-readable datasets for accounting or disaster recovery.
+          </p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -117,15 +131,15 @@ export const SystemMaintenanceTab: React.FC = () => {
             <div>
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-xl bg-[#111111] text-[#F6AF31] flex items-center justify-center font-bold text-xs">
-                  <Download className="w-4 h-4" />
+                  <UIcon name="download" className="text-sm" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-black text-[#111111]">Full System JSON Snapshot</h4>
-                  <span className="text-[11px] text-slate-500">Complete parts, POs, and till receipts</span>
+                  <h4 className="text-xs font-black text-[#111111]">Full JSON Snapshot</h4>
+                  <span className="text-[11px] text-slate-500">Complete parts, purchase orders, and till receipts</span>
                 </div>
               </div>
               <p className="text-[11px] text-slate-600 mt-3 leading-relaxed">
-                Includes all {parts.length} spare parts, {oemOrders.length} OEM factory shipments, and {receipts.length} sales till slips with metadata.
+                Includes all {parts.length} spare parts, {oemOrders.length} factory shipments, and {receipts.length} sales till slips with metadata.
               </p>
             </div>
 
@@ -135,7 +149,7 @@ export const SystemMaintenanceTab: React.FC = () => {
               disabled={isExporting}
               className="w-full py-2.5 bg-[#111111] hover:bg-[#222222] text-[#F6AF31] text-xs font-black rounded-xl flex items-center justify-center gap-2 transition cursor-pointer shadow-xs"
             >
-              <Download className="w-3.5 h-3.5" />
+              <UIcon name="download" className="text-sm" />
               <span>{isExporting ? 'Generating JSON...' : 'Export Complete Backup (JSON)'}</span>
             </button>
           </div>
@@ -145,15 +159,15 @@ export const SystemMaintenanceTab: React.FC = () => {
             <div>
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-xl bg-emerald-700 text-white flex items-center justify-center font-bold text-xs">
-                  <FileSpreadsheet className="w-4 h-4" />
+                  <UIcon name="file-spreadsheet" className="text-sm" />
                 </div>
                 <div>
                   <h4 className="text-xs font-black text-[#111111]">Inventory Catalog (CSV / Excel)</h4>
-                  <span className="text-[11px] text-slate-500">Fast spreadsheet format for yard auditors</span>
+                  <span className="text-[11px] text-slate-500">Fast spreadsheet format for inventory auditors</span>
                 </div>
               </div>
               <p className="text-[11px] text-slate-600 mt-3 leading-relaxed">
-                Ready for import into Microsoft Excel or Google Sheets. Includes part numbers, OEM manufacturers, shelf locations, and cost bases.
+                Ready for import into spreadsheet software. Includes part numbers, manufacturers, shelf locations, and cost bases.
               </p>
             </div>
 
@@ -162,45 +176,110 @@ export const SystemMaintenanceTab: React.FC = () => {
               onClick={handleExportCatalogCSV}
               className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black rounded-xl flex items-center justify-center gap-2 transition cursor-pointer shadow-xs"
             >
-              <FileSpreadsheet className="w-3.5 h-3.5" />
+              <UIcon name="file-spreadsheet" className="text-sm" />
               <span>Export Parts Sheet (CSV)</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* Storage Diagnostics & Environment */}
+      {/* Backend Server Connectivity & Health */}
       <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-7 shadow-xs space-y-4">
-        <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">
-          Telemetry & Operational Diagnostics
-        </span>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-          <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200">
-            <span className="text-slate-500 block text-[11px]">Parts in Catalog</span>
-            <span className="font-mono font-black text-sm text-[#111111]">{parts.length} SKUs</span>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-slate-100 text-slate-800 flex items-center justify-center">
+              <UIcon name="server" className="text-base text-slate-700" />
+            </div>
+            <div>
+              <h4 className="text-sm font-black text-[#111111] uppercase tracking-tight">
+                Backend API Server
+              </h4>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Node.js Express backend proxying REST API endpoints on port 3000
+              </p>
+            </div>
           </div>
-          <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200">
-            <span className="text-slate-500 block text-[11px]">Factory Ingest Orders</span>
-            <span className="font-mono font-black text-sm text-[#111111]">{oemOrders.length} Consignments</span>
+
+          <button
+            type="button"
+            onClick={() => checkBackendConnection(true)}
+            disabled={isPingingBackend}
+            className="px-4 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-[#111111] text-xs font-bold flex items-center gap-1.5 transition cursor-pointer self-start sm:self-auto shrink-0"
+          >
+            <UIcon name="refresh" className={`text-xs ${isPingingBackend ? 'animate-spin text-emerald-600' : 'text-slate-500'}`} />
+            <span>{isPingingBackend ? 'Testing Connection...' : 'Test Backend Connection'}</span>
+          </button>
+        </div>
+
+        {/* Big Data, Small Label stats */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200">
+            <div className="font-mono font-black text-xl text-emerald-600">
+              {backendStatus === 'connected' ? 'HTTP 200 OK' : backendStatus === 'checking' ? 'Checking...' : 'Error'}
+            </div>
+            <div className="text-xs font-semibold text-slate-500 mt-1">API Health Status</div>
           </div>
-          <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200">
-            <span className="text-slate-500 block text-[11px]">Sales Cash Receipts</span>
-            <span className="font-mono font-black text-sm text-[#111111]">{receipts.length} Slips</span>
+          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200">
+            <div className="font-mono font-black text-xl text-[#111111]">
+              {backendLatency !== null ? `${backendLatency} ms` : '—'}
+            </div>
+            <div className="text-xs font-semibold text-slate-500 mt-1">Round-Trip Latency</div>
+          </div>
+          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200">
+            <div className="font-mono font-black text-xl text-[#111111] truncate">
+              /api/health
+            </div>
+            <div className="text-xs font-semibold text-slate-500 mt-1">Backend Route Target</div>
           </div>
         </div>
       </div>
 
-      {/* Danger Zone: Factory Reset */}
+      {/* Operational Diagnostics (Big Data, Small Label) */}
+      <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-7 shadow-xs space-y-4">
+        <div className="border-b border-slate-100 pb-3">
+          <h4 className="text-base font-black text-[#111111] tracking-tight">
+            Operational Diagnostics
+          </h4>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200">
+            <div className="font-mono font-black text-2xl text-[#111111] tracking-tight">
+              {parts.length}
+            </div>
+            <div className="text-xs font-semibold text-slate-500 mt-1">
+              Catalog SKUs
+            </div>
+          </div>
+          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200">
+            <div className="font-mono font-black text-2xl text-[#111111] tracking-tight">
+              {oemOrders.length}
+            </div>
+            <div className="text-xs font-semibold text-slate-500 mt-1">
+              Factory Ingest Orders
+            </div>
+          </div>
+          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200">
+            <div className="font-mono font-black text-2xl text-[#111111] tracking-tight">
+              {receipts.length}
+            </div>
+            <div className="text-xs font-semibold text-slate-500 mt-1">
+              Sales Cash Receipts
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Factory Reset */}
       <div className="bg-red-50/60 rounded-3xl border border-red-200 p-6 sm:p-7 shadow-xs space-y-4">
         <div className="flex items-center gap-2.5 text-red-700">
-          <AlertTriangle className="w-5 h-5 text-red-600" />
+          <UIcon name="triangle-warning" className="text-base text-red-600" />
           <h3 className="text-sm font-black text-red-900 tracking-tight">
-            Danger Zone: Reinitialize System Records
+            Reinitialize System Records
           </h3>
         </div>
 
         <p className="text-xs text-red-800 leading-relaxed max-w-2xl">
-                Reset all inventory levels, sales receipts, and OEM purchase orders back to default clean factory demo seed state. This cannot be undone once executed.
+          Reset all inventory levels, sales receipts, and purchase orders back to default clean factory demo seed state. This cannot be undone once executed.
         </p>
 
         <div>
@@ -209,7 +288,7 @@ export const SystemMaintenanceTab: React.FC = () => {
             onClick={() => setConfirmResetOpen(true)}
             className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-black rounded-2xl flex items-center gap-2 shadow-xs transition cursor-pointer"
           >
-            <Trash2 className="w-4 h-4" />
+            <UIcon name="trash" className="text-sm" />
             <span>Reinitialize Factory Default Data</span>
           </button>
         </div>
@@ -220,7 +299,7 @@ export const SystemMaintenanceTab: React.FC = () => {
         <div className="fixed inset-0 z-50 bg-[#111111]/70 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white w-full max-w-md rounded-3xl border border-slate-200 shadow-2xl p-6 space-y-4 animate-in fade-in zoom-in-95">
             <div className="w-12 h-12 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center mx-auto">
-              <ShieldAlert className="w-6 h-6" />
+              <UIcon name="shield-exclamation" className="text-xl" />
             </div>
 
             <div className="text-center space-y-1.5">
@@ -254,7 +333,7 @@ export const SystemMaintenanceTab: React.FC = () => {
                 Cancel
               </button>
               <button
-                type="button"
+                type="submit"
                 onClick={handleConfirmReset}
                 disabled={resetInput.trim() !== 'RESET'}
                 className={`flex-1 py-2.5 rounded-xl text-xs font-black transition ${

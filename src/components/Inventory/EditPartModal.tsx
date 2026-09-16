@@ -222,7 +222,7 @@ export const EditPartModal: React.FC<EditPartModalProps> = ({ part, isOpen, onCl
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               {/* Product ID (Read-only) */}
               <div className="p-3 bg-white border border-slate-200 rounded-xl">
-                <span className="text-[10px] uppercase font-bold text-[#111111]/50 block">Product ID (Part No)</span>
+                <span className="text-[10px] uppercase font-bold text-[#111111]/50 block">Product ID</span>
                 <span className="font-mono font-black text-sm text-[#111111]">{part.id || part.part_number}</span>
               </div>
 
@@ -245,7 +245,7 @@ export const EditPartModal: React.FC<EditPartModalProps> = ({ part, isOpen, onCl
             {/* Part Name */}
             <div>
               <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
-                Part Name / Title *
+                Part Name *
               </label>
               <input
                 type="text"
@@ -260,7 +260,7 @@ export const EditPartModal: React.FC<EditPartModalProps> = ({ part, isOpen, onCl
             {/* Description */}
             <div>
               <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
-                Description (DESC) & Technical Specifications
+                Description (DESC)
               </label>
               <textarea
                 rows={2}
@@ -421,7 +421,7 @@ export const EditPartModal: React.FC<EditPartModalProps> = ({ part, isOpen, onCl
                   <label className="text-[10px] font-bold uppercase tracking-wider text-[#111111]/70">
                     Cost for Item ({currency}) *
                   </label>
-                  <span className="text-[9px] text-slate-500 font-medium">Landed / Purchase Cost</span>
+                  <span className="text-[9px] text-slate-500 font-medium">Purchase Cost</span>
                 </div>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-[#111111]/50">{currency}</span>

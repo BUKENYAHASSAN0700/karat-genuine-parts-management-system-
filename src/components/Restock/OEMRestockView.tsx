@@ -201,67 +201,41 @@ export const OEMRestockView: React.FC = () => {
         
         {/* Pipeline Value */}
         <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-xs relative overflow-hidden group">
-          <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider">Inbound Pipeline Value</span>
-            <div className="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center text-[#F6AF31]">
-              <Plane className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-2xl font-black text-[#111111] font-mono">
+          <div className="text-2xl sm:text-3xl font-black text-[#111111] font-mono tracking-tight">
             {formatMoney(stats.totalPipelineValue)}
           </div>
-          <div className="text-[11px] text-slate-500 mt-2 flex items-center gap-1">
-            <span className="font-bold text-[#111111]">{stats.activeCount} active consignments</span>
-            <span>en route from Europe & Asia</span>
+          <div className="text-xs font-semibold text-slate-500 mt-1">
+            Inbound Pipeline Value
           </div>
         </div>
 
         {/* In Transit */}
         <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-xs relative overflow-hidden group">
-          <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider">Air & Ocean Freight</span>
-            <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
-              <Truck className="w-4 h-4" />
-            </div>
+          <div className="text-2xl sm:text-3xl font-black text-blue-600 font-mono tracking-tight">
+            {stats.inTransitCount} <span className="text-sm font-normal text-slate-400">In Transit</span>
           </div>
-          <div className="text-2xl font-black text-blue-600 font-mono">
-            {stats.inTransitCount} In Transit
-          </div>
-          <div className="text-[11px] text-slate-500 mt-2 flex items-center gap-1">
-            <span>Airway Bills & B/L active with carriers</span>
+          <div className="text-xs font-semibold text-slate-500 mt-1">
+            Air & Ocean Freight
           </div>
         </div>
 
         {/* Customs & Receiving Bay */}
         <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-xs relative overflow-hidden group">
-          <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider">At Receiving Bay</span>
-            <div className="w-8 h-8 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600">
-              <PackageCheck className="w-4 h-4" />
-            </div>
+          <div className="text-2xl sm:text-3xl font-black text-purple-700 font-mono tracking-tight">
+            {stats.receivingBayCount} <span className="text-sm font-normal text-slate-400">Consignments</span>
           </div>
-          <div className="text-2xl font-black text-purple-700 font-mono">
-            {stats.receivingBayCount} Consignments
-          </div>
-          <div className="text-[11px] text-slate-500 mt-2 flex items-center gap-1">
-            <span className="text-purple-600 font-bold">Ready for inspection</span>
-            <span>& shelf ingest at Dock 3</span>
+          <div className="text-xs font-semibold text-slate-500 mt-1">
+            At Receiving Bay
           </div>
         </div>
 
         {/* Inventory Shortages */}
         <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-xs relative overflow-hidden group">
-          <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider">Catalog Shortages</span>
-            <div className="w-8 h-8 rounded-xl bg-rose-50 flex items-center justify-center text-rose-600">
-              <AlertTriangle className="w-4 h-4" />
-            </div>
+          <div className="text-2xl sm:text-3xl font-black text-rose-600 font-mono tracking-tight">
+            {lowStockParts.length} <span className="text-sm font-normal text-slate-400">Parts</span>
           </div>
-          <div className="text-2xl font-black text-rose-600 font-mono">
-            {lowStockParts.length} Critical Parts
-          </div>
-          <div className="text-[11px] text-slate-500 mt-2 flex items-center gap-1">
-            <span className="text-rose-600 font-semibold">At or below reorder threshold</span>
+          <div className="text-xs font-semibold text-slate-500 mt-1">
+            Catalog Shortages
           </div>
         </div>
 
@@ -632,9 +606,7 @@ export const OEMRestockView: React.FC = () => {
                   {/* Delete Button */}
                   <button
                     onClick={() => {
-                      if (confirm(`Are you sure you want to delete purchase order ${order.id}?`)) {
-                        deleteOEMOrder(order.id);
-                      }
+                      deleteOEMOrder(order.id);
                     }}
                     className="p-2 text-slate-400 hover:text-rose-600 rounded-xl hover:bg-rose-50 transition cursor-pointer"
                     title="Delete PO"

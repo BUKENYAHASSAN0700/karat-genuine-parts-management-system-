@@ -1,30 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import { 
-  Boxes, 
-  AlertTriangle, 
-  TrendingUp, 
-  Warehouse, 
-  ArrowUpRight, 
-  Plus, 
-  CheckCircle2, 
-  Clock, 
-  Truck, 
-  Layers, 
-  FileText, 
-  ShoppingCart,
-  ShieldCheck,
-  ChevronRight,
-  ExternalLink,
-  PlusCircle,
-  MinusCircle,
-  History,
-  Printer,
-  Receipt,
-  Trash2
-} from 'lucide-react';
 import { useInertia } from '../../context/InertiaContext';
 import { SaleReceipt, SaleReceiptItem } from '../../types';
 import { ReceiptModal } from '../Sales/ReceiptModal';
+import { UIcon } from '../Common/UIcon';
 
 export const DashboardView: React.FC = () => {
   const { 
@@ -113,11 +91,6 @@ export const DashboardView: React.FC = () => {
   };
 
   const handleDeleteReceipt = (receipt: SaleReceipt) => {
-    const confirmed = window.confirm(
-      `Delete receipt ${receipt.receipt_number}? This will remove its sold items and restore the deducted stock.`
-    );
-    if (!confirmed) return;
-
     deleteReceipt(receipt.id);
     setViewingReceipt(current => current?.id === receipt.id ? null : current);
     setIsReceiptOpen(current => current && viewingReceipt?.id === receipt.id ? false : current);
@@ -125,36 +98,11 @@ export const DashboardView: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Top Header Row with Clear Greeting and Primary CTAs */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-[#111111] tracking-tight font-mono">
-            Welcome Back, {currentUser?.name || 'Shop Owner'}
-          </h1>
-          <p className="text-xs text-[#111111]/60 mt-0.5">
-            Karat Heavy Machinery Spare Parts
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2.5 self-start sm:self-auto flex-wrap">
-          {/* Quick Sell Action */}
-          <button
-            onClick={() => setActiveView('pos')}
-            className="px-4 py-2 rounded-full bg-white hover:bg-slate-50 text-[#111111] border border-slate-200/90 text-xs font-extrabold flex items-center gap-1.5 shadow-xs transition cursor-pointer active:scale-95"
-          >
-            <ShoppingCart className="w-3.5 h-3.5 text-[#F6AF31]" />
-            <span>Sales Register</span>
-          </button>
-
-          {/* Primary Action Button: + Add New Part */}
-          <button
-            onClick={() => setAddModalOpen(true)}
-            className="px-5 py-2 rounded-full bg-[#F6AF31] hover:bg-[#e5a028] text-[#111111] text-xs font-extrabold flex items-center gap-1.5 shadow-xs transition active:scale-95 cursor-pointer"
-          >
-            <Plus className="w-4 h-4 text-[#111111] stroke-[2.5]" />
-            <span>Add New Part</span>
-          </button>
-        </div>
+      {/* Top Header Row with Clear Greeting */}
+      <div className="flex items-center justify-between pb-1">
+        <h1 className="text-2xl sm:text-3xl font-black text-[#111111] tracking-tight font-mono">
+          Dashboard
+        </h1>
       </div>
 
       {/* ================= 4 CLEAN, COMPACT METRIC CARDS HORIZONTALLY ================= */}
@@ -163,108 +111,84 @@ export const DashboardView: React.FC = () => {
         {/* Card 1: Total Inventory Valuation */}
         <div 
           onClick={() => setActiveView('inventory')}
-          className="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-2xs hover:border-[#111111]/30 transition cursor-pointer group"
+          className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-2xs hover:border-[#111111]/30 transition cursor-pointer group flex items-start justify-between gap-3"
         >
-          <div className="flex items-center justify-between">
-            <div className="w-8 h-8 rounded-xl bg-[#F7F6F3] group-hover:bg-[#F6AF31]/20 flex items-center justify-center text-[#111111] transition">
-              <Warehouse className="w-4 h-4 text-[#111111]" />
-            </div>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#22A06B]/15 text-[#22A06B]">
-              Active Store
-            </span>
-          </div>
-
-          <div className="mt-3">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-[#111111]/50">
-              Inventory Valuation
-            </div>
-            <div className="text-xl font-black text-[#111111] font-mono tracking-tight mt-0.5 truncate">
+          <div className="min-w-0 flex-1">
+            <div className="text-2xl sm:text-3xl font-black text-[#111111] font-mono tracking-tight truncate">
               {formatMoney(totalStockValuation)}
             </div>
+            <div className="text-xs font-semibold text-slate-500 mt-1">
+              Inventory Valuation
+            </div>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-[#F7F6F3] group-hover:bg-[#111111] text-[#111111] group-hover:text-[#F6AF31] flex items-center justify-center shrink-0 transition shadow-2xs">
+            <UIcon name="coins" className="text-base" />
           </div>
         </div>
 
         {/* Card 2: Active Spare Parts In Stock */}
         <div 
           onClick={() => setActiveView('inventory')}
-          className="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-2xs hover:border-[#111111]/30 transition cursor-pointer group"
+          className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-2xs hover:border-[#111111]/30 transition cursor-pointer group flex items-start justify-between gap-3"
         >
-          <div className="flex items-center justify-between">
-            <div className="w-8 h-8 rounded-xl bg-[#F7F6F3] group-hover:bg-[#F6AF31]/20 flex items-center justify-center text-[#111111] transition">
-              <Boxes className="w-4 h-4 text-[#111111]" />
+          <div className="min-w-0 flex-1">
+            <div className="text-2xl sm:text-3xl font-black text-[#111111] font-mono tracking-tight">
+              {totalUnitsInStock} <span className="text-sm font-normal text-slate-400">Units</span>
             </div>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#111111] text-white">
-              {parts.length} SKUs
-            </span>
-          </div>
-
-          <div className="mt-3">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-[#111111]/50">
+            <div className="text-xs font-semibold text-slate-500 mt-1">
               Total Units In Stock
             </div>
-            <div className="text-xl font-black text-[#111111] font-mono tracking-tight mt-0.5">
-              {totalUnitsInStock} <span className="text-[11px] font-normal text-[#111111]/50">Units</span>
-            </div>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-[#F7F6F3] group-hover:bg-[#111111] text-[#111111] group-hover:text-[#F6AF31] flex items-center justify-center shrink-0 transition shadow-2xs">
+            <UIcon name="boxes" className="text-base" />
           </div>
         </div>
 
         {/* Card 3: Low Stock Alerts */}
         <div 
           onClick={() => setActiveView('inventory')}
-          className={`border rounded-2xl p-4 shadow-2xs transition cursor-pointer group ${
+          className={`border rounded-2xl p-5 shadow-2xs transition cursor-pointer group flex items-start justify-between gap-3 ${
             lowStockCount > 0 
               ? 'bg-[#DC2626]/5 border-[#DC2626]/30 hover:border-[#DC2626]' 
               : 'bg-white border-slate-200/90 hover:border-[#111111]/30'
           }`}
         >
-          <div className="flex items-center justify-between">
-            <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition ${
-              lowStockCount > 0 ? 'bg-[#DC2626] text-white' : 'bg-[#F7F6F3] text-[#111111]'
+          <div className="min-w-0 flex-1">
+            <div className={`text-2xl sm:text-3xl font-black font-mono tracking-tight ${
+              lowStockCount > 0 ? 'text-[#DC2626]' : 'text-[#111111]'
             }`}>
-              <AlertTriangle className="w-4 h-4" />
+              {lowStockCount} <span className="text-sm font-normal text-slate-400">Items</span>
             </div>
-            <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
-              lowStockCount > 0 ? 'bg-[#DC2626] text-white' : 'bg-[#22A06B]/15 text-[#22A06B]'
-            }`}>
-              {lowStockCount > 0 ? 'Action Needed' : 'Optimal'}
-            </span>
-          </div>
-
-          <div className="mt-3">
-            <div className={`text-[10px] font-bold uppercase tracking-wider ${
-              lowStockCount > 0 ? 'text-[#DC2626]' : 'text-[#111111]/50'
+            <div className={`text-xs font-semibold mt-1 ${
+              lowStockCount > 0 ? 'text-[#DC2626]' : 'text-slate-500'
             }`}>
               Low Stock Alerts
             </div>
-            <div className={`text-xl font-black font-mono tracking-tight mt-0.5 ${
-              lowStockCount > 0 ? 'text-[#DC2626]' : 'text-[#111111]'
-            }`}>
-              {lowStockCount} <span className="text-[11px] font-normal text-[#111111]/50">Items</span>
-            </div>
+          </div>
+          <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition shadow-2xs ${
+            lowStockCount > 0 
+              ? 'bg-[#DC2626]/10 text-[#DC2626]' 
+              : 'bg-[#F7F6F3] group-hover:bg-[#111111] text-[#111111] group-hover:text-[#F6AF31]'
+          }`}>
+            <UIcon name="triangle-warning" className="text-base" />
           </div>
         </div>
 
         {/* Card 4: Monthly Sales & Transactions */}
         <div 
           onClick={() => setActiveView('pos')}
-          className="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-2xs hover:border-[#111111]/30 transition cursor-pointer group"
+          className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-2xs hover:border-[#111111]/30 transition cursor-pointer group flex items-start justify-between gap-3"
         >
-          <div className="flex items-center justify-between">
-            <div className="w-8 h-8 rounded-xl bg-[#F7F6F3] group-hover:bg-[#F6AF31]/20 flex items-center justify-center text-[#111111] transition">
-              <TrendingUp className="w-4 h-4 text-[#111111]" />
+          <div className="min-w-0 flex-1">
+            <div className="text-2xl sm:text-3xl font-black text-[#111111] font-mono tracking-tight">
+              {totalSalesTransactions} <span className="text-sm font-normal text-slate-400">Transactions</span>
             </div>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#22A06B]/15 text-[#22A06B] border border-[#22A06B]/30">
-              {receipts.length} Invoices
-            </span>
-          </div>
-
-          <div className="mt-3">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-[#111111]/50">
+            <div className="text-xs font-semibold text-slate-500 mt-1">
               Sales Transactions
             </div>
-            <div className="text-xl font-black text-[#111111] font-mono tracking-tight mt-0.5">
-              {totalSalesTransactions} <span className="text-[11px] font-normal text-[#111111]/50">Transactions</span>
-            </div>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-[#F7F6F3] group-hover:bg-[#111111] text-[#111111] group-hover:text-[#F6AF31] flex items-center justify-center shrink-0 transition shadow-2xs">
+            <UIcon name="receipt" className="text-base" />
           </div>
         </div>
 
@@ -281,7 +205,7 @@ export const DashboardView: React.FC = () => {
             <div>
               <div className="flex items-center gap-2">
                 <div className="w-7 h-7 rounded-xl bg-[#111111] text-[#F6AF31] flex items-center justify-center font-bold text-xs">
-                  <Layers className="w-3.5 h-3.5" />
+                  <UIcon name="layers" className="text-xs text-[#F6AF31]" />
                 </div>
                 <h2 className="text-base font-black text-[#111111] tracking-tight">
                   Machinery Fleet Inventory & Stock Movements
@@ -295,7 +219,7 @@ export const DashboardView: React.FC = () => {
                 <button
                   key={brand}
                   onClick={() => setSelectedBrand(brand)}
-                  className={`px-3 py-1 rounded-full text-xs font-bold transition whitespace-nowrap ${
+                  className={`px-3 py-1 rounded-full text-xs font-bold transition whitespace-nowrap cursor-pointer ${
                     selectedBrand === brand
                       ? 'bg-[#111111] text-white shadow-2xs'
                       : 'bg-[#F7F6F3] text-[#111111]/70 hover:bg-slate-200/60'
@@ -337,10 +261,10 @@ export const DashboardView: React.FC = () => {
               </span>
               <button 
                 onClick={() => setActiveView('inventory')}
-                className="text-xs text-[#111111] font-bold hover:underline flex items-center gap-1"
+                className="text-xs text-[#111111] font-bold hover:underline flex items-center gap-1 cursor-pointer"
               >
                 <span>Full Inventory ({parts.length})</span>
-                <ChevronRight className="w-3.5 h-3.5" />
+                <UIcon name="angle-small-right" className="text-xs" />
               </button>
             </div>
 
@@ -391,17 +315,17 @@ export const DashboardView: React.FC = () => {
                         <button
                           onClick={() => handleStockQuickAdjust(part.id, part.stock_quantity, -1)}
                           disabled={part.stock_quantity <= 0}
-                          className="w-6 h-6 rounded-lg bg-white hover:bg-slate-200 text-[#111111] flex items-center justify-center disabled:opacity-30 transition shadow-2xs"
+                          className="w-6 h-6 rounded-lg bg-white hover:bg-slate-200 text-[#111111] flex items-center justify-center disabled:opacity-30 transition shadow-2xs cursor-pointer"
                           title="Decrease Stock (Sale / Dispense)"
                         >
-                          <MinusCircle className="w-3.5 h-3.5" />
+                          <UIcon name="minus-circle" className="text-xs" />
                         </button>
                         <button
                           onClick={() => handleStockQuickAdjust(part.id, part.stock_quantity, 1)}
-                          className="w-6 h-6 rounded-lg bg-[#111111] hover:bg-black text-white flex items-center justify-center transition shadow-2xs"
+                          className="w-6 h-6 rounded-lg bg-[#111111] hover:bg-black text-white flex items-center justify-center transition shadow-2xs cursor-pointer"
                           title="Increase Stock (Restock received)"
                         >
-                          <PlusCircle className="w-3.5 h-3.5 text-[#F6AF31]" />
+                          <UIcon name="plus-circle" className="text-xs text-[#F6AF31]" />
                         </button>
                       </div>
                     </div>
@@ -419,18 +343,14 @@ export const DashboardView: React.FC = () => {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
             <div>
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-xl bg-[#22A06B] text-white flex items-center justify-center font-bold text-xs">
-                  <ShoppingCart className="w-3.5 h-3.5" />
+                <div className="w-7 h-7 rounded-xl bg-[#111111] text-[#F6AF31] flex items-center justify-center font-bold text-xs shadow-2xs">
+                  <UIcon name="shopping-cart" className="text-xs text-[#F6AF31]" />
                 </div>
                 <h2 className="text-base font-black text-[#111111] tracking-tight">
                   Sales Activity History
                 </h2>
               </div>
             </div>
-
-            <span className="px-3 py-1 rounded-full bg-[#F7F6F3] border border-slate-200/70 text-[11px] font-bold text-[#111111]/60 shrink-0">
-              Sold Items ({allSoldItems.length})
-            </span>
           </div>
 
           {/* Live Sold Items Feed */}
@@ -491,9 +411,9 @@ export const DashboardView: React.FC = () => {
                 onClick={() => setActiveView('pos')}
                 className="w-full py-2.5 rounded-2xl bg-[#111111] hover:bg-black text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
               >
-                <History className="w-3.5 h-3.5 text-[#F6AF31]" />
+                <UIcon name="time-past" className="text-xs text-[#F6AF31]" />
                 <span>Open Full Sales Register</span>
-                <ArrowUpRight className="w-3.5 h-3.5" />
+                <UIcon name="arrow-up-right" className="text-xs" />
               </button>
           </div>
 
@@ -506,23 +426,12 @@ export const DashboardView: React.FC = () => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-[#111111] text-[#F6AF31] flex items-center justify-center font-black text-xs shrink-0 shadow-xs">
-              <History className="w-5 h-5 text-[#F6AF31]" />
+              <UIcon name="time-past" className="text-lg text-[#F6AF31]" />
             </div>
             <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-base sm:text-lg font-black text-[#111111] tracking-tight">
-                  Sold Items & Inventory Deductions History
-                </h2>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#22A06B]/15 text-[#22A06B]">
-                  {allSoldItems.reduce((acc, it) => acc + it.quantity, 0)} Units Deducted
-                </span>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#F6AF31]/20 text-[#111111]">
-                  {receipts.length} Official Receipts
-                </span>
-              </div>
-              <p className="text-xs text-[#111111]/60 mt-0.5">
-                Itemized real-time log of sold spare parts, customer contractor fleets, machine models, and issued receipt slips.
-              </p>
+              <h2 className="text-base sm:text-lg font-black text-[#111111] tracking-tight">
+                Sold Items & Inventory Deductions History
+              </h2>
             </div>
           </div>
 
@@ -531,7 +440,7 @@ export const DashboardView: React.FC = () => {
               onClick={() => setActiveView('pos')}
               className="px-4 py-2 rounded-full bg-[#111111] hover:bg-black text-white text-xs font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer"
             >
-              <ShoppingCart className="w-3.5 h-3.5 text-[#F6AF31]" />
+              <UIcon name="shopping-cart" className="text-xs text-[#F6AF31]" />
               <span>Launch Sales & Sell</span>
             </button>
           </div>
@@ -578,7 +487,7 @@ export const DashboardView: React.FC = () => {
 
                 <div className="flex items-center justify-between pt-1 text-xs">
                   <div className="text-[11px] text-slate-500 font-mono flex items-center gap-1">
-                    <Clock className="w-3 h-3 text-slate-400" />
+                    <UIcon name="clock" className="text-xs text-slate-400" />
                     <span>{item.date} {item.time}</span>
                   </div>
 
@@ -598,7 +507,7 @@ export const DashboardView: React.FC = () => {
                       title="Delete receipt and restore stock"
                       aria-label={`Delete receipt ${item.receipt_number}`}
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <UIcon name="trash" className="text-xs" />
                     </button>
                   </div>
                 </div>
@@ -682,7 +591,7 @@ export const DashboardView: React.FC = () => {
                     <td className="py-3.5 px-3 whitespace-nowrap">
                       <div className="font-semibold text-[#111111]">{item.date}</div>
                       <div className="text-[10px] text-[#111111]/50 font-mono flex items-center gap-1">
-                        <Clock className="w-2.5 h-2.5" /> {item.time}
+                        <UIcon name="clock" className="text-xs text-slate-400" /> {item.time}
                       </div>
                     </td>
 
@@ -708,7 +617,7 @@ export const DashboardView: React.FC = () => {
                           }}
                           className="px-2.5 py-1 rounded-full bg-[#111111] hover:bg-black text-white text-[10px] font-bold flex items-center gap-1 transition cursor-pointer"
                         >
-                          <Printer className="w-3 h-3 text-[#F6AF31]" />
+                          <UIcon name="print" className="text-xs text-[#F6AF31]" />
                           <span>View</span>
                         </button>
                         <button
@@ -717,7 +626,7 @@ export const DashboardView: React.FC = () => {
                           title="Delete receipt and restore stock"
                           aria-label={`Delete receipt ${item.receipt_number}`}
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <UIcon name="trash" className="text-xs" />
                         </button>
                       </div>
                     </td>
@@ -738,7 +647,7 @@ export const DashboardView: React.FC = () => {
             className="text-xs font-bold text-[#111111] hover:underline flex items-center gap-1 cursor-pointer self-start sm:self-auto"
           >
             <span>View All Sold Parts in Sales Register</span>
-            <ArrowUpRight className="w-3.5 h-3.5" />
+            <UIcon name="arrow-up-right" className="text-xs" />
           </button>
         </div>
       </div>

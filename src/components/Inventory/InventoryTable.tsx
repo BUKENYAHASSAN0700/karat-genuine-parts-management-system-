@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { 
   Boxes, 
   Search, 
@@ -65,6 +65,19 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
   const [selectedSeries, setSelectedSeries] = useState<string>('all');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedStockStatus, setSelectedStockStatus] = useState<string>('all');
+  const [statusDropdownOpen, setStatusDropdownOpen] = useState<boolean>(false);
+  const statusDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close status dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (statusDropdownRef.current && !statusDropdownRef.current.contains(e.target as Node)) {
+        setStatusDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Sorting States
   const [sortField, setSortField] = useState<SortField>('part_number');
@@ -193,6 +206,16 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
   const lowStockCount = parts.filter(p => p.status === 'Low Stock' || p.status === 'Out of Stock' || p.stock_quantity <= p.min_stock_alert).length;
   const totalStockQuantity = parts.reduce((acc, p) => acc + p.stock_quantity, 0);
   const totalValuation = parts.reduce((acc, p) => acc + (p.stock_quantity * p.unit_price), 0);
+
+  const stockStatusOptions = useMemo(() => [
+    { value: 'all', label: 'All Stock Statuses' },
+    { value: 'low', label: lowStockCount > 0 ? `Low Stock (${lowStockCount})` : 'Low Stock' },
+    { value: 'in-stock', label: 'In Stock' },
+    { value: 'out-of-stock', label: 'Out of Stock' },
+    { value: 'on-order', label: 'On Order' },
+  ], [lowStockCount]);
+
+  const currentStatusLabel = stockStatusOptions.find(opt => opt.value === selectedStockStatus)?.label || 'All Stock Statuses';
 
   // Quick Inline Stock increment / decrement
   const handleQuickStepStock = (part: SparePart, delta: number, e: React.MouseEvent) => {
@@ -342,23 +365,53 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                 </select>
               </div>
 
-              {/* Stock Status Filter */}
-              <div className="flex-1 min-w-[140px]">
-                <select
-                  value={selectedStockStatus}
-                  onChange={e => setSelectedStockStatus(e.target.value)}
-                  className={`w-full border rounded-xl px-3 py-2 text-xs font-bold outline-none cursor-pointer ${
+              {/* Stock Status Filter - Styled matching "Manufacturer Brand" list from Add Part Modal */}
+              <div className="relative flex-1 min-w-[150px]" ref={statusDropdownRef}>
+                <button
+                  type="button"
+                  onClick={() => setStatusDropdownOpen(prev => !prev)}
+                  className={`w-full border rounded-xl px-3 py-2 text-xs font-bold outline-none cursor-pointer flex items-center justify-between transition shadow-2xs ${
                     selectedStockStatus === 'low'
                       ? 'bg-[#DC2626]/10 text-[#DC2626] border-[#DC2626]/40'
                       : 'bg-[#F7F6F3] hover:bg-slate-100/80 text-[#111111] border-slate-200/90'
                   }`}
+                  aria-haspopup="listbox"
+                  aria-expanded={statusDropdownOpen}
                 >
-                  <option value="all">All Stock Statuses</option>
-                  <option value="low">⚠️ Low Stock ({lowStockCount})</option>
-                  <option value="in-stock">✓ In Stock</option>
-                  <option value="out-of-stock">✕ Out of Stock</option>
-                  <option value="on-order">⏳ On Order</option>
-                </select>
+                  <span className="truncate">{currentStatusLabel}</span>
+                  <ChevronDown className={`w-3.5 h-3.5 opacity-60 ml-1.5 shrink-0 transition-transform duration-200 ${statusDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {/* Dropdown Menu matching SearchableCombobox list styling */}
+                {statusDropdownOpen && (
+                  <div className="absolute z-50 left-0 right-0 mt-1.5 bg-white border border-slate-200 rounded-2xl shadow-xl py-1 text-xs animate-in fade-in min-w-[170px]">
+                    <div className="p-1 space-y-0.5">
+                      {stockStatusOptions.map((opt) => {
+                        const isSelected = selectedStockStatus === opt.value;
+                        return (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() => {
+                              setSelectedStockStatus(opt.value);
+                              setStatusDropdownOpen(false);
+                            }}
+                            className={`w-full text-left px-3 py-2 rounded-xl flex items-center justify-between transition-colors cursor-pointer ${
+                              isSelected
+                                ? 'bg-amber-500/15 text-[#111111] font-black'
+                                : 'text-slate-700 hover:bg-slate-100 font-medium'
+                            }`}
+                          >
+                            <div>
+                              <div className="font-bold text-xs">{opt.label}</div>
+                            </div>
+                            {isSelected && <Check className="w-3.5 h-3.5 text-[#F6AF31]" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* CSV Export, Bulk Upload & Add Part Trigger */}
@@ -418,7 +471,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
 
               {selectedStockStatus !== 'all' && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#DC2626] text-white font-semibold">
-                  Filter: {selectedStockStatus}
+                  Filter: {currentStatusLabel}
                   <button onClick={() => setSelectedStockStatus('all')} className="hover:text-white/80">×</button>
                 </span>
               )}
@@ -1240,7 +1293,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
               {/* Product ID, Model & Date Added */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="p-3 bg-[#F7F6F3] rounded-2xl border border-slate-200/80">
-                  <span className="text-[10px] uppercase font-bold text-[#111111]/50 block">Product ID (Part No)</span>
+                  <span className="text-[10px] uppercase font-bold text-[#111111]/50 block">Product ID</span>
                   <div className="font-mono font-black text-sm text-[#111111] mt-0.5">
                     {detailModalPart.id || detailModalPart.part_number}
                   </div>
@@ -1328,7 +1381,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                   <div className="bg-white p-2.5 rounded-xl border border-slate-200">
                     <span className="text-[9px] text-[#111111]/50 block">Cost for Item</span>
                     <strong className="text-xs text-[#111111]">{formatMoney(detailModalPart.unit_cost)}</strong>
-                    <span className="text-[8px] text-slate-400 block mt-0.5">Landed restock cost</span>
+                    <span className="text-[8px] text-slate-400 block mt-0.5">Purchase cost</span>
                   </div>
                   <div className="bg-amber-50/60 p-2.5 rounded-xl border border-amber-300">
                     <span className="text-[9px] font-bold text-[#111111] block">Unit Price</span>
@@ -1365,10 +1418,10 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                 </div>
               </div>
 
-              {/* Description (DESC) & Technical Notes */}
+              {/* Description (DESC) */}
               {detailModalPart.description && (
                 <div className="p-3.5 bg-[#F7F6F3] rounded-2xl border border-slate-200/80 space-y-1">
-                  <span className="text-[10px] uppercase font-bold text-[#111111]/50 block">Description (DESC) & Technical Specifications</span>
+                  <span className="text-[10px] uppercase font-bold text-[#111111]/50 block">Description (DESC)</span>
                   <p className="text-xs text-[#111111]/80 leading-relaxed font-sans">{detailModalPart.description}</p>
                 </div>
               )}

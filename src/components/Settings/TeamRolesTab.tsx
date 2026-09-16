@@ -1,23 +1,11 @@
 import React, { useState } from 'react';
-import { 
-  Users, 
-  UserPlus, 
-  ShieldCheck, 
-  Key, 
-  Mail, 
-  Phone, 
-  CheckCircle2, 
-  Trash2, 
-  Edit3,
-  X,
-  BadgeAlert
-} from 'lucide-react';
 import { useInertia } from '../../context/InertiaContext';
+import { UIcon } from '../Common/UIcon';
 
 export interface TeamMember {
   id: string;
   name: string;
-  role: 'Owner & CFO' | 'Managing Director' | 'Yard Supervisor' | 'Parts Specialist' | 'Sales Cashier';
+  role: 'Owner & CFO' | 'Managing Director' | 'Inventory Supervisor' | 'Parts Specialist' | 'Sales Cashier';
   accessLevel: 'Administrator' | 'Stores Master' | 'Sales Cashier' | 'Field Technician';
   email: string;
   phone: string;
@@ -52,9 +40,9 @@ const INITIAL_TEAM: TeamMember[] = [
   {
     id: 'usr-3',
     name: 'Hassan Ssewankambo',
-    role: 'Yard Supervisor',
+    role: 'Inventory Supervisor',
     accessLevel: 'Stores Master',
-    email: 'yard4@karat.co.ug',
+    email: 'inventory@karat.co.ug',
     phone: '+256 751 339014',
     status: 'On Shift',
     avatarInitials: 'HS',
@@ -148,12 +136,12 @@ export const TeamRolesTab: React.FC = () => {
       email: '',
       phone: ''
     });
-    setFlashMessage('success', `${created.name} added to KARAT Operations team.`);
+    setFlashMessage('success', `${created.name} added to Operations team.`);
   };
 
   const handleRemoveMember = (id: string, name: string) => {
-    if (id === 'usr-1' || id === 'usr-2') {
-      setFlashMessage('error', 'Principal Directors & CFO accounts cannot be deleted.');
+    if (team.length <= 1) {
+      setFlashMessage('error', 'At least one store administrator or team member must remain active.');
       return;
     }
     const next = team.filter(m => m.id !== id);
@@ -168,14 +156,11 @@ export const TeamRolesTab: React.FC = () => {
       <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-7 shadow-xs space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
           <div>
-            <span className="text-[10px] font-black uppercase tracking-wider text-[#F6AF31] bg-[#111111] px-2 py-0.5 rounded-md">
-              Access Control
-            </span>
-            <h3 className="text-base font-black text-[#111111] tracking-tight mt-1">
+            <h3 className="text-base font-black text-[#111111] tracking-tight">
               Store Staff & Permission Access Matrix
             </h3>
-            <p className="text-xs text-slate-500">
-              Manage authorized operators across Yard 4 receiving bays, sales register, and finance management.
+            <p className="text-xs text-slate-500 mt-0.5">
+              Manage authorized operators across inventory receiving bays, sales register, and finance management.
             </p>
           </div>
 
@@ -184,7 +169,7 @@ export const TeamRolesTab: React.FC = () => {
             onClick={() => setIsModalOpen(true)}
             className="px-4 py-2 bg-[#111111] hover:bg-[#222222] text-[#F6AF31] text-xs font-black rounded-2xl flex items-center gap-2 transition cursor-pointer shadow-xs"
           >
-            <UserPlus className="w-4 h-4" />
+            <UIcon name="user-add" className="text-sm" />
             <span>Add Team Member</span>
           </button>
         </div>
@@ -206,11 +191,11 @@ export const TeamRolesTab: React.FC = () => {
                   </div>
                   <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-500 mt-0.5">
                     <span className="flex items-center gap-1">
-                      <Mail className="w-3 h-3 text-slate-400" />
+                      <UIcon name="envelope" className="text-xs text-slate-400" />
                       {member.email}
                     </span>
                     <span className="flex items-center gap-1">
-                      <Phone className="w-3 h-3 text-slate-400" />
+                      <UIcon name="phone-call" className="text-xs text-slate-400" />
                       {member.phone}
                     </span>
                   </div>
@@ -247,7 +232,7 @@ export const TeamRolesTab: React.FC = () => {
                     className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition cursor-pointer"
                     title="Remove member"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <UIcon name="trash" className="text-sm" />
                   </button>
                 )}
               </div>
@@ -271,7 +256,7 @@ export const TeamRolesTab: React.FC = () => {
           <div className="p-3 bg-white rounded-2xl border border-slate-200">
             <span className="font-bold text-[#111111] block">Stores Master</span>
             <p className="text-[11px] text-slate-500 mt-1">
-              Yard 4 stock receiving, shelf bin reassignment, damaged part logging, and restock creation.
+              Store stock receiving, shelf bin reassignment, damaged part logging, and restock creation.
             </p>
           </div>
           <div className="p-3 bg-white rounded-2xl border border-slate-200">
@@ -299,7 +284,7 @@ export const TeamRolesTab: React.FC = () => {
                   Add Authorized Operator
                 </h3>
                 <p className="text-[11px] text-slate-500">
-                  Provision new credentials for Yard 4 depot or counter sales.
+                  Provision new credentials for store inventory or counter sales.
                 </p>
               </div>
               <button
@@ -307,7 +292,7 @@ export const TeamRolesTab: React.FC = () => {
                 onClick={() => setIsModalOpen(false)}
                 className="p-1.5 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-700 cursor-pointer"
               >
-                <X className="w-4 h-4" />
+                <UIcon name="cross" className="text-sm" />
               </button>
             </div>
 
@@ -337,7 +322,7 @@ export const TeamRolesTab: React.FC = () => {
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-[#111111]"
                   >
                     <option value="Parts Specialist">Parts Specialist</option>
-                    <option value="Yard Supervisor">Yard Supervisor</option>
+                    <option value="Inventory Supervisor">Inventory Supervisor</option>
                     <option value="Sales Cashier">Sales Cashier</option>
                     <option value="Managing Director">Managing Director</option>
                   </select>

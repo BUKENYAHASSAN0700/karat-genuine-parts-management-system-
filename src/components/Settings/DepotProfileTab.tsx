@@ -1,29 +1,32 @@
 import React, { useState } from 'react';
-import { 
-  Building, 
-  MapPin, 
-  Phone, 
-  Mail, 
-  Clock, 
-  Save, 
-  CheckCircle2,
-  FileText
-} from 'lucide-react';
 import { useInertia } from '../../context/InertiaContext';
+import { UIcon } from '../Common/UIcon';
 
 export const DepotProfileTab: React.FC = () => {
   const { currentUser, updateUser, setFlashMessage } = useInertia();
 
-  const [formData, setFormData] = useState({
-    shopName: currentUser?.shop_name || 'Karat Heavy Machinery Spare Parts',
-    facilityName: 'Yard 4 Industrial Area Heavy Depot & Ingest Bay',
-    physicalAddress: 'Plot 14-16 Jinja Road, Industrial Area Estate, Kampala, Uganda',
-    officialEmail: currentUser?.email || 'finance@karat.co.ug',
-    dispatchPhone: '+256 700 882194',
-    emergencyHotline: '+256 414 290114',
-    operatingHours: 'Monday - Saturday: 07:30 - 18:30 EAT',
-    ownerName: currentUser?.name || 'Hassan Bukenya',
-    ownerTitle: 'Chief Financial Officer & Stores Controller'
+  const [formData, setFormData] = useState(() => {
+    try {
+      const saved = localStorage.getItem('karat_store_profile');
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch {}
+    return {
+      shopName: currentUser?.shop_name || 'Karat Heavy Machinery Spare Parts',
+      facilityName: 'Industrial Area Central Branch & Inventory Hub',
+      physicalAddress: 'Plot 14-16 Jinja Road, Industrial Area Estate, Kampala, Uganda',
+      officialEmail: currentUser?.email || 'finance@karat.co.ug',
+      dispatchPhone: '+256 700 882194',
+      emergencyHotline: '+256 414 290114',
+      operatingHours: 'Monday - Saturday: 07:30 - 18:30 EAT',
+      ownerName: currentUser?.name || 'Hassan Bukenya',
+      ownerTitle: 'Chief Financial Officer & Stores Controller',
+      tinNumber: '1004829104',
+      websiteUrl: 'www.karat.co.ug',
+      bankDetails: 'Stanbic Bank Uganda • Account: 9030018290123 • Industrial Area Branch',
+      receiptFooter: 'Genuine OEM heavy machinery spare parts. Guaranteed against manufacturing defects. Returns accepted within 14 calendar days in original factory packaging.'
+    };
   });
 
   const [isSaved, setIsSaved] = useState(false);
@@ -36,8 +39,11 @@ export const DepotProfileTab: React.FC = () => {
       name: formData.ownerName,
       phone: formData.dispatchPhone
     });
+    try {
+      localStorage.setItem('karat_store_profile', JSON.stringify(formData));
+    } catch {}
     setIsSaved(true);
-    setFlashMessage('success', 'Depot facility details & legal profile saved successfully.');
+    setFlashMessage('success', 'Store identity details & legal profile saved successfully.');
     setTimeout(() => setIsSaved(false), 3000);
   };
 
@@ -48,17 +54,18 @@ export const DepotProfileTab: React.FC = () => {
       <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-7 shadow-xs space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
           <div>
-            <span className="text-[10px] font-black uppercase tracking-wider text-[#F6AF31] bg-[#111111] px-2 py-0.5 rounded-md">
-              Facility Registration
-            </span>
-            <h3 className="text-base font-black text-[#111111] tracking-tight mt-1">
-              Store & Depot Facility Identity
+            <h3 className="text-base font-black text-[#111111] tracking-tight">
+              Store & Commercial Identity
             </h3>
-            <p className="text-xs text-slate-500">
-              Official corporate name and warehouse facility details printed on invoices, quotes, and dispatch slips.
+            <p className="text-xs text-slate-500 mt-0.5">
+              Official corporate name, legal registration, and contact information printed on sales invoices and quotations.
             </p>
           </div>
 
+          <div className="flex items-center gap-1.5 text-slate-600 text-xs font-bold self-start sm:self-auto">
+            <UIcon name="shield-check" className="text-sm text-emerald-600" />
+            <span>Verified Entity</span>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -67,10 +74,27 @@ export const DepotProfileTab: React.FC = () => {
             <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
               Registered Company Name
             </label>
+            <div className="relative">
+              <input
+                type="text"
+                value={formData.shopName}
+                onChange={e => setFormData({ ...formData, shopName: e.target.value })}
+                className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-10 pr-4 py-2.5 text-xs font-bold text-[#111111] focus:bg-white focus:outline-none focus:border-amber-400 transition"
+                required
+              />
+              <UIcon name="building" className="text-sm text-slate-400 absolute left-3.5 top-3" />
+            </div>
+          </div>
+
+          {/* Facility Name */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
+              Branch & Facility Name
+            </label>
             <input
               type="text"
-              value={formData.shopName}
-              onChange={e => setFormData({ ...formData, shopName: e.target.value })}
+              value={formData.facilityName}
+              onChange={e => setFormData({ ...formData, facilityName: e.target.value })}
               className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 text-xs font-bold text-[#111111] focus:bg-white focus:outline-none focus:border-amber-400 transition"
               required
             />
@@ -79,7 +103,7 @@ export const DepotProfileTab: React.FC = () => {
           {/* Physical Address */}
           <div className="space-y-1.5 md:col-span-2">
             <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
-              Physical Yard Location (Dispatch & Receiving)
+              Physical Store Location (Dispatch & Receiving)
             </label>
             <div className="relative">
               <input
@@ -89,7 +113,7 @@ export const DepotProfileTab: React.FC = () => {
                 className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-10 pr-4 py-2.5 text-xs font-medium text-[#111111] focus:bg-white focus:outline-none focus:border-amber-400 transition"
                 required
               />
-              <MapPin className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+              <UIcon name="marker" className="text-sm text-slate-400 absolute left-3.5 top-3" />
             </div>
           </div>
 
@@ -105,7 +129,7 @@ export const DepotProfileTab: React.FC = () => {
                 onChange={e => setFormData({ ...formData, dispatchPhone: e.target.value })}
                 className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-10 pr-4 py-2.5 text-xs font-mono font-bold text-[#111111] focus:bg-white focus:outline-none focus:border-amber-400 transition"
               />
-              <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+              <UIcon name="phone-call" className="text-sm text-slate-400 absolute left-3.5 top-3" />
             </div>
           </div>
 
@@ -121,7 +145,7 @@ export const DepotProfileTab: React.FC = () => {
                 onChange={e => setFormData({ ...formData, emergencyHotline: e.target.value })}
                 className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-10 pr-4 py-2.5 text-xs font-mono font-bold text-[#111111] focus:bg-white focus:outline-none focus:border-amber-400 transition"
               />
-              <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+              <UIcon name="phone-call" className="text-sm text-slate-400 absolute left-3.5 top-3" />
             </div>
           </div>
 
@@ -138,14 +162,31 @@ export const DepotProfileTab: React.FC = () => {
                 className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-10 pr-4 py-2.5 text-xs font-medium text-[#111111] focus:bg-white focus:outline-none focus:border-amber-400 transition"
                 required
               />
-              <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+              <UIcon name="envelope" className="text-sm text-slate-400 absolute left-3.5 top-3" />
+            </div>
+          </div>
+
+          {/* URA TIN */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
+              Tax Identification Number (TIN)
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                value={formData.tinNumber}
+                onChange={e => setFormData({ ...formData, tinNumber: e.target.value })}
+                className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-10 pr-4 py-2.5 text-xs font-mono font-bold text-[#111111] focus:bg-white focus:outline-none focus:border-amber-400 transition"
+                required
+              />
+              <UIcon name="document" className="text-sm text-slate-400 absolute left-3.5 top-3" />
             </div>
           </div>
 
           {/* Operating Hours */}
           <div className="space-y-1.5">
             <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
-              Yard Receiving Bay Operating Hours
+              Store & Receiving Bay Operating Hours
             </label>
             <div className="relative">
               <input
@@ -154,8 +195,70 @@ export const DepotProfileTab: React.FC = () => {
                 onChange={e => setFormData({ ...formData, operatingHours: e.target.value })}
                 className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-10 pr-4 py-2.5 text-xs font-medium text-[#111111] focus:bg-white focus:outline-none focus:border-amber-400 transition"
               />
-              <Clock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+              <UIcon name="clock" className="text-sm text-slate-400 absolute left-3.5 top-3" />
             </div>
+          </div>
+
+          {/* Website */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
+              Official Website / Domain
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                value={formData.websiteUrl}
+                onChange={e => setFormData({ ...formData, websiteUrl: e.target.value })}
+                className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-10 pr-4 py-2.5 text-xs font-medium text-[#111111] focus:bg-white focus:outline-none focus:border-amber-400 transition"
+              />
+              <UIcon name="globe" className="text-sm text-slate-400 absolute left-3.5 top-3" />
+            </div>
+          </div>
+
+          {/* Store Controller Name */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
+              Lead Store Controller / Signatory
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                value={formData.ownerName}
+                onChange={e => setFormData({ ...formData, ownerName: e.target.value })}
+                className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-10 pr-4 py-2.5 text-xs font-bold text-[#111111] focus:bg-white focus:outline-none focus:border-amber-400 transition"
+                required
+              />
+              <UIcon name="user" className="text-sm text-slate-400 absolute left-3.5 top-3" />
+            </div>
+          </div>
+
+          {/* Bank Wire Details */}
+          <div className="space-y-1.5 md:col-span-2">
+            <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
+              Official Banking & Wire Transfer Instructions
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                value={formData.bankDetails}
+                onChange={e => setFormData({ ...formData, bankDetails: e.target.value })}
+                className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-10 pr-4 py-2.5 text-xs font-medium text-[#111111] focus:bg-white focus:outline-none focus:border-amber-400 transition"
+              />
+              <UIcon name="credit-card" className="text-sm text-slate-400 absolute left-3.5 top-3" />
+            </div>
+          </div>
+
+          {/* Receipt Footer Terms */}
+          <div className="space-y-1.5 md:col-span-2">
+            <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
+              Standard Invoice & Quotation Footer Terms
+            </label>
+            <textarea
+              rows={2}
+              value={formData.receiptFooter}
+              onChange={e => setFormData({ ...formData, receiptFooter: e.target.value })}
+              className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3 text-xs text-[#111111] focus:bg-white focus:outline-none focus:border-amber-400 transition"
+            />
           </div>
         </div>
       </div>
@@ -163,7 +266,7 @@ export const DepotProfileTab: React.FC = () => {
       {/* Save Action Bar */}
       <div className="flex items-center justify-between pt-2">
         <span className="text-xs text-slate-500">
-          Changes will immediately take effect across all depot profiles and store settings.
+          Changes will immediately take effect across all receipts and system settings.
         </span>
 
         <button
@@ -172,13 +275,13 @@ export const DepotProfileTab: React.FC = () => {
         >
           {isSaved ? (
             <>
-              <CheckCircle2 className="w-4 h-4 text-[#111111]" />
+              <UIcon name="check" className="text-sm text-[#111111]" />
               <span>Saved Successfully!</span>
             </>
           ) : (
             <>
-              <Save className="w-4 h-4 text-[#111111]" />
-              <span>Save Depot Changes</span>
+              <UIcon name="disk" className="text-sm text-[#111111]" />
+              <span>Save Settings</span>
             </>
           )}
         </button>

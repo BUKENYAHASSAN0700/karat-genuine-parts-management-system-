@@ -1,16 +1,6 @@
 import React, { useState } from 'react';
-import { 
-  DollarSign, 
-  RefreshCw, 
-  TrendingUp, 
-  Sliders, 
-  CheckCircle2, 
-  Save, 
-  Receipt,
-  HelpCircle
-} from 'lucide-react';
 import { useInertia } from '../../context/InertiaContext';
-import { CurrencyCode } from '../../types';
+import { UIcon } from '../Common/UIcon';
 
 export const CurrencyFXTab: React.FC = () => {
   const { 
@@ -18,7 +8,6 @@ export const CurrencyFXTab: React.FC = () => {
     setCurrency, 
     exchangeRate, 
     setExchangeRate, 
-    formatMoney, 
     setFlashMessage 
   } = useInertia();
 
@@ -60,20 +49,17 @@ export const CurrencyFXTab: React.FC = () => {
       <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-7 shadow-xs space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
           <div>
-            <span className="text-[10px] font-black uppercase tracking-wider text-[#F6AF31] bg-[#111111] px-2 py-0.5 rounded-md">
-              System Standard
-            </span>
-            <h3 className="text-base font-black text-[#111111] tracking-tight mt-1">
+            <h3 className="text-base font-black text-[#111111] tracking-tight">
               Active System Operating Currency
             </h3>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-500 mt-0.5">
               Select the primary denomination displayed across dashboard metrics, inventory valuations, and cashier checkout.
             </p>
           </div>
 
-          <span className="px-3 py-1 rounded-full text-xs font-black bg-[#111111] text-white">
+          <div className="text-xs font-bold text-slate-600">
             Current: {currency}
-          </span>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -93,7 +79,7 @@ export const CurrencyFXTab: React.FC = () => {
               <span className="font-mono font-black text-base">$ USD</span>
               {currency === 'USD' && (
                 <span className="w-5 h-5 rounded-full bg-[#F6AF31] text-[#111111] flex items-center justify-center text-xs font-black">
-                  ✓
+                  <UIcon name="check" className="text-xs" />
                 </span>
               )}
             </div>
@@ -124,7 +110,7 @@ export const CurrencyFXTab: React.FC = () => {
               <span className="font-mono font-black text-base">USh UGX</span>
               {currency === 'UGX' && (
                 <span className="w-5 h-5 rounded-full bg-[#F6AF31] text-[#111111] flex items-center justify-center text-xs font-black">
-                  ✓
+                  <UIcon name="check" className="text-xs" />
                 </span>
               )}
             </div>
@@ -145,13 +131,10 @@ export const CurrencyFXTab: React.FC = () => {
       <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-7 shadow-xs space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
           <div>
-            <span className="text-[10px] font-black uppercase tracking-wider text-blue-700 bg-blue-100 px-2 py-0.5 rounded-md">
-              Forex Engine
-            </span>
-            <h3 className="text-base font-black text-[#111111] tracking-tight mt-1">
+            <h3 className="text-base font-black text-[#111111] tracking-tight">
               Live Currency Exchange Rate Peg (1 USD to UGX)
             </h3>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-500 mt-0.5">
               Adjust the baseline foreign exchange rate used to calculate Uganda Shilling equivalents.
             </p>
           </div>
@@ -279,12 +262,12 @@ export const CurrencyFXTab: React.FC = () => {
         >
           {isSaved ? (
             <>
-              <CheckCircle2 className="w-4 h-4 text-[#111111]" />
+              <UIcon name="check" className="text-sm text-[#111111]" />
               <span>Exchange Rate Applied!</span>
             </>
           ) : (
             <>
-              <Save className="w-4 h-4 text-[#111111]" />
+              <UIcon name="disk" className="text-sm text-[#111111]" />
               <span>Save Forex Settings</span>
             </>
           )}

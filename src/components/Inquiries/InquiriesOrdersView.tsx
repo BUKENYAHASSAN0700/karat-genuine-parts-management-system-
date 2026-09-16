@@ -172,27 +172,21 @@ export const InquiriesOrdersView: React.FC = () => {
 
           {/* Quick Metrics Cards */}
           <div className="grid grid-cols-2 gap-3 sm:gap-4 shrink-0">
-            <div className="bg-white/5 backdrop-blur-xs border border-white/10 p-3 sm:p-4 rounded-2xl">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                Active RFQs Pipeline
-              </div>
-              <div className="text-lg sm:text-xl font-mono font-black text-[#F6AF31] mt-0.5">
+            <div className="bg-white/5 backdrop-blur-xs border border-white/10 p-4 sm:p-5 rounded-2xl">
+              <div className="text-xl sm:text-2xl font-mono font-black text-[#F6AF31]">
                 {formatMoney(totalInquiryPipeline)}
               </div>
-              <div className="text-[10px] text-slate-400 mt-1">
-                {inquiries.length} registered inquiries
+              <div className="text-xs font-semibold text-slate-400 mt-1">
+                Active RFQs Pipeline
               </div>
             </div>
 
-            <div className="bg-white/5 backdrop-blur-xs border border-white/10 p-3 sm:p-4 rounded-2xl">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                Confirmed Orders Value
-              </div>
-              <div className="text-lg sm:text-xl font-mono font-black text-[#22A06B] mt-0.5">
+            <div className="bg-white/5 backdrop-blur-xs border border-white/10 p-4 sm:p-5 rounded-2xl">
+              <div className="text-xl sm:text-2xl font-mono font-black text-[#22A06B]">
                 {formatMoney(totalOrdersValue)}
               </div>
-              <div className="text-[10px] text-slate-400 mt-1">
-                {pendingDispatchesCount} pending dispatch
+              <div className="text-xs font-semibold text-slate-400 mt-1">
+                Confirmed Orders Value
               </div>
             </div>
           </div>

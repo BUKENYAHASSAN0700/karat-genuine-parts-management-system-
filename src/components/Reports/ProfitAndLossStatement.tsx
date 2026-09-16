@@ -103,7 +103,7 @@ export const ProfitAndLossStatement: React.FC<PnLProps> = ({
       ['Summary', 'GROSS PROFIT', grossProfit],
       ['Summary', 'Gross Margin (%)', `${grossMarginPercent.toFixed(2)}%`],
       [''],
-      ['Operating Expenses (OPEX)', 'Yard 4 Industrial Area Depot Lease & Storage', -opexDepotLease],
+      ['Operating Expenses (OPEX)', 'Central Facility Warehouse Lease & Storage', -opexDepotLease],
       ['Operating Expenses (OPEX)', 'Fleet Logistics & Delivery Transit', -opexLogisticsFleet],
       ['Operating Expenses (OPEX)', 'Master Mechanics & Technical Payroll', -opexSalariesTechnicians],
       ['Operating Expenses (OPEX)', 'Hydraulic Diagnostic Rig & Tool Calibration', -opexDiagnosticTools],
@@ -285,7 +285,7 @@ export const ProfitAndLossStatement: React.FC<PnLProps> = ({
             {expandOPEX && (
               <div className="bg-white divide-y divide-slate-100">
                 <div className="px-8 py-2.5 flex items-center justify-between text-slate-600 hover:bg-slate-50/50">
-                  <span>Yard 4 Industrial Area Warehouse Lease, Heavy Aisle Storage & Yard Security</span>
+                  <span>Central Facility Warehouse Lease, Heavy Aisle Storage & Security</span>
                   <span className="font-mono font-bold text-slate-800">({formatMoney(opexDepotLease)})</span>
                 </div>
                 <div className="px-8 py-2.5 flex items-center justify-between text-slate-600 hover:bg-slate-50/50">

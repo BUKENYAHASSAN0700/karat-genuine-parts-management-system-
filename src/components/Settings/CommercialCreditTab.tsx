@@ -1,15 +1,6 @@
 import React, { useState } from 'react';
-import { 
-  Percent, 
-  CreditCard, 
-  AlertTriangle, 
-  ShieldCheck, 
-  CheckCircle2, 
-  Save, 
-  Lock,
-  Layers
-} from 'lucide-react';
 import { useInertia } from '../../context/InertiaContext';
+import { UIcon } from '../Common/UIcon';
 
 export const CommercialCreditTab: React.FC = () => {
   const { setFlashMessage, formatMoney } = useInertia();
@@ -40,18 +31,15 @@ export const CommercialCreditTab: React.FC = () => {
       <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-7 shadow-xs space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
           <div>
-            <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md">
-              Pricing Strategy
-            </span>
-            <h3 className="text-base font-black text-[#111111] tracking-tight mt-1">
+            <h3 className="text-base font-black text-[#111111] tracking-tight">
               Target Gross Margins & Emergency Surcharges
             </h3>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-500 mt-0.5">
               Default markup multipliers applied when adding parts to OEM factory restocks and quotations.
             </p>
           </div>
 
-          <div className="text-xs font-bold text-slate-700 bg-slate-100 px-3 py-1 rounded-xl">
+          <div className="text-xs font-bold text-slate-700">
             Target Blended Margin: ~32.4%
           </div>
         </div>
@@ -71,7 +59,7 @@ export const CommercialCreditTab: React.FC = () => {
                 onChange={e => setStandardMargin(Number(e.target.value))}
                 className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-12 pr-4 py-2.5 text-sm font-black font-mono text-[#111111] focus:bg-white focus:outline-none focus:border-amber-400 transition"
               />
-              <Percent className="w-4 h-4 text-slate-400 absolute left-4 top-3" />
+              <UIcon name="percentage" className="text-sm text-slate-400 absolute left-4 top-3" />
             </div>
             <span className="text-[11px] text-slate-400 block">
               Typical margin: 30% - 40%
@@ -92,7 +80,7 @@ export const CommercialCreditTab: React.FC = () => {
                 onChange={e => setHeavyAssemblyMargin(Number(e.target.value))}
                 className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-12 pr-4 py-2.5 text-sm font-black font-mono text-[#111111] focus:bg-white focus:outline-none focus:border-amber-400 transition"
               />
-              <Percent className="w-4 h-4 text-slate-400 absolute left-4 top-3" />
+              <UIcon name="percentage" className="text-sm text-slate-400 absolute left-4 top-3" />
             </div>
             <span className="text-[11px] text-slate-400 block">
               High-value capital items: 25% - 30%
@@ -113,7 +101,7 @@ export const CommercialCreditTab: React.FC = () => {
                 onChange={e => setMachineDownSurcharge(Number(e.target.value))}
                 className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-12 pr-4 py-2.5 text-sm font-black font-mono text-[#111111] focus:bg-white focus:outline-none focus:border-amber-400 transition"
               />
-              <Percent className="w-4 h-4 text-slate-400 absolute left-4 top-3" />
+              <UIcon name="percentage" className="text-sm text-slate-400 absolute left-4 top-3" />
             </div>
             <span className="text-[11px] text-slate-400 block">
               Air-freight & urgent site courier fee
@@ -126,19 +114,16 @@ export const CommercialCreditTab: React.FC = () => {
       <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-7 shadow-xs space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
           <div>
-            <span className="text-[10px] font-black uppercase tracking-wider text-blue-700 bg-blue-100 px-2 py-0.5 rounded-md">
-              Risk Management
-            </span>
-            <h3 className="text-base font-black text-[#111111] tracking-tight mt-1">
+            <h3 className="text-base font-black text-[#111111] tracking-tight">
               Contractor Commercial Credit & Dispatch Lockout Rules
             </h3>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-500 mt-0.5">
               Set default payment periods and automatic safety lockouts to curb bad debt from road contractors and quarry operators.
             </p>
           </div>
 
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold">
-            <Lock className="w-3.5 h-3.5 text-amber-600" />
+          <div className="flex items-center gap-1.5 text-slate-600 text-xs font-bold">
+            <UIcon name="lock" className="text-sm text-amber-600" />
             <span>Auto-Lock Enabled</span>
           </div>
         </div>
@@ -228,10 +213,10 @@ export const CommercialCreditTab: React.FC = () => {
                 onChange={e => setLowStockDefaultThreshold(Number(e.target.value))}
                 className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-12 pr-4 py-2.5 text-sm font-black font-mono text-[#111111] focus:bg-white focus:outline-none focus:border-amber-400 transition"
               />
-              <Layers className="w-4 h-4 text-slate-400 absolute left-4 top-3" />
+              <UIcon name="layers" className="text-sm text-slate-400 absolute left-4 top-3" />
             </div>
             <span className="text-[11px] text-slate-400 block">
-              Triggers low stock badge on parts catalog.
+              Triggers low stock alert on parts catalog.
             </span>
           </div>
 
@@ -248,7 +233,7 @@ export const CommercialCreditTab: React.FC = () => {
                   Mandatory CFO or Managing Director PIN Override for Frozen Accounts
                 </span>
                 <span className="text-[11px] text-slate-500">
-                  Prevents yard technicians from releasing heavy parts to overdue debtors without signed authorization.
+                  Prevents warehouse staff from releasing heavy parts to overdue debtors without signed authorization.
                 </span>
               </div>
             </label>
@@ -268,12 +253,12 @@ export const CommercialCreditTab: React.FC = () => {
         >
           {isSaved ? (
             <>
-              <CheckCircle2 className="w-4 h-4 text-[#111111]" />
+              <UIcon name="check" className="text-sm text-[#111111]" />
               <span>Credit Policies Saved!</span>
             </>
           ) : (
             <>
-              <Save className="w-4 h-4 text-[#111111]" />
+              <UIcon name="disk" className="text-sm text-[#111111]" />
               <span>Save Commercial Terms</span>
             </>
           )}

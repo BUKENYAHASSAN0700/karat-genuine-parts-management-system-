@@ -237,3 +237,14 @@ export interface SaleReceipt {
   cashier_name: string;
   currency: CurrencyCode;
 }
+
+export interface AppNotification {
+  id: string;
+  title: string;
+  message: string;
+  category: 'stock' | 'sale' | 'system';
+  timestamp: string;
+  createdAt: number;
+  read: boolean;
+  linkView?: string;
+}

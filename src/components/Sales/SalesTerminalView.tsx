@@ -31,6 +31,7 @@ import {
   Barcode,
   History
 } from 'lucide-react';
+import { UIcon } from '../Common/UIcon';
 import { useInertia } from '../../context/InertiaContext';
 import { SparePart, SaleReceiptItem, SaleReceipt } from '../../types';
 import { ReceiptModal } from './ReceiptModal';
@@ -391,11 +392,6 @@ export const SalesTerminalView: React.FC = () => {
   }, [receipts]);
 
   const handleDeleteReceipt = (receipt: SaleReceipt) => {
-    const confirmed = window.confirm(
-      `Delete receipt ${receipt.receipt_number}? This will remove its sold items and restore the deducted stock.`
-    );
-    if (!confirmed) return;
-
     deleteReceipt(receipt.id);
     setViewingReceipt(current => current?.id === receipt.id ? null : current);
     setIsReceiptOpen(current => current && viewingReceipt?.id === receipt.id ? false : current);
@@ -406,21 +402,9 @@ export const SalesTerminalView: React.FC = () => {
       {/* Module Title & Navigation Tabs Bar */}
       <div className="bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-2xl bg-[#111111] text-[#F6AF31] flex items-center justify-center font-extrabold shadow-sm shrink-0">
-              <Receipt className="w-5 h-5 text-[#F6AF31]" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-black text-[#111111] tracking-tight font-mono">
-                  Shop
-                </h1>
-              </div>
-              <p className="text-xs text-[#111111]/60 mt-0.5">
-                Browse products, verify stock, manage customer cart, and complete orders.
-              </p>
-            </div>
-          </div>
+          <h1 className="text-2xl font-black text-[#111111] tracking-tight font-mono">
+            Shop
+          </h1>
         </div>
 
         {/* View Switcher Tabs: Sell Register, Sold Items History, Receipts Archive */}
@@ -433,13 +417,8 @@ export const SalesTerminalView: React.FC = () => {
                 : 'bg-[#F7F6F3] text-[#111111] hover:bg-slate-200/70 border border-slate-200/80'
             }`}
           >
-            <ShoppingCart className="w-4 h-4 text-[#F6AF31]" />
+            <UIcon name="shopping-cart" className="text-sm text-[#F6AF31]" />
             <span>Sell Products</span>
-            {cart.length > 0 && (
-              <span className="w-5 h-5 rounded-full bg-[#F6AF31] text-[#111111] text-[10px] font-black flex items-center justify-center">
-                {cart.reduce((s, it) => s + it.quantity, 0)}
-              </span>
-            )}
           </button>
 
           <button
@@ -449,12 +428,10 @@ export const SalesTerminalView: React.FC = () => {
                 ? 'bg-[#111111] text-white shadow-xs'
                 : 'bg-[#F7F6F3] text-[#111111] hover:bg-slate-200/70 border border-slate-200/80'
             }`}
+            title="Sold Items"
           >
-            <History className="w-4 h-4 text-[#111111]/70" />
-            <span>Sold Items</span>
-            <span className="px-2 py-0.5 rounded-full bg-[#22A06B]/15 text-[#22A06B] text-[10px] font-mono font-black">
-              {totalItemsSold}
-            </span>
+            <UIcon name="time-past" className="text-sm opacity-80" />
+            <span>{totalItemsSold}</span>
           </button>
 
           <button
@@ -464,12 +441,10 @@ export const SalesTerminalView: React.FC = () => {
                 ? 'bg-[#111111] text-white shadow-xs'
                 : 'bg-[#F7F6F3] text-[#111111] hover:bg-slate-200/70 border border-slate-200/80'
             }`}
+            title="Receipts"
           >
-            <Receipt className="w-4 h-4 text-[#111111]/70" />
+            <UIcon name="receipt" className="text-sm opacity-80" />
             <span>Receipts</span>
-            <span className="px-2 py-0.5 rounded-full bg-slate-200/90 text-[10px] font-mono text-[#111111] font-bold">
-              {receipts.length}
-            </span>
           </button>
         </div>
       </div>
@@ -481,9 +456,8 @@ export const SalesTerminalView: React.FC = () => {
           <div className="lg:col-span-7 bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-6 shadow-xs space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-100">
               <div>
-                <h2 className="text-base font-extrabold text-[#111111] flex items-center gap-2">
-                  <Package className="w-4 h-4 text-[#F6AF31]" />
-                  <span>Spare Parts Catalog</span>
+                <h2 className="text-base font-extrabold text-[#111111]">
+                  Spare Parts Catalog
                 </h2>
                 <p className="text-[11px] text-[#111111]/50">
                   Showing {filteredParts.length} available items
@@ -993,16 +967,13 @@ export const SalesTerminalView: React.FC = () => {
                   </div>
                 )}
 
-                <div className="pt-2 flex justify-between items-baseline">
-                  <div>
-                    <span className="text-sm font-black uppercase text-[#111111]">Grand Total Due:</span>
-                    <span className="text-[10px] text-[#111111]/50 block font-medium">
-                      Total across {cart.reduce((a, b) => a + b.quantity, 0)} items
-                    </span>
-                  </div>
-                  <span className="text-2xl font-black font-mono text-[#111111]">
+                <div className="pt-2">
+                  <div className="text-2xl sm:text-3xl font-black font-mono text-[#111111]">
                     {formatMoney(grandTotal)}
-                  </span>
+                  </div>
+                  <div className="text-xs font-semibold text-slate-500 mt-0.5">
+                    Grand Total Due
+                  </div>
                 </div>
               </div>
 
@@ -1035,13 +1006,7 @@ export const SalesTerminalView: React.FC = () => {
                 <h2 className="text-lg font-extrabold text-[#111111] tracking-tight">
                   Sold Spare Parts & Itemized History
                 </h2>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#22A06B]/15 text-[#22A06B]">
-                  {filteredSoldItems.reduce((acc, it) => acc + it.quantity, 0)} Units Logged
-                </span>
               </div>
-              <p className="text-xs text-[#111111]/60 mt-1">
-                Detailed audit trail of all spare parts sold, stock deductions, customer contractor details, and unit sale prices.
-              </p>
             </div>
 
             {/* Search Input for Sold Items */}
@@ -1144,7 +1109,7 @@ export const SalesTerminalView: React.FC = () => {
                         title="Delete receipt and restore stock"
                         aria-label={`Delete receipt ${item.receipt_number}`}
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <UIcon name="trash" className="text-xs" />
                       </button>
                     </div>
                   </div>
@@ -1268,7 +1233,7 @@ export const SalesTerminalView: React.FC = () => {
                             title="Delete receipt and restore stock"
                             aria-label={`Delete receipt ${item.receipt_number}`}
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <UIcon name="trash" className="text-xs" />
                           </button>
                         </div>
                       </td>
@@ -1373,7 +1338,7 @@ export const SalesTerminalView: React.FC = () => {
                         title="Delete receipt and restore stock"
                         aria-label={`Delete receipt ${receipt.receipt_number}`}
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <UIcon name="trash" className="text-sm" />
                       </button>
                     </div>
                   </div>
@@ -1473,7 +1438,7 @@ export const SalesTerminalView: React.FC = () => {
                             title="Delete receipt and restore stock"
                             aria-label={`Delete receipt ${receipt.receipt_number}`}
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <UIcon name="trash" className="text-xs" />
                           </button>
                         </div>
                       </td>

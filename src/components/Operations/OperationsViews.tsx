@@ -102,10 +102,10 @@ export const SalesView: React.FC = () => {
 
             <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
               <div>
-                <span className="text-[10px] text-[#111111]/40 uppercase font-bold">Total Quoted</span>
                 <div className="text-base font-extrabold text-[#111111] font-mono">
                   {formatMoney(inq.quoted_amount)}
                 </div>
+                <div className="text-[10px] text-[#111111]/50 uppercase font-bold">Total Quoted</div>
               </div>
 
               {inq.status !== 'Approved' && (

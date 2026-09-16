@@ -110,7 +110,7 @@ export const FinancialAuditModal: React.FC<FinancialAuditModalProps> = ({
                 Plot 14-16 Jinja Road, Industrial Area Estate, Yard 4 Ingest, Kampala, Uganda.
               </p>
               <p className="text-[10px] text-slate-500 font-mono">
-                TIN: 1004829104 &bull; VAT No: 1004829104-VAT &bull; EFRIS Fiscal Unit: EFRIS-UG-882194
+                TIN: 1004829104 &bull; VAT No: 1004829104-VAT
               </p>
             </div>
 
@@ -164,7 +164,7 @@ export const FinancialAuditModal: React.FC<FinancialAuditModalProps> = ({
               <span className="text-base font-black text-slate-800 font-mono">16.4 Days</span>
             </div>
             <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-center">
-              <span className="text-[10px] font-bold text-slate-500 uppercase block">EFRIS Status</span>
+              <span className="text-[10px] font-bold text-slate-500 uppercase block">Tax Status</span>
               <span className="text-base font-black text-[#22A06B] font-mono">100% Tax OK</span>
             </div>
           </div>
@@ -240,7 +240,7 @@ export const FinancialAuditModal: React.FC<FinancialAuditModalProps> = ({
               </div>
               <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
                 <span className="text-[10px] text-slate-500 font-bold block uppercase">Statutory VAT Status</span>
-                <span className="font-mono font-black text-sm text-[#22A06B]">Active (EFRIS)</span>
+                <span className="font-mono font-black text-sm text-[#22A06B]">Active</span>
                 <span className="text-[10px] text-slate-400 block mt-0.5">URA TIN: 1004829104</span>
               </div>
             </div>

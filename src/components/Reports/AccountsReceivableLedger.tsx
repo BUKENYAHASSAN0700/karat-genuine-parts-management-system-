@@ -116,14 +116,6 @@ export const AccountsReceivableLedger: React.FC = () => {
       {/* Top Banner & DSO Velocity */}
       <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-900">
-              Accounts Receivable (A/R)
-            </span>
-            <span className="text-xs text-slate-400 font-mono">
-              Commercial Credit Ledger & Debt Aging
-            </span>
-          </div>
           <h2 className="text-xl font-black text-[#111111] tracking-tight">
             Corporate Client Credit & Collections
           </h2>
@@ -132,13 +124,12 @@ export const AccountsReceivableLedger: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-4 bg-slate-50 px-5 py-3 rounded-2xl border border-slate-200">
-          <div>
-            <span className="text-[10px] font-bold uppercase text-slate-400 block">Avg Collection Velocity</span>
-            <span className="text-lg font-black text-[#111111] font-mono">16.4 Days DSO</span>
+        <div className="bg-slate-50 px-5 py-3 rounded-2xl border border-slate-200">
+          <div className="text-xl font-black text-[#111111] font-mono">
+            16.4 Days DSO
           </div>
-          <div className="w-9 h-9 rounded-xl bg-emerald-100 text-[#22A06B] flex items-center justify-center font-black text-xs">
-            ✓
+          <div className="text-xs font-semibold text-slate-500 mt-0.5">
+            Avg Collection Velocity
           </div>
         </div>
       </div>
@@ -149,85 +140,61 @@ export const AccountsReceivableLedger: React.FC = () => {
         {/* Current (< 30 Days) */}
         <div 
           onClick={() => setSelectedAgingFilter(selectedAgingFilter === 'current' ? 'all' : 'current')}
-          className={`p-4 rounded-3xl border transition cursor-pointer ${
+          className={`p-5 rounded-3xl border transition cursor-pointer ${
             selectedAgingFilter === 'current' 
               ? 'bg-[#111111] text-white border-[#111111] shadow-md' 
               : 'bg-white text-slate-800 border-slate-200 hover:border-slate-300'
           }`}
         >
-          <div className="flex items-center justify-between mb-1">
-            <span className={`text-[10px] font-black uppercase tracking-wider ${selectedAgingFilter === 'current' ? 'text-[#F6AF31]' : 'text-slate-500'}`}>
-              Current (&lt; 30 Days)
-            </span>
-            <span className="w-2 h-2 rounded-full bg-emerald-500" />
-          </div>
-          <div className="text-xl font-black font-mono">
+          <div className="text-2xl sm:text-3xl font-black font-mono tracking-tight">
             {formatMoney(currentBucket)}
           </div>
-          <div className={`text-[11px] mt-1 ${selectedAgingFilter === 'current' ? 'text-slate-300' : 'text-slate-500'}`}>
-            Within standard commercial terms
+          <div className={`text-xs font-semibold mt-1 ${selectedAgingFilter === 'current' ? 'text-slate-300' : 'text-slate-500'}`}>
+            Current (&lt; 30 Days)
           </div>
         </div>
 
         {/* 31-60 Days */}
         <div 
           onClick={() => setSelectedAgingFilter(selectedAgingFilter === '31-60-days' ? 'all' : '31-60-days')}
-          className={`p-4 rounded-3xl border transition cursor-pointer ${
+          className={`p-5 rounded-3xl border transition cursor-pointer ${
             selectedAgingFilter === '31-60-days' 
               ? 'bg-[#111111] text-white border-[#111111] shadow-md' 
               : 'bg-white text-slate-800 border-slate-200 hover:border-slate-300'
           }`}
         >
-          <div className="flex items-center justify-between mb-1">
-            <span className={`text-[10px] font-black uppercase tracking-wider ${selectedAgingFilter === '31-60-days' ? 'text-[#F6AF31]' : 'text-amber-700'}`}>
-              31 - 60 Days Due
-            </span>
-            <span className="w-2 h-2 rounded-full bg-amber-500" />
-          </div>
-          <div className="text-xl font-black font-mono text-amber-600">
+          <div className={`text-2xl sm:text-3xl font-black font-mono tracking-tight ${selectedAgingFilter === '31-60-days' ? 'text-white' : 'text-amber-600'}`}>
             {formatMoney(overdue30Bucket)}
           </div>
-          <div className={`text-[11px] mt-1 ${selectedAgingFilter === '31-60-days' ? 'text-slate-300' : 'text-slate-500'}`}>
-            Follow-up statement required
+          <div className={`text-xs font-semibold mt-1 ${selectedAgingFilter === '31-60-days' ? 'text-slate-300' : 'text-amber-700'}`}>
+            31 - 60 Days Due
           </div>
         </div>
 
         {/* 61-90 Days */}
         <div 
           onClick={() => setSelectedAgingFilter(selectedAgingFilter === '61-90-days' ? 'all' : '61-90-days')}
-          className={`p-4 rounded-3xl border transition cursor-pointer ${
+          className={`p-5 rounded-3xl border transition cursor-pointer ${
             selectedAgingFilter === '61-90-days' 
               ? 'bg-[#111111] text-white border-[#111111] shadow-md' 
               : 'bg-white text-slate-800 border-slate-200 hover:border-slate-300'
           }`}
         >
-          <div className="flex items-center justify-between mb-1">
-            <span className={`text-[10px] font-black uppercase tracking-wider ${selectedAgingFilter === '61-90-days' ? 'text-[#F6AF31]' : 'text-rose-700'}`}>
-              61 - 90 Days Overdue
-            </span>
-            <span className="w-2 h-2 rounded-full bg-rose-500" />
-          </div>
-          <div className="text-xl font-black font-mono text-rose-600">
+          <div className={`text-2xl sm:text-3xl font-black font-mono tracking-tight ${selectedAgingFilter === '61-90-days' ? 'text-white' : 'text-rose-600'}`}>
             {formatMoney(overdue60Bucket)}
           </div>
-          <div className={`text-[11px] mt-1 ${selectedAgingFilter === '61-90-days' ? 'text-slate-300' : 'text-slate-500'}`}>
-            Hold further parts dispatch
+          <div className={`text-xs font-semibold mt-1 ${selectedAgingFilter === '61-90-days' ? 'text-slate-300' : 'text-rose-700'}`}>
+            61 - 90 Days Overdue
           </div>
         </div>
 
         {/* Total Outstanding */}
-        <div className="p-4 rounded-3xl bg-slate-50 border border-slate-200 text-slate-800">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">
-              Total Trade Receivables
-            </span>
-            <span className="text-xs font-bold text-slate-600 font-mono">{debtorClients.length} Clients</span>
-          </div>
-          <div className="text-xl font-black font-mono text-[#111111]">
+        <div className="p-5 rounded-3xl bg-slate-50 border border-slate-200 text-slate-800">
+          <div className="text-2xl sm:text-3xl font-black font-mono text-[#111111] tracking-tight">
             {formatMoney(totalReceivables)}
           </div>
-          <div className="text-[11px] text-slate-500 mt-1">
-            Gross ledger outstanding
+          <div className="text-xs font-semibold text-slate-500 mt-1">
+            Total Trade Receivables
           </div>
         </div>
 

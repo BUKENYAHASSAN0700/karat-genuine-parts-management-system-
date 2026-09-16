@@ -62,14 +62,6 @@ export const InventoryValuationReport: React.FC = () => {
       {/* Top Banner */}
       <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-100 text-blue-900">
-              Warehouse Balance Sheet
-            </span>
-            <span className="text-xs text-slate-400 font-mono">
-              Industrial Area Yard 4 • Heavy Spares Capitalization
-            </span>
-          </div>
           <h2 className="text-xl font-black text-[#111111] tracking-tight">
             Inventory Asset Valuation & Stock Turnover
           </h2>
@@ -78,13 +70,12 @@ export const InventoryValuationReport: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-4 bg-slate-50 px-5 py-3 rounded-2xl border border-slate-200">
-          <div>
-            <span className="text-[10px] font-bold uppercase text-slate-400 block">Catalog SKU Units</span>
-            <span className="text-lg font-black text-[#111111] font-mono">{totalItemsCount} Physical Units</span>
+        <div className="bg-slate-50 px-5 py-3 rounded-2xl border border-slate-200">
+          <div className="text-xl font-black text-[#111111] font-mono">
+            {totalItemsCount} <span className="text-xs font-normal text-slate-400">Units</span>
           </div>
-          <div className="w-9 h-9 rounded-xl bg-[#111111] text-[#F6AF31] flex items-center justify-center font-black text-xs">
-            <Boxes className="w-4 h-4" />
+          <div className="text-xs font-semibold text-slate-500 mt-0.5">
+            Catalog SKU Units
           </div>
         </div>
       </div>
@@ -93,45 +84,31 @@ export const InventoryValuationReport: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* Total Cost Value */}
         <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-xs">
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-500 block mb-1">
-            Total Inventory at Cost
-          </span>
-          <div className="text-2xl font-black text-[#111111] font-mono">
+          <div className="text-2xl sm:text-3xl font-black text-[#111111] font-mono tracking-tight">
             {formatMoney(totalValueAtCost)}
           </div>
-          <div className="text-[11px] text-slate-500 mt-2">
-            Capital tied up in physical shelf stock
+          <div className="text-xs font-semibold text-slate-500 mt-1">
+            Total Inventory at Cost
           </div>
         </div>
 
         {/* Total Retail Realization */}
         <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-xs">
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-500 block mb-1">
-            Projected Retail Realization
-          </span>
-          <div className="text-2xl font-black text-blue-600 font-mono">
+          <div className="text-2xl sm:text-3xl font-black text-blue-600 font-mono tracking-tight">
             {formatMoney(totalValueAtRetail)}
           </div>
-          <div className="text-[11px] text-slate-500 mt-2">
-            Full market selling value at current catalogue prices
+          <div className="text-xs font-semibold text-slate-500 mt-1">
+            Projected Retail Realization
           </div>
         </div>
 
         {/* Potential Gross Profit */}
-        <div className="p-5 rounded-3xl bg-emerald-500/10 border border-emerald-300 shadow-xs">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-xs font-black uppercase tracking-wider text-[#22A06B]">
-              Unrealized Inventory Gain
-            </span>
-            <span className="text-[10px] font-black bg-[#22A06B] text-white px-2 py-0.5 rounded-full">
-              {unrealizedMarginPct.toFixed(1)}% Margin
-            </span>
-          </div>
-          <div className="text-2xl font-black text-[#22A06B] font-mono">
+        <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-xs">
+          <div className="text-2xl sm:text-3xl font-black text-[#22A06B] font-mono tracking-tight">
             +{formatMoney(unrealizedProfit)}
           </div>
-          <div className="text-[11px] text-slate-700 mt-2 font-medium">
-            Expected gross profit upon complete stock realization
+          <div className="text-xs font-semibold text-slate-500 mt-1">
+            Unrealized Inventory Gain
           </div>
         </div>
       </div>

@@ -167,12 +167,7 @@ export const AddPartModal: React.FC = () => {
               <Boxes className="w-5 h-5 text-[#F6AF31]" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h3 className="font-extrabold text-base text-[#111111]">Add New Product</h3>
-                <span className="px-2.5 py-0.5 rounded-lg bg-[#111111] text-[#F6AF31] font-mono font-black text-xs">
-                  {assignedId}
-                </span>
-              </div>
+              <h3 className="font-extrabold text-base text-[#111111]">Add New Product</h3>
             </div>
           </div>
           <button
@@ -201,17 +196,16 @@ export const AddPartModal: React.FC = () => {
               {/* Product ID */}
               <div className="p-3 bg-white border border-slate-200 rounded-xl flex items-center justify-between">
                 <div>
-                  <span className="text-[10px] uppercase font-bold text-[#111111]/50 block">Product ID (Part No)</span>
+                  <span className="text-[10px] uppercase font-bold text-[#111111]/50 block">Product ID</span>
                   <span className="font-mono font-black text-sm text-[#111111]">{assignedId}</span>
                 </div>
                 <button
                   type="button"
                   onClick={handleRegenerateId}
-                  className="text-[10px] text-[#111111]/60 hover:text-[#111111] flex items-center gap-1 font-semibold px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 transition"
+                  className="text-[10px] text-[#111111]/60 hover:text-[#111111] flex items-center justify-center p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 transition"
                   title="Generate New ID"
                 >
-                  <RefreshCw className="w-3 h-3" />
-                  <span>Refresh</span>
+                  <RefreshCw className="w-3.5 h-3.5" />
                 </button>
               </div>
 
@@ -234,7 +228,7 @@ export const AddPartModal: React.FC = () => {
             {/* Part Name */}
             <div>
               <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
-                Part Name / Title *
+                Part Name *
               </label>
               <input
                 type="text"
@@ -249,7 +243,7 @@ export const AddPartModal: React.FC = () => {
             {/* Part Description */}
             <div>
               <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
-                Description (DESC) & Technical Specifications
+                Description (DESC)
               </label>
               <textarea
                 rows={2}
@@ -384,7 +378,6 @@ export const AddPartModal: React.FC = () => {
                     <Calendar className="w-3 h-3 text-[#111111]/50" />
                     <span>Date Added *</span>
                   </label>
-                  <span className="text-[9px] text-[#22A06B] font-bold">Auto-Captured</span>
                 </div>
                 <input
                   type="date"
@@ -413,7 +406,7 @@ export const AddPartModal: React.FC = () => {
                   <label className="text-[10px] font-bold uppercase tracking-wider text-[#111111]/70">
                     Cost for Item ({currency}) *
                   </label>
-                  <span className="text-[9px] text-slate-500 font-medium">Landed / Purchase Cost</span>
+                  <span className="text-[9px] text-slate-500 font-medium">Purchase Cost</span>
                 </div>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-[#111111]/50">{currency}</span>

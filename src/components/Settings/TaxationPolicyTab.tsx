@@ -1,114 +1,102 @@
 import React, { useState } from 'react';
-import { 
-  Percent, 
-  Server, 
-  ShieldAlert, 
-  CheckCircle2, 
-  Save, 
-  FileCheck, 
-  Info,
-  RefreshCw
-} from 'lucide-react';
 import { useInertia } from '../../context/InertiaContext';
+import { UIcon } from '../Common/UIcon';
 
 export const TaxationPolicyTab: React.FC = () => {
   const { setFlashMessage } = useInertia();
 
   const [vatRate, setVatRate] = useState<number>(18);
   const [whtRate, setWhtRate] = useState<number>(6);
-  const [efrisMode, setEfrisMode] = useState<'live' | 'buffered'>('live');
-  const [autoFiscalizePOS, setAutoFiscalizePOS] = useState<boolean>(true);
+  const [taxMode, setTaxMode] = useState<'live' | 'buffered'>('live');
+  const [autoTaxPOS, setAutoTaxPOS] = useState<boolean>(true);
   const [exemptMiningHolders, setExemptMiningHolders] = useState<boolean>(true);
   const [taxDisclaimer, setTaxDisclaimer] = useState<string>(
-    'All parts supplied are subject to Uganda Revenue Authority 18% VAT and standard EFRIS fiscal documentation. Official e-receipt generated at checkout.'
+    'All parts supplied are subject to Uganda Revenue Authority 18% VAT and standard statutory documentation. Official receipt generated at checkout.'
   );
   const [isSaved, setIsSaved] = useState(false);
-  const [isPingingEfris, setIsPingingEfris] = useState(false);
+  const [isTestingTax, setIsTestingTax] = useState(false);
 
-  const handlePingEfris = () => {
-    setIsPingingEfris(true);
+  const handleTestTax = () => {
+    setIsTestingTax(true);
     setTimeout(() => {
-      setIsPingingEfris(false);
-      setFlashMessage('success', 'URA EFRIS Gateway connected! Response code: 200 OK (Latency: 48ms)');
+      setIsTestingTax(false);
+      setFlashMessage('success', 'Tax rates verified! Response code: 200 OK');
     }, 1200);
   };
 
   const handleSaveTax = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaved(true);
-    setFlashMessage('success', 'URA statutory tax rules and EFRIS fiscal protocol saved successfully.');
+    setFlashMessage('success', 'Statutory tax rules saved successfully.');
     setTimeout(() => setIsSaved(false), 3000);
   };
 
   return (
     <form onSubmit={handleSaveTax} className="space-y-6">
       
-      {/* URA EFRIS Realtime Fiscalization Engine */}
+      {/* Statutory Tax Configuration Engine */}
       <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-7 shadow-xs space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
           <div>
-            <span className="text-[10px] font-black uppercase tracking-wider text-purple-700 bg-purple-100 px-2 py-0.5 rounded-md">
-              EFRIS Protocol
-            </span>
-            <h3 className="text-base font-black text-[#111111] tracking-tight mt-1">
-              Electronic Fiscal Receipting & Invoicing System (EFRIS)
+            <h3 className="text-base font-black text-[#111111] tracking-tight">
+              Automated Statutory Tax Calculation
             </h3>
-            <p className="text-xs text-slate-500">
-              Live automated handshake with Uganda Revenue Authority servers for instantaneous QR code and fiscal receipt signature generation.
+            <p className="text-xs text-slate-500 mt-0.5">
+              Automated calculation with statutory revenue authority rules for receipts and invoicing.
             </p>
           </div>
 
           <button
             type="button"
-            onClick={handlePingEfris}
-            disabled={isPingingEfris}
+            onClick={handleTestTax}
+            disabled={isTestingTax}
             className="px-3.5 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-[#111111] text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isPingingEfris ? 'animate-spin text-purple-600' : 'text-slate-500'}`} />
-            <span>{isPingingEfris ? 'Testing Handshake...' : 'Ping EFRIS Gateway'}</span>
+            <UIcon name="refresh" className={`text-xs ${isTestingTax ? 'animate-spin text-purple-600' : 'text-slate-500'}`} />
+            <span>{isTestingTax ? 'Testing Rates...' : 'Verify Tax Settings'}</span>
           </button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Live Server Mode */}
           <div
-            onClick={() => setEfrisMode('live')}
+            onClick={() => setTaxMode('live')}
             className={`p-4 rounded-2xl border text-left cursor-pointer transition ${
-              efrisMode === 'live'
+              taxMode === 'live'
                 ? 'bg-purple-50/70 border-purple-300 ring-1 ring-purple-400'
                 : 'bg-slate-50 border-slate-200 hover:border-slate-300'
             }`}
           >
             <div className="flex items-center justify-between">
               <span className="text-xs font-black text-purple-900 flex items-center gap-2">
-                <Server className="w-4 h-4 text-purple-600" />
-                Live Cloud Fiscal Gateway (Recommended)
+                <UIcon name="server" className="text-sm text-purple-600" />
+                Live Cloud Mode (Recommended)
               </span>
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
             </div>
             <p className="text-[11px] text-slate-600 mt-2 leading-relaxed">
-              Receipts are transmitted immediately upon checkout via HTTPS REST. QR code and URA verification signature returned within 100ms.
+              Receipts are recorded immediately upon checkout with official tax calculations.
             </p>
           </div>
 
           {/* Offline Buffer Mode */}
           <div
-            onClick={() => setEfrisMode('buffered')}
+            onClick={() => setTaxMode('buffered')}
             className={`p-4 rounded-2xl border text-left cursor-pointer transition ${
-              efrisMode === 'buffered'
+              taxMode === 'buffered'
                 ? 'bg-purple-50/70 border-purple-300 ring-1 ring-purple-400'
                 : 'bg-slate-50 border-slate-200 hover:border-slate-300'
             }`}
           >
             <div className="flex items-center justify-between">
               <span className="text-xs font-black text-slate-900 flex items-center gap-2">
-                <FileCheck className="w-4 h-4 text-slate-600" />
+                <UIcon name="document-signed" className="text-sm text-slate-600" />
                 Offline Store & Forward Buffer
               </span>
               <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
             </div>
             <p className="text-[11px] text-slate-600 mt-2 leading-relaxed">
-              Safe for rural quarry yards with intermittent fiber internet. Signs invoices locally with cryptographic security key and synchronizes when online.
+              Safe for locations with intermittent internet. Records transactions locally with secure logging and synchronizes when network reconnects.
             </p>
           </div>
         </div>
@@ -117,16 +105,16 @@ export const TaxationPolicyTab: React.FC = () => {
           <label className="flex items-center gap-3 cursor-pointer select-none">
             <input
               type="checkbox"
-              checked={autoFiscalizePOS}
-              onChange={e => setAutoFiscalizePOS(e.target.checked)}
+              checked={autoTaxPOS}
+              onChange={e => setAutoTaxPOS(e.target.checked)}
               className="w-4 h-4 rounded text-purple-600 focus:ring-purple-400 accent-purple-600"
             />
             <div>
               <span className="text-xs font-bold text-slate-800 block">
-                Automatic Fiscalization on Every Transaction
+                Automatic Tax Calculation on Every Transaction
               </span>
               <span className="text-[11px] text-slate-500">
-                Immediately issues an official URA EFRIS receipt without cashier manual intervention.
+                Immediately generates tax receipt without cashier manual intervention.
               </span>
             </div>
           </label>
@@ -136,13 +124,10 @@ export const TaxationPolicyTab: React.FC = () => {
       {/* Statutory Rates & Withholding Tax */}
       <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-7 shadow-xs space-y-6">
         <div className="border-b border-slate-100 pb-3">
-          <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md">
-            Statutory Rates
-          </span>
-          <h3 className="text-base font-black text-[#111111] tracking-tight mt-1">
+          <h3 className="text-base font-black text-[#111111] tracking-tight">
             Value Added Tax (VAT) & Withholding Tax (WHT)
           </h3>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-500 mt-0.5">
             Applicable tax calculations configured in adherence to the Uganda VAT Act & Tax Procedures Code.
           </p>
         </div>
@@ -161,7 +146,7 @@ export const TaxationPolicyTab: React.FC = () => {
                 onChange={e => setVatRate(Number(e.target.value))}
                 className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-12 pr-4 py-2.5 text-sm font-black font-mono text-[#111111] focus:bg-white focus:outline-none focus:border-amber-400 transition"
               />
-              <Percent className="w-4 h-4 text-slate-400 absolute left-4 top-3" />
+              <UIcon name="percentage" className="text-sm text-slate-400 absolute left-4 top-3" />
             </div>
             <span className="text-[11px] text-slate-400 block">
               Statutory standard rate in Uganda is 18%.
@@ -181,7 +166,7 @@ export const TaxationPolicyTab: React.FC = () => {
                 onChange={e => setWhtRate(Number(e.target.value))}
                 className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-12 pr-4 py-2.5 text-sm font-black font-mono text-[#111111] focus:bg-white focus:outline-none focus:border-amber-400 transition"
               />
-              <Percent className="w-4 h-4 text-slate-400 absolute left-4 top-3" />
+              <UIcon name="percentage" className="text-sm text-slate-400 absolute left-4 top-3" />
             </div>
             <span className="text-[11px] text-slate-400 block">
               Deducted by approved commercial clients on invoices &gt; 1,000,000 UGX.
@@ -201,7 +186,7 @@ export const TaxationPolicyTab: React.FC = () => {
                   Support EAC / COMESA Mining Investment Exemption Certificates
                 </span>
                 <span className="text-[11px] text-slate-500">
-                  Allows zero-rating parts for accredited gold/tin/cobalt mining license holders holding URA exemption slips.
+                  Allows zero-rating parts for accredited mining license holders holding statutory exemption slips.
                 </span>
               </div>
             </label>
@@ -224,7 +209,7 @@ export const TaxationPolicyTab: React.FC = () => {
       {/* Save Action Bar */}
       <div className="flex items-center justify-between pt-2">
         <span className="text-xs text-slate-500">
-          Tax adjustments update future quote calculations and EFRIS fiscal transmissions.
+          Tax adjustments update future quote and checkout calculations.
         </span>
 
         <button
@@ -233,12 +218,12 @@ export const TaxationPolicyTab: React.FC = () => {
         >
           {isSaved ? (
             <>
-              <CheckCircle2 className="w-4 h-4 text-[#111111]" />
+              <UIcon name="check" className="text-sm text-[#111111]" />
               <span>Tax Policies Saved!</span>
             </>
           ) : (
             <>
-              <Save className="w-4 h-4 text-[#111111]" />
+              <UIcon name="disk" className="text-sm text-[#111111]" />
               <span>Save Taxation Rules</span>
             </>
           )}

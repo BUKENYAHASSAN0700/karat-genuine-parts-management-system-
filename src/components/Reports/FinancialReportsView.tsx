@@ -21,7 +21,7 @@ import { useInertia } from '../../context/InertiaContext';
 import { FinancialKPIs } from './FinancialKPIs';
 import { ProfitAndLossStatement } from './ProfitAndLossStatement';
 import { AccountsReceivableLedger } from './AccountsReceivableLedger';
-import { TaxAndEFRISReport } from './TaxAndEFRISReport';
+import { TaxComplianceReport } from './TaxComplianceReport';
 import { InventoryValuationReport } from './InventoryValuationReport';
 import { FinancialCharts } from './FinancialCharts';
 import { FinancialAuditModal } from './FinancialAuditModal';
@@ -153,7 +153,7 @@ export const FinancialReportsView: React.FC = () => {
     const totalInventoryRetail = parts.reduce((sum, p) => sum + (p.stock_quantity * p.unit_price), 0);
     const unrealizedProfit = totalInventoryRetail - totalInventoryCost;
 
-    // 7. Taxes & URA EFRIS (18% VAT)
+    // 7. Taxes & URA (18% VAT)
     const outputVAT = grossRevenue * 0.18;
     const inputVAT = cogs * 0.18;
     const netVATPayable = Math.max(0, outputVAT - inputVAT);
@@ -335,7 +335,7 @@ export const FinancialReportsView: React.FC = () => {
           { id: 'overview', label: 'Executive Overview & Charts', icon: BarChart3 },
           { id: 'pnl', label: 'Profit & Loss (Income Statement)', icon: FileText },
           { id: 'receivables', label: 'Accounts Receivable & Aging', icon: Clock, badge: `${financialData.unpaidOrdersCount} Open` },
-          { id: 'tax', label: 'URA 18% VAT & EFRIS Compliance', icon: ShieldCheck },
+          { id: 'tax', label: 'URA 18% VAT Compliance', icon: ShieldCheck },
           { id: 'inventory', label: 'Inventory Asset Valuation', icon: Boxes },
         ].map(tab => {
           const Icon = tab.icon;
@@ -410,7 +410,7 @@ export const FinancialReportsView: React.FC = () => {
       )}
 
       {activeTab === 'tax' && (
-        <TaxAndEFRISReport
+        <TaxComplianceReport
           grossRevenue={financialData.grossRevenue}
           outputVAT={financialData.outputVAT}
           inputVAT={financialData.inputVAT}
