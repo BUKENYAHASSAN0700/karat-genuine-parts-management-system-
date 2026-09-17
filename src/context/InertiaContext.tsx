@@ -253,9 +253,12 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const saved = localStorage.getItem('karat_parts_v3');
       if (saved) {
         const parsed = JSON.parse(saved);
-        return parsed.map((p: any) => ({
+        const existingIds = new Set(parsed.map((p: any) => p.id));
+        const missing = INITIAL_SPARE_PARTS.filter(p => !existingIds.has(p.id));
+        const combined = [...parsed, ...missing];
+        return combined.map((p: any) => ({
           ...p,
-          unit: p.unit || (p.name?.toLowerCase().includes('kit') ? 'KIT' : p.name?.toLowerCase().includes('set') ? 'SET' : p.name?.toLowerCase().includes('assembly') || p.name?.toLowerCase().includes('pump') ? 'ASSY' : 'PCS'),
+          unit: p.unit || (p.name?.toLowerCase().includes('kit') ? 'KIT' : p.name?.toLowerCase().includes('set') ? 'SET' : p.name?.toLowerCase().includes('assembly') || p.name?.toLowerCase().includes('pump') || p.name?.toLowerCase().includes('motor') ? 'ASSY' : 'PCS'),
           taxes: p.taxes || '18% VAT',
           tax_rate: p.tax_rate ?? 18,
           unit_cost: p.unit_cost !== undefined ? p.unit_cost : Math.round((p.unit_price || 0) * 0.65),
@@ -278,6 +281,25 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
       return INITIAL_RECEIPTS;
     }
   });
+
+  const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('karat_notifications_enabled');
+      return saved !== null ? JSON.parse(saved) : true;
+    } catch {
+      return true;
+    }
+  });
+
+  const toggleNotificationsEnabled = () => {
+    setNotificationsEnabled(prev => {
+      const next = !prev;
+      try {
+        localStorage.setItem('karat_notifications_enabled', JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  };
 
   const [notifications, setNotifications] = useState<AppNotification[]>(() => {
     try {
@@ -306,7 +328,7 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
   };
 
-  const unreadNotificationsCount = notifications.filter(n => !n.read).length;
+  const unreadNotificationsCount = notificationsEnabled ? notifications.filter(n => !n.read).length : 0;
 
   const [activeReceipt, setActiveReceipt] = useState<SaleReceipt | null>(null);
   const [selectedPartForSale, setSelectedPartForSale] = useState<SparePart | null>(null);
@@ -992,6 +1014,8 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setFlashMessage,
         clearFlash,
         notifications,
+        notificationsEnabled,
+        toggleNotificationsEnabled,
         clearNotification,
         clearAllNotifications,
         markNotificationAsRead,

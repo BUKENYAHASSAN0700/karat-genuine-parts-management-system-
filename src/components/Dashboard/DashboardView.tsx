@@ -100,7 +100,7 @@ export const DashboardView: React.FC = () => {
     <div className="space-y-6">
       {/* Top Header Row with Clear Greeting */}
       <div className="flex items-center justify-between pb-1">
-        <h1 className="text-2xl sm:text-3xl font-black text-[#111111] tracking-tight font-mono">
+        <h1 className="text-2xl sm:text-3xl font-black text-[#111111] tracking-tight font-poppins">
           Dashboard
         </h1>
       </div>

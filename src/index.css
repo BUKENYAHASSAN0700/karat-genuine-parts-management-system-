@@ -1,11 +1,15 @@
 @import "tailwindcss";
 
 @layer base {
-  body, input, button, select, textarea, .font-sans, .font-inter {
+  *, ::before, ::after {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
 
-  h1, h2, h3, h4, h5, h6, .font-heading, .font-poppins, .font-mono {
+  body, input, button, select, textarea, p, span, div, label, table, th, td, .font-sans, .font-inter {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6, .font-heading, .font-poppins {
     font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
   }
 }
@@ -16,6 +20,12 @@
 
 .font-inter {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+}
+
+/* Ensure font-mono strictly uses Inter with clean tabular lining numbers */
+.font-mono {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+  font-feature-settings: 'tnum' on, 'lnum' on;
 }
 
 html, body, #root {

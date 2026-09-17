@@ -53,7 +53,7 @@ export const StoreSettingsView: React.FC = () => {
       {/* Header Banner */}
       <div className="bg-white border border-slate-200/90 rounded-3xl p-6 sm:p-7 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-[#111111] tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-black text-[#111111] tracking-tight font-poppins">
             Settings
           </h1>
         </div>

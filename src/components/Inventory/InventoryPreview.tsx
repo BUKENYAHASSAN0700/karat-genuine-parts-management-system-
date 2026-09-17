@@ -23,7 +23,7 @@ export const InventoryPreview: React.FC = () => {
       {/* Top Header Bento Summary */}
       <div className="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xs flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
         <div>
-          <h1 className="text-2xl font-black text-[#111111] tracking-tight font-mono">
+          <h1 className="text-2xl sm:text-3xl font-black text-[#111111] tracking-tight font-poppins">
             Inventory
           </h1>
         </div>

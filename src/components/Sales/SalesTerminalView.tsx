@@ -402,7 +402,7 @@ export const SalesTerminalView: React.FC = () => {
       {/* Module Title & Navigation Tabs Bar */}
       <div className="bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-[#111111] tracking-tight font-mono">
+          <h1 className="text-2xl sm:text-3xl font-black text-[#111111] tracking-tight font-poppins">
             Shop
           </h1>
         </div>

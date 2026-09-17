@@ -20,7 +20,9 @@ export const Header: React.FC = () => {
     setFlashMessage,
     theme,
     toggleTheme,
-    unreadNotificationsCount
+    unreadNotificationsCount,
+    notificationsEnabled,
+    toggleNotificationsEnabled
   } = useInertia();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -276,23 +278,47 @@ export const Header: React.FC = () => {
                 </button>
 
                 {/* 2. Notifications */}
-                <button
-                  onClick={() => {
-                    setActiveView('notifications');
-                    setDropdownOpen(false);
-                  }}
-                  className="w-full text-left px-4 py-2 text-xs text-[#111111] hover:bg-slate-100 flex items-center justify-between font-medium transition cursor-pointer"
+                <div
+                  className="w-full text-left px-4 py-2 text-xs text-[#111111] hover:bg-slate-100 flex items-center justify-between font-medium transition cursor-pointer select-none"
                 >
-                  <div className="flex items-center gap-2.5">
-                    <UIcon name="bell" className="text-sm text-[#111111]/60" />
+                  <button
+                    onClick={() => {
+                      setActiveView('notifications');
+                      setDropdownOpen(false);
+                    }}
+                    className="flex items-center gap-2.5 text-left flex-1 cursor-pointer"
+                  >
+                    <UIcon name={notificationsEnabled ? 'bell' : 'bell-slash'} className="text-sm text-[#111111]/60" />
                     <span>Notifications</span>
-                  </div>
-                  {unreadNotificationsCount > 0 && (
-                    <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-[#111111] text-white">
-                      {unreadNotificationsCount}
+                    {unreadNotificationsCount > 0 && notificationsEnabled && (
+                      <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-[#111111] text-white">
+                        {unreadNotificationsCount}
+                      </span>
+                    )}
+                  </button>
+
+                  {/* Sliding switch button for Notifications ON / OFF */}
+                  <div
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleNotificationsEnabled();
+                    }}
+                    className={`relative inline-flex items-center h-5 w-12 rounded-full p-0.5 transition-colors duration-200 shrink-0 cursor-pointer ${
+                      notificationsEnabled ? 'bg-[#111111]' : 'bg-slate-300'
+                    }`}
+                    title={notificationsEnabled ? 'Turn notifications OFF' : 'Turn notifications ON'}
+                  >
+                    <span
+                      className={`inline-flex items-center justify-center h-4 w-5 rounded-full bg-white shadow-xs text-[8px] font-black tracking-tight uppercase transition-transform duration-200 ease-in-out ${
+                        notificationsEnabled 
+                          ? 'translate-x-6 text-[#111111]' 
+                          : 'translate-x-0 text-slate-600'
+                      }`}
+                    >
+                      {notificationsEnabled ? 'ON' : 'OFF'}
                     </span>
-                  )}
-                </button>
+                  </div>
+                </div>
 
                 {/* Dark Mode - under Notifications */}
                 <div
