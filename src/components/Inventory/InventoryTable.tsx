@@ -5,7 +5,6 @@ import {
   Filter, 
   AlertTriangle, 
   CheckCircle2, 
-  Warehouse, 
   ArrowUpDown, 
   ArrowUp, 
   ArrowDown, 
@@ -39,6 +38,7 @@ import { SparePart } from '../../types';
 import { EditPartModal } from './EditPartModal';
 import { BulkUploadModal } from './BulkUploadModal';
 import { SERIES_LIST, getSeriesForCategory, getCategoriesForSeries, MANUFACTURER_BRANDS } from '../../data/partTaxonomy';
+import { cleanModelName } from '../../utils/modelUtils';
 
 export interface InventoryTableProps {
   initialSearchQuery?: string;
@@ -235,7 +235,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
 
   // Export CSV
   const handleExportCSV = () => {
-    const headers = ['Product ID', 'OEM Number', 'Name', 'Brand', 'Category', 'Stock Quantity', 'Min Alert', 'Warehouse Bin', 'Unit Cost USD', 'Unit Price USD', 'Status', 'Machinery Models'];
+    const headers = ['Product ID', 'OEM Number', 'Name', 'Brand', 'Category', 'Stock Quantity', 'Min Alert', 'Unit Cost USD', 'Unit Price USD', 'Status', 'Machinery Models'];
     const rows = filteredAndSortedParts.map(p => [
       `"${p.id || p.part_number}"`,
       `"${p.oem_number}"`,
@@ -244,7 +244,6 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
       `"${p.category}"`,
       p.stock_quantity,
       p.min_stock_alert,
-      `"${p.warehouse_bin}"`,
       p.unit_cost,
       p.unit_price,
       `"${p.status}"`,
@@ -272,24 +271,9 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
     );
   };
 
-  // Helper for brand badge style
-  const getBrandBadge = (brand: string) => {
-    switch (brand) {
-      case 'Caterpillar':
-        return 'bg-[#F6AF31]/20 text-[#111111] border-[#F6AF31]/50';
-      case 'Komatsu':
-        return 'bg-blue-50 text-blue-800 border-blue-200';
-      case 'Volvo':
-        return 'bg-slate-100 text-slate-800 border-slate-300';
-      case 'Hitachi':
-        return 'bg-orange-50 text-orange-800 border-orange-200';
-      case 'Hyundai':
-        return 'bg-cyan-50 text-cyan-800 border-cyan-200';
-      case 'Doosan':
-        return 'bg-amber-50 text-amber-800 border-amber-200';
-      default:
-        return 'bg-[#F7F6F3] text-[#111111] border-slate-200';
-    }
+  // Helper for brand badge style - neutral unhighlighted
+  const getBrandBadge = (_brand: string) => {
+    return 'bg-slate-100/80 text-slate-600 border-slate-200';
   };
 
   return (
@@ -582,7 +566,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                   <div className="flex items-center justify-between gap-2 text-xs bg-[#F7F6F3] px-3 py-2 rounded-xl border border-slate-200/70">
                     <div className="text-[11px] text-slate-700 font-medium truncate">
                       <span className="text-slate-400 font-bold mr-1">Model:</span>
-                      <span className="font-semibold text-[#111111]">{part.model || part.machinery_models?.join(', ') || 'Universal'}</span>
+                      <span className="font-semibold text-[#111111]">{cleanModelName(part.model || part.machinery_models?.[0] || 'Universal', part.brand)}</span>
                     </div>
                   </div>
 
@@ -842,7 +826,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                               toggleRow(part.id);
                             }}
                             className="w-6 h-6 rounded-lg bg-[#F7F6F3] group-hover:bg-slate-200 text-[#111111] flex items-center justify-center transition"
-                            title={isExpanded ? 'Collapse details' : 'Click to view full specifications and warehouse bin'}
+                            title={isExpanded ? 'Collapse details' : 'Click to view full specifications'}
                           >
                             {isExpanded ? (
                               <ChevronUp className="w-3.5 h-3.5" />
@@ -865,7 +849,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                             {part.name}
                           </div>
                           <div className="text-[11px] text-amber-900 font-medium truncate mt-0.5">
-                            Model: <span className="font-semibold">{part.model || part.machinery_models?.[0] || 'Universal'}</span>
+                            Model: <span className="font-semibold">{cleanModelName(part.model || part.machinery_models?.[0] || 'Universal', part.brand)}</span>
                           </div>
                         </td>
 
@@ -1049,12 +1033,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                                   <div><span className="text-[#111111]/50">Unit of Measure:</span> <strong className="text-[#111111]">{part.unit || 'PCS'}</strong></div>
                                   <div><span className="text-[#111111]/50">Tax Amount:</span> <strong className="text-amber-900 bg-amber-50 px-1 py-0.2 rounded border border-amber-200/60 text-[10px]">{formatMoney(part.tax_amount || 0)}</strong></div>
                                   <div><span className="text-[#111111]/50">Transport Cost:</span> <strong className="text-[#111111]">{formatMoney(part.transport_cost || 0)}</strong></div>
-                                  <div className="text-[11px] text-[#111111]/60 mt-1">
-                                    Warehouse Bin: <strong>{part.warehouse_bin}</strong>
-                                  </div>
-                                  <div className="text-[11px] text-[#111111]/60">
-                                    Safety Threshold: <strong>{part.min_stock_alert} {part.unit || 'PCS'}</strong>
-                                  </div>
+                                  {/* Storage Details */}
                                 </div>
                               </div>
 
@@ -1131,7 +1110,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                 <span className="font-bold text-xs text-[#111111] truncate">{deleteConfirmPart.name}</span>
               </div>
               <div className="text-[11px] text-[#111111]/60 font-mono pt-1">
-                Brand: <strong>{deleteConfirmPart.brand}</strong> &bull; Stock: <strong>{deleteConfirmPart.stock_quantity} units</strong> &bull; Bin: <strong>{deleteConfirmPart.warehouse_bin}</strong>
+                Brand: <strong>{deleteConfirmPart.brand}</strong> &bull; Stock: <strong>{deleteConfirmPart.stock_quantity} units</strong>
               </div>
             </div>
 
@@ -1190,17 +1169,14 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
             <div className="bg-[#F7F6F3] p-3 rounded-2xl border border-slate-200/80">
               <div className="font-bold text-xs text-[#111111]">{stockEditPart.name}</div>
               <div className="text-[10px] text-[#111111]/50 font-mono mt-0.5">
-                Location: {stockEditPart.warehouse_bin}
-              </div>
-              <div className="text-[10px] text-[#111111]/50 font-mono">
-                Min Safety Level: {stockEditPart.min_stock_alert} units
+                Min Stock Alert: {stockEditPart.min_stock_alert} units
               </div>
             </div>
 
             <form onSubmit={handleSaveStockModal} className="space-y-4">
               <div>
                 <label className="block text-[11px] font-bold uppercase text-[#111111]/70 mb-1">
-                  New Quantity in Bin
+                  New Stock Quantity
                 </label>
                 <div className="flex items-center gap-2">
                   <button
@@ -1356,10 +1332,6 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                     }`}>
                       {detailModalPart.status}
                     </span>
-                  </div>
-                  <div className="flex justify-between text-xs">
-                    <span className="text-[#111111]/60">Warehouse Bin:</span>
-                    <strong className="text-[#111111]">{detailModalPart.warehouse_bin}</strong>
                   </div>
                   <div className="flex justify-between text-[11px] text-[#111111]/70">
                     <span>Balance: <strong className="text-[#111111]">{detailModalPart.stock_quantity} {detailModalPart.unit || 'PCS'}</strong></span>

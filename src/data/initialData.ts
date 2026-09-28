@@ -1,4 +1,5 @@
 import { SparePart, InquiryItem, RecentTransaction, ClientAccount, User, CommercialOrder, OEMSupplier, OEMPurchaseOrder, AppNotification } from '../types';
+import { cleanModelName } from '../utils/modelUtils';
 
 export const INITIAL_OWNER: User = {
   id: 1,
@@ -42,7 +43,7 @@ export const INITIAL_SPARE_PARTS: SparePart[] = [
     min_stock_alert: 3,
     unit_cost: 5800,
     unit_price: 8900,
-    warehouse_bin: 'Aisle 1 - Bay D - Level 1',
+    warehouse_bin: 'Section 1 - Bay D - Level 1',
     status: 'Low Stock',
   },
   {
@@ -59,7 +60,7 @@ export const INITIAL_SPARE_PARTS: SparePart[] = [
     min_stock_alert: 6,
     unit_cost: 420,
     unit_price: 790,
-    warehouse_bin: 'Aisle 5 - Cabinet 2 - Tray 4',
+    warehouse_bin: 'Section 5 - Storage 2 - Box 4',
     status: 'In Stock',
   },
   {
@@ -76,7 +77,7 @@ export const INITIAL_SPARE_PARTS: SparePart[] = [
     min_stock_alert: 8,
     unit_cost: 185,
     unit_price: 340,
-    warehouse_bin: 'Aisle 8 - Pallet Row 4',
+    warehouse_bin: 'Section 8 - Pallet Row 4',
     status: 'Low Stock',
   },
   {
@@ -93,25 +94,8 @@ export const INITIAL_SPARE_PARTS: SparePart[] = [
     min_stock_alert: 2,
     unit_cost: 1650,
     unit_price: 2850,
-    warehouse_bin: 'Aisle 2 - Bay C - Level 3',
+    warehouse_bin: 'Section 2 - Bay C - Level 3',
     status: 'Out of Stock',
-  },
-  {
-    id: 'KA106',
-    part_number: 'KA106',
-    oem_number: 'KOM-PC300-SWG',
-    name: 'Swing Motor Reduction Gearbox Assembly',
-    description: 'Heavy duty planetary reduction gear train with wet multi-disc holding brake for Komatsu excavators.',
-    series: 'Gear Parts Series',
-    category: 'Swing Drive',
-    machinery_models: ['Komatsu PC300-7', 'Komatsu PC350-7'],
-    brand: 'Komatsu',
-    stock_quantity: 3,
-    min_stock_alert: 2,
-    unit_cost: 3900,
-    unit_price: 6100,
-    warehouse_bin: 'Aisle 4 - Bay A - Heavy Rack',
-    status: 'In Stock',
   },
   {
     id: 'KA107',
@@ -127,7 +111,7 @@ export const INITIAL_SPARE_PARTS: SparePart[] = [
     min_stock_alert: 15,
     unit_cost: 45,
     unit_price: 95,
-    warehouse_bin: 'Aisle 9 - Bin 12 - Ground Pallet',
+    warehouse_bin: 'Section 9 - Bin 12 - Ground Pallet',
     status: 'In Stock',
   },
   {
@@ -144,7 +128,7 @@ export const INITIAL_SPARE_PARTS: SparePart[] = [
     min_stock_alert: 2,
     unit_cost: 1100,
     unit_price: 1850,
-    warehouse_bin: 'Aisle 6 - Rack 3 - Top',
+    warehouse_bin: 'Section 6 - Rack 3 - Top',
     status: 'In Stock',
   },
   {
@@ -161,7 +145,7 @@ export const INITIAL_SPARE_PARTS: SparePart[] = [
     min_stock_alert: 4,
     unit_cost: 120,
     unit_price: 240,
-    warehouse_bin: 'Aisle 5 - Cabinet 1 - Tray 2',
+    warehouse_bin: 'Section 5 - Storage 1 - Box 2',
     status: 'In Stock',
   },
   {
@@ -178,7 +162,7 @@ export const INITIAL_SPARE_PARTS: SparePart[] = [
     min_stock_alert: 10,
     unit_cost: 72,
     unit_price: 148,
-    warehouse_bin: 'Aisle 7 - Shelf 1',
+    warehouse_bin: 'Section 7 - Shelf 1',
     status: 'In Stock',
   },
   {
@@ -195,7 +179,7 @@ export const INITIAL_SPARE_PARTS: SparePart[] = [
     min_stock_alert: 5,
     unit_cost: 110,
     unit_price: 260,
-    warehouse_bin: 'Aisle 5 - Cabinet 4 - Tray 1',
+    warehouse_bin: 'Section 5 - Storage 4 - Box 1',
     status: 'In Stock',
   },
   {
@@ -212,7 +196,7 @@ export const INITIAL_SPARE_PARTS: SparePart[] = [
     min_stock_alert: 2,
     unit_cost: 850,
     unit_price: 1450,
-    warehouse_bin: 'Aisle 2 - Shelf 4',
+    warehouse_bin: 'Section 2 - Shelf 4',
     status: 'In Stock',
   },
   {
@@ -246,7 +230,7 @@ export const INITIAL_SPARE_PARTS: SparePart[] = [
     min_stock_alert: 4,
     unit_cost: 310,
     unit_price: 540,
-    warehouse_bin: 'Aisle 4 - Shelf 2',
+    warehouse_bin: 'Section 4 - Shelf 2',
     status: 'In Stock',
   },
   {
@@ -263,7 +247,7 @@ export const INITIAL_SPARE_PARTS: SparePart[] = [
     min_stock_alert: 2,
     unit_cost: 920,
     unit_price: 1580,
-    warehouse_bin: 'Aisle 5 - Cabinet 3 - Safe',
+    warehouse_bin: 'Section 5 - Storage 3 - Safe',
     status: 'In Stock',
   },
   {
@@ -280,7 +264,7 @@ export const INITIAL_SPARE_PARTS: SparePart[] = [
     min_stock_alert: 3,
     unit_cost: 440,
     unit_price: 790,
-    warehouse_bin: 'Aisle 3 - Shelf D',
+    warehouse_bin: 'Section 3 - Shelf D',
     status: 'In Stock',
   },
   {
@@ -297,7 +281,7 @@ export const INITIAL_SPARE_PARTS: SparePart[] = [
     min_stock_alert: 6,
     unit_cost: 65,
     unit_price: 145,
-    warehouse_bin: 'Aisle 5 - Cabinet 4 - Tray 3',
+    warehouse_bin: 'Section 5 - Storage 4 - Box 3',
     status: 'In Stock',
   },
   {
@@ -331,7 +315,7 @@ export const INITIAL_SPARE_PARTS: SparePart[] = [
     min_stock_alert: 2,
     unit_cost: 1450,
     unit_price: 2650,
-    warehouse_bin: 'Aisle 2 - Bay B - Level 2',
+    warehouse_bin: 'Section 2 - Bay B - Level 2',
     status: 'In Stock',
   },
   {
@@ -399,7 +383,7 @@ export const INITIAL_SPARE_PARTS: SparePart[] = [
     min_stock_alert: 3,
     unit_cost: 380,
     unit_price: 720,
-    warehouse_bin: 'Aisle 4 - Shelf C - Box 8',
+    warehouse_bin: 'Section 4 - Shelf C - Box 8',
     status: 'In Stock',
   },
   {
@@ -416,7 +400,7 @@ export const INITIAL_SPARE_PARTS: SparePart[] = [
     min_stock_alert: 2,
     unit_cost: 1150,
     unit_price: 2100,
-    warehouse_bin: 'Aisle 1 - Bay B - Level 3',
+    warehouse_bin: 'Section 1 - Bay B - Level 3',
     status: 'In Stock',
   },
   {
@@ -433,7 +417,7 @@ export const INITIAL_SPARE_PARTS: SparePart[] = [
     min_stock_alert: 4,
     unit_cost: 290,
     unit_price: 580,
-    warehouse_bin: 'Aisle 3 - Shelf A - Drawer 2',
+    warehouse_bin: 'Section 3 - Shelf A - Drawer 2',
     status: 'In Stock',
   },
   {
@@ -484,7 +468,7 @@ export const INITIAL_SPARE_PARTS: SparePart[] = [
     min_stock_alert: 4,
     unit_cost: 240,
     unit_price: 520,
-    warehouse_bin: 'Aisle 2 - Shelf B - Tray 4',
+    warehouse_bin: 'Section 2 - Shelf B - Box 4',
     status: 'In Stock',
   },
   {
@@ -535,7 +519,7 @@ export const INITIAL_SPARE_PARTS: SparePart[] = [
     min_stock_alert: 2,
     unit_cost: 650,
     unit_price: 1280,
-    warehouse_bin: 'Electronics Bay - Cabinet 1',
+    warehouse_bin: 'Electronics Bay - Storage 1',
     status: 'In Stock',
   },
   {
@@ -552,7 +536,7 @@ export const INITIAL_SPARE_PARTS: SparePart[] = [
     min_stock_alert: 8,
     unit_cost: 85,
     unit_price: 195,
-    warehouse_bin: 'Aisle 3 - Shelf D - Box 14',
+    warehouse_bin: 'Section 3 - Shelf D - Box 14',
     status: 'In Stock',
   },
   {
@@ -569,7 +553,7 @@ export const INITIAL_SPARE_PARTS: SparePart[] = [
     min_stock_alert: 3,
     unit_cost: 260,
     unit_price: 490,
-    warehouse_bin: 'Aisle 4 - Shelf B - Box 3',
+    warehouse_bin: 'Section 4 - Shelf B - Box 3',
     status: 'In Stock',
   },
   {
@@ -586,7 +570,7 @@ export const INITIAL_SPARE_PARTS: SparePart[] = [
     min_stock_alert: 15,
     unit_cost: 28,
     unit_price: 65,
-    warehouse_bin: 'Aisle 5 - Pallet 2',
+    warehouse_bin: 'Section 5 - Pallet 2',
     status: 'In Stock',
   },
   {
@@ -603,7 +587,7 @@ export const INITIAL_SPARE_PARTS: SparePart[] = [
     min_stock_alert: 2,
     unit_cost: 410,
     unit_price: 780,
-    warehouse_bin: 'Aisle 3 - Shelf B - Box 7',
+    warehouse_bin: 'Section 3 - Shelf B - Box 7',
     status: 'In Stock',
   },
   {
@@ -620,7 +604,7 @@ export const INITIAL_SPARE_PARTS: SparePart[] = [
     min_stock_alert: 5,
     unit_cost: 55,
     unit_price: 135,
-    warehouse_bin: 'Aisle 1 - Shelf E - Bin 9',
+    warehouse_bin: 'Section 1 - Shelf E - Bin 9',
     status: 'In Stock',
   }
 ].map((part, idx): SparePart => ({
@@ -637,7 +621,8 @@ export const INITIAL_SPARE_PARTS: SparePart[] = [
   taxes: '18% VAT',
   tax_rate: 18,
   registered_date: `2026-0${(idx % 3) + 1}-1${(idx % 8) + 1}`,
-  model: part.machinery_models ? part.machinery_models.join(', ') : 'Universal Fleet',
+  machinery_models: (part.machinery_models || []).map(m => cleanModelName(m, part.brand)),
+  model: cleanModelName((part as any).model || (part.machinery_models?.[0] || 'Standard'), part.brand),
 }));
 
 export const INITIAL_TRANSACTIONS: RecentTransaction[] = [
@@ -792,8 +777,8 @@ export const INITIAL_INQUIRIES: InquiryItem[] = [
     created_at: 'Yesterday 04:45 PM',
     items: [
       {
-        part_id: 'KA106',
-        part_number: 'KA106',
+        part_id: 'KA110',
+        part_number: 'KA110',
         oem_number: 'VOL-EC480-SOL',
         name: 'Electro-Hydraulic Main Pump Solenoid Proportional Valve',
         brand: 'Volvo',
@@ -937,7 +922,7 @@ export const INITIAL_ORDERS: CommercialOrder[] = [
     customer_email: 'procurement@titan-earthmoving.com',
     equipment_model: 'Komatsu PC400-8 & PC200-8',
     delivery_site: 'Kampala Depot (Yard 4 - Industrial Area)',
-    delivery_method: 'Warehouse Pickup (Yard 4 - Industrial Area)',
+    delivery_method: 'Store Pickup (Yard 4 - Industrial Area)',
     subtotal: 3660,
     total_amount: 3660,
     payment_status: 'Paid in Full',
@@ -1009,8 +994,8 @@ export const INITIAL_CLIENTS: ClientAccount[] = [
 
 export const INITIAL_RECEIPTS: import('../types').SaleReceipt[] = [
   {
-    id: 'RCT-2026-0814',
-    receipt_number: 'RCT-2026-0814',
+    id: '802419',
+    receipt_number: '802419',
     date: 'Sep 02, 2026',
     time: '10:45 AM',
     timestamp: Date.now() - 86400000,
@@ -1027,6 +1012,7 @@ export const INITIAL_RECEIPTS: import('../types').SaleReceipt[] = [
         brand: 'Caterpillar',
         series: 'Hydraulic Parts Series',
         category: 'Control Valve',
+        model: 'CAT 349D',
         quantity: 1,
         unit_price: 6850,
         total_price: 6850,
@@ -1044,12 +1030,12 @@ export const INITIAL_RECEIPTS: import('../types').SaleReceipt[] = [
     amount_tendered: 6700,
     change_due: 0,
     notes: 'Urgent site repair delivery for Entebbe Highway Expansion project.',
-    cashier_name: 'Hassan',
+    cashier_name: 'Arafat',
     currency: 'USD',
   },
   {
-    id: 'RCT-2026-0815',
-    receipt_number: 'RCT-2026-0815',
+    id: '781519',
+    receipt_number: '781519',
     date: 'Sep 02, 2026',
     time: '02:30 PM',
     timestamp: Date.now() - 43200000,
@@ -1066,10 +1052,11 @@ export const INITIAL_RECEIPTS: import('../types').SaleReceipt[] = [
         brand: 'Volvo',
         series: 'Engine Parts Series',
         category: 'Nozzle Series',
+        model: 'Volvo D13',
         quantity: 2,
         unit_price: 790,
         total_price: 1580,
-        warehouse_bin: 'Aisle 5 - Cabinet 2 - Tray 4',
+        warehouse_bin: 'Section 5 - Storage 2 - Box 4',
       },
       {
         part_id: 'KA107',
@@ -1079,10 +1066,11 @@ export const INITIAL_RECEIPTS: import('../types').SaleReceipt[] = [
         brand: 'Caterpillar',
         series: 'Chassis Parts Series',
         category: 'Teeth',
+        model: 'CAT J350',
         quantity: 5,
         unit_price: 95,
         total_price: 475,
-        warehouse_bin: 'Aisle 9 - Bin GET-01',
+        warehouse_bin: 'Section 9 - Bin GET-01',
       }
     ],
     subtotal: 2055,
@@ -1096,8 +1084,37 @@ export const INITIAL_RECEIPTS: import('../types').SaleReceipt[] = [
     amount_tendered: 2000,
     change_due: 0,
     notes: 'Walk-in cash & carry pickup by fleet mechanic.',
-    cashier_name: 'Hassan',
+    cashier_name: 'Arafat',
     currency: 'USD',
+  }
+];
+
+export const INITIAL_RECEIPT_DRAFTS: import('../types').ReceiptDraft[] = [
+  {
+    id: 'D94102',
+    draft_code: 'D94102',
+    customer_name: 'Kampala Earthmovers Ltd',
+    customer_phone: '+256 782 119 402',
+    issued_by: 'Arafat',
+    items: [
+      {
+        part_id: 'KA102',
+        part_number: 'KA102',
+        oem_number: 'KOM-PC400-PMP',
+        name: 'Variable Displacement Hydraulic Piston Pump',
+        brand: 'Komatsu',
+        category: 'Hydraulic Pump Series',
+        quantity: 1,
+        unit_price: 8900,
+        total_price: 8900,
+        model: 'PC400-8',
+      }
+    ],
+    subtotal: 8900,
+    notes: 'Awaiting site manager confirmation before payment.',
+    created_at: '2026-09-28',
+    updated_at: '2026-09-28',
+    timestamp: Date.now() - 3600000,
   }
 ];
 
@@ -1231,7 +1248,7 @@ export const INITIAL_OEM_ORDERS: OEMPurchaseOrder[] = [
         quantity_ordered: 4,
         unit_cost: 1650,
         total_cost: 6600,
-        target_bin: 'Aisle 2 - Bay C - Level 3',
+        target_bin: 'Section 2 - Bay C - Level 3',
       },
       {
         part_id: 'KA110',
@@ -1242,7 +1259,7 @@ export const INITIAL_OEM_ORDERS: OEMPurchaseOrder[] = [
         quantity_ordered: 15,
         unit_cost: 32,
         total_cost: 480,
-        target_bin: 'Aisle 7 - Shelf 1',
+        target_bin: 'Section 7 - Shelf 1',
       }
     ]
   },
@@ -1282,7 +1299,7 @@ export const INITIAL_OEM_ORDERS: OEMPurchaseOrder[] = [
         quantity_ordered: 2,
         unit_cost: 5800,
         total_cost: 11600,
-        target_bin: 'Aisle 1 - Bay D - Level 1',
+        target_bin: 'Section 1 - Bay D - Level 1',
       },
       {
         part_id: 'KA111',
@@ -1293,7 +1310,7 @@ export const INITIAL_OEM_ORDERS: OEMPurchaseOrder[] = [
         quantity_ordered: 10,
         unit_cost: 110,
         total_cost: 1100,
-        target_bin: 'Aisle 5 - Cabinet 4 - Tray 1',
+        target_bin: 'Section 5 - Storage 4 - Box 1',
       }
     ]
   },
@@ -1333,7 +1350,7 @@ export const INITIAL_OEM_ORDERS: OEMPurchaseOrder[] = [
         quantity_ordered: 12,
         unit_cost: 420,
         total_cost: 5040,
-        target_bin: 'Aisle 5 - Cabinet 2 - Tray 4',
+        target_bin: 'Section 5 - Storage 2 - Box 4',
       },
       {
         part_id: 'KA108',
@@ -1344,7 +1361,7 @@ export const INITIAL_OEM_ORDERS: OEMPurchaseOrder[] = [
         quantity_ordered: 2,
         unit_cost: 1100,
         total_cost: 2200,
-        target_bin: 'Aisle 6 - Rack 3 - Top',
+        target_bin: 'Section 6 - Rack 3 - Top',
       }
     ]
   },
@@ -1388,7 +1405,7 @@ export const INITIAL_OEM_ORDERS: OEMPurchaseOrder[] = [
         quantity_received: 20,
         unit_cost: 185,
         total_cost: 3700,
-        target_bin: 'Aisle 8 - Pallet Row 4',
+        target_bin: 'Section 8 - Pallet Row 4',
       },
       {
         part_id: 'KA109',
@@ -1400,7 +1417,7 @@ export const INITIAL_OEM_ORDERS: OEMPurchaseOrder[] = [
         quantity_received: 12,
         unit_cost: 120,
         total_cost: 1440,
-        target_bin: 'Aisle 5 - Cabinet 1 - Tray 2',
+        target_bin: 'Section 5 - Storage 1 - Box 2',
       }
     ]
   }

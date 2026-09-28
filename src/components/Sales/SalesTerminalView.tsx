@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   ShoppingCart, 
   Search, 
@@ -29,13 +29,17 @@ import {
   Clock,
   Sparkles,
   Barcode,
-  History
+  History,
+  Edit3,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { UIcon } from '../Common/UIcon';
 import { useInertia } from '../../context/InertiaContext';
-import { SparePart, SaleReceiptItem, SaleReceipt } from '../../types';
+import { SparePart, SaleReceiptItem, SaleReceipt, ReceiptDraft, ReceiptDraftItem } from '../../types';
 import { ReceiptModal } from './ReceiptModal';
 import { SERIES_LIST, getSeriesForCategory, getCategoriesForSeries, MANUFACTURER_BRANDS } from '../../data/partTaxonomy';
+import { cleanModelName } from '../../utils/modelUtils';
 
 interface CartItem {
   part: SparePart;
@@ -54,13 +58,20 @@ export const SalesTerminalView: React.FC = () => {
     activeReceipt, 
     setActiveReceipt,
     deleteReceipt,
+    receiptDrafts,
+    activeDraftId,
+    setActiveDraftId,
+    saveReceiptDraft,
+    updateReceiptDraft,
+    deleteReceiptDraft,
+    clearAllReceiptDrafts,
     selectedPartForSale,
     clearSelectedPartForSale,
     setFlashMessage
   } = useInertia();
 
-  // Active Tab: 'pos' (active sale register), 'sold-items' (itemized parts sold history), or 'receipts' (receipts archive)
-  const [activeTab, setActiveTab] = useState<'pos' | 'sold-items' | 'receipts'>('pos');
+  // Active Tab: 'pos' (active sale register), 'drafts' (receipt drafts CRUD), 'sold-items' (itemized parts sold history), or 'receipts' (receipts archive)
+  const [activeTab, setActiveTab] = useState<'pos' | 'drafts' | 'sold-items' | 'receipts'>('pos');
 
   // Catalog filtering & searching
   const [catalogSearch, setCatalogSearch] = useState('');
@@ -76,11 +87,21 @@ export const SalesTerminalView: React.FC = () => {
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerCompany, setCustomerCompany] = useState('');
+  const [cashierName, setCashierName] = useState(() => currentUser?.name || 'Arafat');
   const [equipmentModel, setEquipmentModel] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<'Cash' | 'Mobile Money' | 'Bank Wire' | 'Card' | 'Credit Account'>('Cash');
   const [paymentReference, setPaymentReference] = useState('');
   const [cashTendered, setCashTendered] = useState<string>('');
   const [notes, setNotes] = useState('');
+
+  // Drafts Management State (CRUD)
+  const [draftsSearch, setDraftsSearch] = useState('');
+  const [expandedDraftId, setExpandedDraftId] = useState<string | null>(null);
+  const [editingDraft, setEditingDraft] = useState<ReceiptDraft | null>(null);
+  const [editDraftName, setEditDraftName] = useState('');
+  const [editDraftPhone, setEditDraftPhone] = useState('');
+  const [editDraftIssuer, setEditDraftIssuer] = useState('');
+  const [editDraftNotes, setEditDraftNotes] = useState('');
 
   // Discount & Tax Settings
   const [discountType, setDiscountType] = useState<'fixed' | 'percent'>('fixed');
@@ -112,6 +133,102 @@ export const SalesTerminalView: React.FC = () => {
       setIsReceiptOpen(true);
     }
   }, [activeReceipt]);
+
+  // Store refs so unmount effect has access to current state when moving to another page
+  const cartRef = useRef(cart);
+  const customerNameRef = useRef(customerName);
+  const customerPhoneRef = useRef(customerPhone);
+  const cashierNameRef = useRef(cashierName);
+  const notesRef = useRef(notes);
+  const activeDraftIdRef = useRef(activeDraftId);
+  const isSaleCompletedRef = useRef(false);
+
+  useEffect(() => {
+    cartRef.current = cart;
+  }, [cart]);
+  useEffect(() => {
+    customerNameRef.current = customerName;
+  }, [customerName]);
+  useEffect(() => {
+    customerPhoneRef.current = customerPhone;
+  }, [customerPhone]);
+  useEffect(() => {
+    cashierNameRef.current = cashierName;
+  }, [cashierName]);
+  useEffect(() => {
+    notesRef.current = notes;
+  }, [notes]);
+  useEffect(() => {
+    activeDraftIdRef.current = activeDraftId;
+  }, [activeDraftId]);
+
+  // If making a receipt then moving to another page, auto-save the receipt to drafts
+  useEffect(() => {
+    return () => {
+      if (isSaleCompletedRef.current) return;
+      const currentCart = cartRef.current;
+      if (!currentCart || currentCart.length === 0) return;
+
+      const draftItems: ReceiptDraftItem[] = currentCart.map(item => ({
+        part_id: item.part.id,
+        part_number: item.part.part_number,
+        oem_number: item.part.oem_number || '',
+        name: item.part.name,
+        brand: item.part.brand,
+        category: item.part.category,
+        quantity: item.quantity,
+        unit_price: item.custom_unit_price,
+        total_price: item.custom_unit_price * item.quantity,
+        model: cleanModelName(item.part.model || (item.part.machinery_models?.[0] || 'Standard'), item.part.brand),
+      }));
+
+      const subtotalVal = currentCart.reduce((acc, item) => acc + (item.custom_unit_price * item.quantity), 0);
+      const draftData = {
+        customer_name: customerNameRef.current.trim() || 'Walk-in Client',
+        customer_phone: customerPhoneRef.current.trim(),
+        issued_by: cashierNameRef.current.trim() || currentUser?.name || 'Arafat',
+        items: draftItems,
+        subtotal: subtotalVal,
+        notes: notesRef.current.trim(),
+      };
+
+      try {
+        const savedDraftsRaw = localStorage.getItem('karat_receipt_drafts');
+        const draftsList: ReceiptDraft[] = savedDraftsRaw ? JSON.parse(savedDraftsRaw) : [];
+        const existingId = activeDraftIdRef.current;
+        const now = new Date();
+        const dateStr = now.toISOString().slice(0, 10);
+        
+        const existingIdx = draftsList.findIndex(d => d.id === existingId || d.draft_code === existingId);
+        if (existingIdx >= 0) {
+          draftsList[existingIdx] = {
+            ...draftsList[existingIdx],
+            ...draftData,
+            updated_at: dateStr,
+            timestamp: now.getTime(),
+          };
+        } else {
+          const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+          let code = '';
+          for (let i = 0; i < 6; i++) {
+            code += chars.charAt(Math.floor(Math.random() * chars.length));
+          }
+          const newDraft: ReceiptDraft = {
+            ...draftData,
+            id: code,
+            draft_code: code,
+            created_at: dateStr,
+            updated_at: dateStr,
+            timestamp: now.getTime(),
+          };
+          draftsList.unshift(newDraft);
+        }
+        localStorage.setItem('karat_receipt_drafts', JSON.stringify(draftsList));
+      } catch {}
+
+      saveReceiptDraft(draftData, activeDraftIdRef.current || undefined);
+    };
+  }, []);
 
   // Filter Parts for Catalog
   const filteredParts = useMemo(() => {
@@ -213,6 +330,7 @@ export const SalesTerminalView: React.FC = () => {
     setCart([]);
     setDiscountValue(0);
     setCashTendered('');
+    setCustomerName('');
   };
 
   // Financial Calculations
@@ -235,17 +353,20 @@ export const SalesTerminalView: React.FC = () => {
   const numericTendered = parseFloat(cashTendered) || 0;
   const changeDue = numericTendered > grandTotal ? numericTendered - grandTotal : 0;
 
+  // Switch tab with auto-save to drafts if moving away from active cart
+  const handleSwitchTab = (newTab: 'pos' | 'drafts' | 'sold-items' | 'receipts') => {
+    if (activeTab === 'pos' && newTab !== 'pos' && cart.length > 0) {
+      handleSaveAsDraft();
+    }
+    setActiveTab(newTab);
+  };
+
   // Complete Sale and issue receipt
   const handleCompleteSale = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (cart.length === 0) {
       setFlashMessage('error', 'The sale cart is empty. Add at least one spare part from the catalog.');
-      return;
-    }
-
-    if (!customerName.trim()) {
-      setFlashMessage('error', 'Please enter a customer or fleet company name for this receipt.');
       return;
     }
 
@@ -268,32 +389,35 @@ export const SalesTerminalView: React.FC = () => {
       quantity: item.quantity,
       unit_price: item.custom_unit_price,
       total_price: item.custom_unit_price * item.quantity,
-      model: item.part.model || item.part.machinery_models?.join(', '),
-      warehouse_bin: item.part.warehouse_bin,
+      model: cleanModelName(item.part.model || (item.part.machinery_models?.[0] || 'Standard'), item.part.brand),
     }));
 
     const saleRecord = {
-      customer_name: customerName.trim(),
-      customer_phone: customerPhone.trim() || undefined,
-      customer_company: customerCompany.trim() || undefined,
-      equipment_model: equipmentModel.trim() || undefined,
+      customer_name: customerName.trim() || 'Walk-in Client',
+      customer_phone: customerPhone.trim(),
+      customer_company: customerCompany.trim(),
       items: saleItems,
       subtotal,
-      discount_amount: discountAmount,
-      tax_rate: taxRate,
-      tax_amount: taxAmount,
-      grand_total: grandTotal,
-      payment_method: paymentMethod,
-      payment_reference: paymentReference.trim() || undefined,
+      discount_amount: 0,
+      tax_rate: 0,
+      tax_amount: 0,
+      grand_total: subtotal,
+      payment_method: 'Cash' as const,
       payment_status: 'Paid' as const,
-      amount_tendered: paymentMethod === 'Cash' && numericTendered > 0 ? numericTendered : grandTotal,
-      change_due: paymentMethod === 'Cash' ? changeDue : 0,
-      notes: notes.trim() || undefined,
-      cashier_name: currentUser?.name || 'Hassan (Owner)',
+      amount_tendered: subtotal,
+      change_due: 0,
+      cashier_name: cashierName.trim() || currentUser?.name || 'Arafat',
+      notes: notes.trim(),
       currency: currency,
     };
 
+    isSaleCompletedRef.current = true;
     const newReceipt = completeSale(saleRecord);
+
+    if (activeDraftId) {
+      deleteReceiptDraft(activeDraftId);
+      setActiveDraftId(null);
+    }
 
     // Reset register for next customer
     setCart([]);
@@ -310,6 +434,158 @@ export const SalesTerminalView: React.FC = () => {
     setViewingReceipt(newReceipt);
     setIsReceiptOpen(true);
   };
+
+  // Drafts CRUD Handlers
+  const handleSaveAsDraft = () => {
+    if (cart.length === 0) {
+      setFlashMessage('error', 'Add at least one spare part to the cart before saving as draft.');
+      return;
+    }
+
+    const draftItems = cart.map(item => ({
+      part_id: item.part.id,
+      part_number: item.part.part_number,
+      oem_number: item.part.oem_number,
+      name: item.part.name,
+      brand: item.part.brand,
+      category: item.part.category,
+      quantity: item.quantity,
+      unit_price: item.custom_unit_price,
+      total_price: item.custom_unit_price * item.quantity,
+      model: cleanModelName(item.part.model || (item.part.machinery_models?.[0] || 'Standard'), item.part.brand),
+    }));
+
+    const saved = saveReceiptDraft({
+      customer_name: customerName.trim() || 'Walk-in Client',
+      customer_phone: customerPhone.trim(),
+      issued_by: cashierName.trim() || currentUser?.name || 'Arafat',
+      items: draftItems,
+      subtotal,
+      notes: notes.trim(),
+    }, activeDraftId || undefined);
+
+    setActiveDraftId(saved.id);
+  };
+
+  const handleResumeDraft = (draft: ReceiptDraft) => {
+    const loadedCart: CartItem[] = draft.items.map(it => {
+      const livePart = parts.find(p => p.id === it.part_id || p.part_number === it.part_number);
+      const basePart: SparePart = livePart || {
+        id: it.part_id,
+        part_number: it.part_number,
+        oem_number: it.oem_number,
+        name: it.name,
+        brand: (it.brand as any) || 'Caterpillar',
+        category: it.category,
+        model: cleanModelName(it.model || 'Standard', it.brand),
+        machinery_models: [cleanModelName(it.model || 'Standard', it.brand)],
+        stock_quantity: 99,
+        min_stock_alert: 2,
+        unit_cost: Math.round(it.unit_price * 0.65),
+        unit_price: it.unit_price,
+        warehouse_bin: 'General Storage',
+        status: 'In Stock',
+      };
+      return {
+        part: basePart,
+        quantity: it.quantity,
+        custom_unit_price: it.unit_price,
+      };
+    });
+
+    setCart(loadedCart);
+    setCustomerName(draft.customer_name === 'CASH' || draft.customer_name === 'Walk-in Client' ? '' : draft.customer_name);
+    setCustomerPhone(draft.customer_phone || '');
+    setCashierName(draft.issued_by || currentUser?.name || 'Arafat');
+    setNotes(draft.notes || '');
+    setActiveDraftId(draft.id);
+    setActiveTab('pos');
+    setFlashMessage('info', `Draft #${draft.draft_code} loaded into register. You can make adjustments and complete the sale.`);
+  };
+
+  const handleCompleteDraftDirectly = (draft: ReceiptDraft) => {
+    // Check stock for draft items
+    for (const item of draft.items) {
+      const livePart = parts.find(p => p.id === item.part_id || p.part_number === item.part_number);
+      if (livePart && livePart.stock_quantity < item.quantity) {
+        setFlashMessage('error', `Insufficient stock for ${item.name}. Only ${livePart.stock_quantity} available in warehouse.`);
+        return;
+      }
+    }
+
+    const saleItems: SaleReceiptItem[] = draft.items.map(it => ({
+      part_id: it.part_id,
+      part_number: it.part_number,
+      oem_number: it.oem_number,
+      name: it.name,
+      brand: it.brand,
+      category: it.category,
+      quantity: it.quantity,
+      unit_price: it.unit_price,
+      total_price: it.total_price,
+      model: it.model || 'Standard',
+    }));
+
+    const saleRecord = {
+      customer_name: draft.customer_name || 'Walk-in Client',
+      customer_phone: draft.customer_phone || '',
+      cashier_name: draft.issued_by || currentUser?.name || 'Arafat',
+      items: saleItems,
+      subtotal: draft.subtotal,
+      discount_amount: 0,
+      tax_rate: 0,
+      tax_amount: 0,
+      grand_total: draft.subtotal,
+      payment_method: 'Cash' as const,
+      payment_status: 'Paid' as const,
+      amount_tendered: draft.subtotal,
+      change_due: 0,
+      currency: currency,
+      notes: draft.notes,
+    };
+
+    const newReceipt = completeSale(saleRecord);
+    deleteReceiptDraft(draft.id);
+    if (activeDraftId === draft.id) {
+      setActiveDraftId(null);
+      setCart([]);
+    }
+    setViewingReceipt(newReceipt);
+    setIsReceiptOpen(true);
+  };
+
+  const handleOpenQuickEditDraft = (draft: ReceiptDraft) => {
+    setEditingDraft(draft);
+    setEditDraftName(draft.customer_name);
+    setEditDraftPhone(draft.customer_phone || '');
+    setEditDraftIssuer(draft.issued_by);
+    setEditDraftNotes(draft.notes || '');
+  };
+
+  const handleSaveQuickEditDraft = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingDraft) return;
+    updateReceiptDraft(editingDraft.id, {
+      customer_name: editDraftName.trim() || 'Walk-in Client',
+      customer_phone: editDraftPhone.trim(),
+      issued_by: editDraftIssuer.trim() || 'Arafat',
+      notes: editDraftNotes.trim(),
+    });
+    setEditingDraft(null);
+  };
+
+  // Filter drafts for drafts tab
+  const filteredDrafts = useMemo(() => {
+    if (!draftsSearch.trim()) return receiptDrafts;
+    const q = draftsSearch.toLowerCase();
+    return receiptDrafts.filter(d =>
+      d.draft_code.toLowerCase().includes(q) ||
+      d.customer_name.toLowerCase().includes(q) ||
+      (d.customer_phone && d.customer_phone.toLowerCase().includes(q)) ||
+      (d.issued_by && d.issued_by.toLowerCase().includes(q)) ||
+      d.items.some(it => it.name.toLowerCase().includes(q) || it.part_number.toLowerCase().includes(q) || (it.model && it.model.toLowerCase().includes(q)))
+    );
+  }, [receiptDrafts, draftsSearch]);
 
   // Filter receipts for receipts archive tab
   const filteredReceipts = useMemo(() => {
@@ -407,10 +683,10 @@ export const SalesTerminalView: React.FC = () => {
           </h1>
         </div>
 
-        {/* View Switcher Tabs: Sell Register, Sold Items History, Receipts Archive */}
+        {/* View Switcher Tabs: Sell Register, Drafts, Receipts Archive, Sold Items */}
         <div className="flex items-center gap-2 self-start md:self-auto shrink-0 flex-wrap w-full md:w-auto">
           <button
-            onClick={() => setActiveTab('pos')}
+            onClick={() => handleSwitchTab('pos')}
             className={`flex-1 sm:flex-none justify-center px-4 py-2 rounded-2xl text-xs font-extrabold flex items-center gap-2 transition cursor-pointer ${
               activeTab === 'pos'
                 ? 'bg-[#111111] text-white shadow-xs'
@@ -419,23 +695,31 @@ export const SalesTerminalView: React.FC = () => {
           >
             <UIcon name="shopping-cart" className="text-sm text-[#F6AF31]" />
             <span>Sell Products</span>
+            {cart.length > 0 && (
+              <span className="px-1.5 py-0.5 rounded-full bg-[#F6AF31] text-[#111111] font-mono font-bold text-[10px]">
+                {cart.reduce((s, it) => s + it.quantity, 0)}
+              </span>
+            )}
           </button>
 
           <button
-            onClick={() => setActiveTab('sold-items')}
+            onClick={() => handleSwitchTab('drafts')}
             className={`flex-1 sm:flex-none justify-center px-4 py-2 rounded-2xl text-xs font-extrabold flex items-center gap-2 transition cursor-pointer ${
-              activeTab === 'sold-items'
+              activeTab === 'drafts'
                 ? 'bg-[#111111] text-white shadow-xs'
                 : 'bg-[#F7F6F3] text-[#111111] hover:bg-slate-200/70 border border-slate-200/80'
             }`}
-            title="Sold Items"
+            title="Receipt Drafts"
           >
-            <UIcon name="time-past" className="text-sm opacity-80" />
-            <span>{totalItemsSold}</span>
+            <FileText className="w-3.5 h-3.5 text-[#F6AF31]" />
+            <span>Drafts</span>
+            <span className="px-1.5 py-0.5 rounded-full bg-slate-200 text-[#111111] font-mono font-bold text-[10px]">
+              {receiptDrafts.length}
+            </span>
           </button>
 
           <button
-            onClick={() => setActiveTab('receipts')}
+            onClick={() => handleSwitchTab('receipts')}
             className={`flex-1 sm:flex-none justify-center px-4 py-2 rounded-2xl text-xs font-extrabold flex items-center gap-2 transition cursor-pointer ${
               activeTab === 'receipts'
                 ? 'bg-[#111111] text-white shadow-xs'
@@ -445,6 +729,25 @@ export const SalesTerminalView: React.FC = () => {
           >
             <UIcon name="receipt" className="text-sm opacity-80" />
             <span>Receipts</span>
+            <span className="px-1.5 py-0.5 rounded-full bg-slate-200 text-[#111111] font-mono font-bold text-[10px]">
+              {receipts.length}
+            </span>
+          </button>
+
+          <button
+            onClick={() => handleSwitchTab('sold-items')}
+            className={`flex-1 sm:flex-none justify-center px-4 py-2 rounded-2xl text-xs font-extrabold flex items-center gap-2 transition cursor-pointer ${
+              activeTab === 'sold-items'
+                ? 'bg-[#111111] text-white shadow-xs'
+                : 'bg-[#F7F6F3] text-[#111111] hover:bg-slate-200/70 border border-slate-200/80'
+            }`}
+            title="Sold Items"
+          >
+            <UIcon name="time-past" className="text-sm opacity-80" />
+            <span>Sold Items</span>
+            <span className="px-1.5 py-0.5 rounded-full bg-slate-200 text-[#111111] font-mono font-bold text-[10px]">
+              {totalItemsSold}
+            </span>
           </button>
         </div>
       </div>
@@ -576,8 +879,11 @@ export const SalesTerminalView: React.FC = () => {
               ) : (
                 filteredParts.map(part => {
                   const inCartItem = cart.find(item => item.part.id === part.id);
-                  const isOutOfStock = part.stock_quantity <= 0;
-                  const isLowStock = part.stock_quantity > 0 && part.stock_quantity <= part.min_stock_alert;
+                  const inCartQty = inCartItem ? inCartItem.quantity : 0;
+                  const remainingStock = Math.max(0, part.stock_quantity - inCartQty);
+                  const isOutOfStock = remainingStock <= 0;
+                  const isLowStock = remainingStock > 0 && remainingStock <= part.min_stock_alert;
+                  const cleanModel = cleanModelName(part.model || (part.machinery_models && part.machinery_models.length > 0 ? part.machinery_models[0] : 'Standard'), part.brand);
 
                   return (
                     <div
@@ -591,13 +897,10 @@ export const SalesTerminalView: React.FC = () => {
                       }`}
                     >
                       <div>
-                        {/* Part ID & Brand Badge */}
+                        {/* Part ID - Highlighted manufacturer badge removed */}
                         <div className="flex items-center justify-between gap-1">
                           <span className="text-[10px] font-mono font-black px-2 py-0.5 rounded bg-slate-100 text-[#111111] border border-slate-200/80">
                             {part.part_number}
-                          </span>
-                          <span className="text-[10px] font-bold text-[#111111]/70 px-2 py-0.5 rounded-full bg-slate-100">
-                            {part.brand}
                           </span>
                         </div>
 
@@ -616,10 +919,10 @@ export const SalesTerminalView: React.FC = () => {
                           </span>
                         </div>
 
-                        {/* Machinery Model */}
+                        {/* Machinery Model without company name */}
                         <div className="text-[10px] text-[#111111]/70 mt-1 flex items-center gap-1 truncate font-medium">
                           <span className="font-bold text-[#111111]/80">Model:</span>
-                          <span className="truncate">{part.model || (part.machinery_models && part.machinery_models.length > 0 ? part.machinery_models.join(', ') : 'Heavy Fleet')}</span>
+                          <span className="truncate">{cleanModel}</span>
                         </div>
                       </div>
 
@@ -631,17 +934,19 @@ export const SalesTerminalView: React.FC = () => {
                           </div>
                           <div className="flex items-center gap-1 mt-0.5">
                             {isOutOfStock ? (
-                              <span className="text-[9px] font-bold text-[#DC2626] uppercase">Out of Stock</span>
+                              <span className="text-[9px] font-bold text-[#DC2626] uppercase">
+                                {part.stock_quantity <= 0 ? 'Out of Stock' : '0 left in stock (In Cart)'}
+                              </span>
                             ) : (
                               <span className={`text-[9px] font-bold ${isLowStock ? 'text-amber-600' : 'text-[#22A06B]'}`}>
-                                {part.stock_quantity} left in stock
+                                {remainingStock} left in stock
                               </span>
                             )}
                           </div>
                         </div>
 
                         {/* Add / In-Cart controls */}
-                        {isOutOfStock ? (
+                        {isOutOfStock && !inCartItem ? (
                           <button
                             disabled
                             className="px-3 py-1.5 rounded-xl bg-slate-200 text-slate-400 text-[11px] font-bold cursor-not-allowed"
@@ -651,6 +956,7 @@ export const SalesTerminalView: React.FC = () => {
                         ) : inCartItem ? (
                           <div className="flex items-center gap-1 bg-[#111111] text-white p-1 rounded-xl">
                             <button
+                              type="button"
                               onClick={() => handleUpdateQuantity(part.id, -1)}
                               className="w-6 h-6 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-xs font-bold transition cursor-pointer"
                             >
@@ -660,6 +966,7 @@ export const SalesTerminalView: React.FC = () => {
                               {inCartItem.quantity}
                             </span>
                             <button
+                              type="button"
                               onClick={() => handleUpdateQuantity(part.id, 1)}
                               disabled={inCartItem.quantity >= part.stock_quantity}
                               className="w-6 h-6 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-xs font-bold transition disabled:opacity-40 cursor-pointer"
@@ -669,6 +976,7 @@ export const SalesTerminalView: React.FC = () => {
                           </div>
                         ) : (
                           <button
+                            type="button"
                             onClick={() => handleAddToCart(part)}
                             className="px-3 py-1.5 rounded-xl bg-[#F6AF31] hover:bg-[#e5a028] text-[#111111] text-[11px] font-extrabold flex items-center gap-1 transition shadow-2xs cursor-pointer active:scale-95"
                           >
@@ -707,88 +1015,79 @@ export const SalesTerminalView: React.FC = () => {
               )}
             </div>
 
-            {/* Customer Details Form */}
+            {/* If currently editing a resumed draft, show indicator banner */}
+            {activeDraftId && (
+              <div className="bg-[#FFF8E7] border border-[#F6AF31]/50 rounded-2xl p-3 flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-[#F6AF31]" />
+                  <div>
+                    <span className="font-extrabold text-[#111111] block">
+                      Active Draft #{activeDraftId}
+                    </span>
+                    <span className="text-[10px] text-[#111111]/60">
+                      Changes will update this draft or complete into an official receipt.
+                    </span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveDraftId(null);
+                    handleClearCart();
+                    setFlashMessage('info', 'Exited draft editing.');
+                  }}
+                  className="text-[11px] font-bold text-slate-500 hover:text-black underline cursor-pointer shrink-0 ml-2"
+                >
+                  Cancel Draft
+                </button>
+              </div>
+            )}
+
+            {/* Current Order Flow */}
             <form onSubmit={handleCompleteSale} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
-                <div>
-                  <label className="text-[10px] uppercase font-bold text-[#111111]/50 block mb-1">
-                    Customer Name *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={customerName}
-                    onChange={(e) => setCustomerName(e.target.value)}
-                    placeholder="e.g. Roko Construction / Alex"
-                    className="w-full bg-[#F7F6F3] border border-slate-200 rounded-xl px-3 py-2 text-xs text-[#111111] outline-none focus:border-[#111111]"
-                  />
+              {/* Customer & Issuer Information */}
+              <div className="bg-[#F7F6F3] border border-slate-200 rounded-2xl p-3.5 space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div>
+                    <label className="text-[10px] uppercase font-extrabold text-[#111111]/70 tracking-wider block mb-1">
+                      Client Name
+                    </label>
+                    <input
+                      type="text"
+                      value={customerName}
+                      onChange={e => setCustomerName(e.target.value)}
+                      placeholder="Enter client name..."
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] uppercase font-extrabold text-[#111111]/70 tracking-wider block mb-1">
+                      Client Phone Number
+                    </label>
+                    <input
+                      type="text"
+                      value={customerPhone}
+                      onChange={e => setCustomerPhone(e.target.value)}
+                      placeholder="e.g. +256 701 234 567"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-mono text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
+                    />
+                  </div>
                 </div>
 
                 <div>
-                  <label className="text-[10px] uppercase font-bold text-[#111111]/50 block mb-1">
-                    Phone / Contact
+                  <label className="text-[10px] uppercase font-extrabold text-[#111111]/70 tracking-wider block mb-1">
+                    Issued By (Receipt Officer)
                   </label>
                   <input
                     type="text"
-                    value={customerPhone}
-                    onChange={(e) => setCustomerPhone(e.target.value)}
-                    placeholder="e.g. +256 772 458 912"
-                    className="w-full bg-[#F7F6F3] border border-slate-200 rounded-xl px-3 py-2 text-xs text-[#111111] outline-none focus:border-[#111111]"
+                    value={cashierName}
+                    onChange={e => setCashierName(e.target.value)}
+                    placeholder="e.g. Arafat"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
                   />
-                </div>
-
-                <div>
-                  <label className="text-[10px] uppercase font-bold text-[#111111]/50 block mb-1">
-                    Equipment / Machine Model
-                  </label>
-                  <input
-                    type="text"
-                    value={equipmentModel}
-                    onChange={(e) => setEquipmentModel(e.target.value)}
-                    placeholder="e.g. CAT 349D Excavator"
-                    className="w-full bg-[#F7F6F3] border border-slate-200 rounded-xl px-3 py-2 text-xs text-[#111111] outline-none focus:border-[#111111]"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-[10px] uppercase font-bold text-[#111111]/50 block mb-1">
-                    Payment Method
-                  </label>
-                  <select
-                    value={paymentMethod}
-                    onChange={(e) => setPaymentMethod(e.target.value as any)}
-                    className="w-full bg-[#F7F6F3] border border-slate-200 rounded-xl px-3 py-2 text-xs text-[#111111] font-bold outline-none focus:border-[#111111]"
-                  >
-                    <option value="Cash">Cash</option>
-                    <option value="Mobile Money">Mobile Money (MTN / Airtel)</option>
-                    <option value="Bank Wire">Bank Wire / EFT Transfer</option>
-                    <option value="Card">Credit / Debit Card</option>
-                    <option value="Credit Account">Fleet Credit / On Account</option>
-                  </select>
                 </div>
               </div>
-
-              {/* Extra Payment Reference (if Mobile Money, Wire, or Card) */}
-              {paymentMethod !== 'Cash' && (
-                <div>
-                  <label className="text-[10px] uppercase font-bold text-[#111111]/50 block mb-1">
-                    Payment Reference / Transaction ID
-                  </label>
-                  <input
-                    type="text"
-                    value={paymentReference}
-                    onChange={(e) => setPaymentReference(e.target.value)}
-                    placeholder={
-                      paymentMethod === 'Mobile Money'
-                        ? 'e.g. MOMO-984210'
-                        : paymentMethod === 'Bank Wire'
-                        ? 'e.g. WIRE-8491-STANBIC'
-                        : 'Reference or Slip Number'
-                    }
-                    className="w-full bg-[#F7F6F3] border border-slate-200 rounded-xl px-3 py-2 text-xs text-[#111111] font-mono outline-none focus:border-[#111111]"
-                  />
-                </div>
-              )}
 
               {/* Cart Items Table */}
               <div className="border border-slate-200 rounded-2xl p-3 bg-[#FAFAF8] space-y-2">
@@ -809,7 +1108,7 @@ export const SalesTerminalView: React.FC = () => {
                     {cart.map(item => (
                       <div key={item.part.id} className="py-2.5 flex items-center justify-between gap-2">
                         <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-1.5">
+                          <div className="flex items-center gap-1.5 flex-wrap">
                             <span className="text-[10px] font-mono font-bold text-[#111111] bg-white px-1.5 py-0.5 rounded border border-slate-200">
                               {item.part.part_number}
                             </span>
@@ -817,8 +1116,10 @@ export const SalesTerminalView: React.FC = () => {
                               {item.part.name}
                             </span>
                           </div>
-                          <div className="text-[10px] text-[#111111]/60 font-mono mt-0.5">
-                            {formatMoney(item.custom_unit_price)} each • Max: {item.part.stock_quantity}
+                          <div className="text-[10px] text-[#111111]/60 font-mono mt-0.5 flex items-center gap-1.5 flex-wrap">
+                            <span>Model: <strong className="text-[#111111]">{cleanModelName(item.part.model || 'Standard', item.part.brand)}</strong></span>
+                            <span>•</span>
+                            <span>{formatMoney(item.custom_unit_price)} each</span>
                           </div>
                         </div>
 
@@ -832,7 +1133,7 @@ export const SalesTerminalView: React.FC = () => {
                             >
                               <Minus className="w-2.5 h-2.5" />
                             </button>
-                            <span className="w-5 text-center font-mono font-bold text-xs text-[#111111]">
+                            <span className="w-6 text-center font-mono font-bold text-xs text-[#111111]">
                               {item.quantity}
                             </span>
                             <button
@@ -854,7 +1155,7 @@ export const SalesTerminalView: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => handleRemoveFromCart(item.part.id)}
-                            className="text-slate-400 hover:text-[#DC2626] transition p-1"
+                            className="text-slate-400 hover:text-[#DC2626] transition p-1 cursor-pointer"
                             title="Remove item"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -866,131 +1167,278 @@ export const SalesTerminalView: React.FC = () => {
                 )}
               </div>
 
-              {/* Discounts & Tax Adjustments */}
-              {cart.length > 0 && (
-                <div className="p-3 bg-[#F7F6F3] rounded-2xl border border-slate-200/80 space-y-2.5 text-xs">
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="text-[10px] uppercase font-bold text-[#111111]/50 block mb-1">
-                        Discount (USD)
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={discountValue || ''}
-                        onChange={(e) => setDiscountValue(Math.max(0, parseFloat(e.target.value) || 0))}
-                        placeholder="0"
-                        className="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-mono text-[#111111] outline-none"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-[10px] uppercase font-bold text-[#111111]/50 block mb-1">
-                        Tax / VAT Rate
-                      </label>
-                      <select
-                        value={taxRate}
-                        onChange={(e) => setTaxRate(parseFloat(e.target.value))}
-                        className="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold text-[#111111] outline-none"
-                      >
-                        <option value="0">0% (Tax Exempt)</option>
-                        <option value="5">5% (Regional Tax)</option>
-                        <option value="18">18% (Standard VAT)</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* Cash Tendered & Change Due (If Cash Payment) */}
-                  {paymentMethod === 'Cash' && (
-                    <div className="pt-2 border-t border-slate-200 grid grid-cols-2 gap-2">
-                      <div>
-                        <label className="text-[10px] uppercase font-bold text-[#111111]/50 block mb-1">
-                          Cash Tendered ({currency})
-                        </label>
-                        <div className="relative">
-                          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[9px] font-black text-[#111111]/50">{currency}</span>
-                          <input
-                            type="number"
-                            value={cashTendered}
-                            onChange={(e) => setCashTendered(e.target.value)}
-                            placeholder={grandTotal.toString()}
-                            className="w-full bg-white border border-slate-200 rounded-xl pl-11 pr-2.5 py-1.5 text-xs font-mono text-[#111111] outline-none"
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <span className="text-[10px] uppercase font-bold text-[#111111]/50 block mb-1">
-                          Change Due
-                        </span>
-                        <div className="font-mono font-bold text-xs py-1.5 px-2 bg-white rounded-xl border border-slate-200 text-[#22A06B]">
-                          {formatMoney(changeDue)}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Internal Notes */}
-                  <div>
-                    <label className="text-[10px] uppercase font-bold text-[#111111]/50 block mb-1">
-                      Sale / Warranty Notes (Printed on receipt)
-                    </label>
-                    <input
-                      type="text"
-                      value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
-                      placeholder="e.g. Urgent repair order. Warranty valid 30 days."
-                      className="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-[#111111] outline-none"
-                    />
-                  </div>
-                </div>
-              )}
-
               {/* Grand Total Summary Display */}
               <div className="border-t-2 border-[#111111] pt-3 space-y-1.5 text-xs">
                 <div className="flex justify-between text-[#111111]/70">
-                  <span>Subtotal:</span>
-                  <span className="font-mono font-bold text-[#111111]">{formatMoney(subtotal)}</span>
+                  <span>Total Items:</span>
+                  <span className="font-mono font-bold text-[#111111]">
+                    {cart.reduce((s, it) => s + it.quantity, 0)} Units
+                  </span>
                 </div>
 
-                {discountAmount > 0 && (
-                  <div className="flex justify-between text-[#22A06B]">
-                    <span>Discount:</span>
-                    <span className="font-mono font-bold">-{formatMoney(discountAmount)}</span>
-                  </div>
-                )}
-
-                {taxAmount > 0 && (
-                  <div className="flex justify-between text-[#111111]/70">
-                    <span>Tax ({taxRate}%):</span>
-                    <span className="font-mono font-bold text-[#111111]">{formatMoney(taxAmount)}</span>
-                  </div>
-                )}
-
-                <div className="pt-2">
+                <div className="pt-1">
                   <div className="text-2xl sm:text-3xl font-black font-mono text-[#111111]">
-                    {formatMoney(grandTotal)}
+                    {formatMoney(subtotal)}
                   </div>
                   <div className="text-xs font-semibold text-slate-500 mt-0.5">
-                    Grand Total Due
+                    Total Price
                   </div>
                 </div>
               </div>
 
-              {/* Big Checkout Button */}
-              <button
-                type="submit"
-                disabled={cart.length === 0}
-                className="w-full py-3.5 px-5 rounded-2xl bg-[#F6AF31] hover:bg-[#e5a028] disabled:bg-slate-200 disabled:text-slate-400 text-[#111111] font-black text-sm flex items-center justify-center gap-2.5 shadow-md transition active:scale-98 cursor-pointer disabled:cursor-not-allowed"
-              >
-                <Printer className="w-4 h-4 text-[#111111] stroke-[2.5]" />
-                <span>Complete Sale & Issue Receipt</span>
-                <span className="ml-1 px-2 py-0.5 rounded-full bg-[#111111] text-white text-xs font-mono font-bold">
-                  {formatMoney(grandTotal)}
-                </span>
-              </button>
+              {/* Action Buttons: Save as Draft & Complete Sale */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={handleSaveAsDraft}
+                  disabled={cart.length === 0}
+                  className="w-full py-3 rounded-2xl bg-white hover:bg-slate-50 text-[#111111] border border-slate-300 font-extrabold text-xs flex items-center justify-center gap-2 transition disabled:opacity-40 cursor-pointer shadow-xs"
+                >
+                  <FileText className="w-4 h-4 text-[#F6AF31]" />
+                  <span>{activeDraftId ? 'Update Draft' : 'Save as Draft'}</span>
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={cart.length === 0}
+                  className="w-full py-3 rounded-2xl bg-[#F6AF31] hover:bg-[#e5a028] text-[#111111] font-black text-xs flex items-center justify-center gap-2 transition shadow-sm disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer uppercase tracking-wider"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>Complete Sale</span>
+                </button>
+              </div>
             </form>
           </div>
+        </div>
+      )}
+
+      {/* ===================== TAB: RECEIPT DRAFTS (CRUD) ===================== */}
+      {activeTab === 'drafts' && (
+        <div className="bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-6 shadow-xs space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-slate-100">
+            <div>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-[#111111] text-[#F6AF31] flex items-center justify-center font-bold text-xs shrink-0">
+                  <FileText className="w-4 h-4 text-[#F6AF31]" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-extrabold text-[#111111] tracking-tight">
+                    Order Drafts & Pending Receipts
+                  </h2>
+                  <p className="text-xs text-[#111111]/60">
+                    Manage incomplete orders, hold customer receipts, resume editing, or finalize sales.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Search Input for Drafts */}
+              <div className="relative w-full sm:w-64">
+                <Search className="w-4 h-4 text-[#111111]/40 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="text"
+                  value={draftsSearch}
+                  onChange={(e) => setDraftsSearch(e.target.value)}
+                  placeholder="Search drafts, client, item..."
+                  className="w-full bg-[#F7F6F3] border border-slate-200 rounded-full pl-10 pr-4 py-2 text-xs text-[#111111] placeholder:text-[#111111]/40 outline-none focus:border-[#111111]"
+                />
+                {draftsSearch && (
+                  <button
+                    onClick={() => setDraftsSearch('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-black cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+
+              <button
+                onClick={() => {
+                  setActiveDraftId(null);
+                  handleClearCart();
+                  setActiveTab('pos');
+                }}
+                className="px-4 py-2 rounded-full bg-[#F6AF31] hover:bg-[#e5a028] text-[#111111] text-xs font-black flex items-center gap-1.5 transition cursor-pointer shadow-xs"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>New Draft</span>
+              </button>
+
+              {receiptDrafts.length > 0 && (
+                <button
+                  onClick={() => {
+                    if (window.confirm('Are you sure you want to clear all drafts?')) {
+                      clearAllReceiptDrafts();
+                    }
+                  }}
+                  className="px-3 py-2 rounded-full bg-slate-100 hover:bg-red-50 text-slate-600 hover:text-red-600 text-xs font-bold transition cursor-pointer border border-slate-200"
+                  title="Clear all drafts"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Drafts List */}
+          {filteredDrafts.length === 0 ? (
+            <div className="py-16 text-center text-[#111111]/40 space-y-3">
+              <FileText className="w-12 h-12 mx-auto text-[#111111]/20 stroke-[1.5]" />
+              <div>
+                <p className="font-bold text-sm text-[#111111]/70">No order drafts found</p>
+                <p className="text-xs text-[#111111]/50 mt-1 max-w-md mx-auto">
+                  {draftsSearch ? 'No drafts match your search filter.' : 'When customer orders are in progress, click "Save as Draft" in the sell terminal to store and manage them here.'}
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setActiveDraftId(null);
+                  setActiveTab('pos');
+                }}
+                className="px-5 py-2.5 rounded-full bg-[#111111] text-white text-xs font-extrabold hover:bg-black transition cursor-pointer"
+              >
+                Go to Sell Terminal
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {filteredDrafts.map((draft) => {
+                const isExpanded = expandedDraftId === draft.id;
+                const totalUnits = draft.items.reduce((s, it) => s + it.quantity, 0);
+
+                return (
+                  <div
+                    key={draft.id}
+                    className="border border-slate-200 rounded-2xl p-4 bg-white hover:border-[#F6AF31]/60 transition shadow-2xs space-y-3"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="flex items-start sm:items-center gap-3">
+                        <div className="px-2.5 py-1 rounded-xl bg-neutral-100 border border-neutral-300 font-mono font-black text-xs text-[#111111]">
+                          #{draft.draft_code}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-extrabold text-sm text-[#111111]">
+                              {draft.customer_name}
+                            </span>
+                            {draft.customer_phone && (
+                              <span className="text-xs font-mono text-[#111111]/60 flex items-center gap-1">
+                                <Phone className="w-3 h-3 text-[#111111]/40" />
+                                {draft.customer_phone}
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-[11px] text-[#111111]/60 flex items-center gap-2 mt-0.5 flex-wrap">
+                            <span>Issued By: <strong className="text-[#111111]">{draft.issued_by}</strong></span>
+                            <span>•</span>
+                            <span>Updated: {draft.updated_at}</span>
+                            <span>•</span>
+                            <span>{draft.items.length} parts ({totalUnits} units)</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 self-end sm:self-auto flex-wrap">
+                        <div className="text-right mr-2">
+                          <span className="text-[10px] text-slate-500 uppercase font-bold block">Draft Total</span>
+                          <span className="text-base font-black font-mono text-[#111111]">
+                            {formatMoney(draft.subtotal)}
+                          </span>
+                        </div>
+
+                        {/* Resume in POS button */}
+                        <button
+                          onClick={() => handleResumeDraft(draft)}
+                          className="px-3.5 py-1.5 rounded-full bg-[#111111] hover:bg-black text-white text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
+                          title="Resume and edit in register"
+                        >
+                          <ShoppingCart className="w-3.5 h-3.5 text-[#F6AF31]" />
+                          <span>Resume & Edit</span>
+                        </button>
+
+                        {/* Complete Sale directly */}
+                        <button
+                          onClick={() => handleCompleteDraftDirectly(draft)}
+                          className="px-3.5 py-1.5 rounded-full bg-[#F6AF31] hover:bg-[#e5a028] text-[#111111] text-xs font-black flex items-center gap-1.5 transition cursor-pointer shadow-xs"
+                          title="Complete sale immediately and issue receipt"
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                          <span>Complete Sale</span>
+                        </button>
+
+                        {/* Quick edit */}
+                        <button
+                          onClick={() => handleOpenQuickEditDraft(draft)}
+                          className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-black hover:bg-slate-50 transition cursor-pointer"
+                          title="Edit client info / remarks"
+                        >
+                          <Edit3 className="w-4 h-4" />
+                        </button>
+
+                        {/* Expand/collapse items */}
+                        <button
+                          onClick={() => setExpandedDraftId(isExpanded ? null : draft.id)}
+                          className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:text-black hover:bg-slate-50 transition cursor-pointer"
+                          title={isExpanded ? 'Collapse items' : 'View itemized parts'}
+                        >
+                          {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                        </button>
+
+                        {/* Delete draft */}
+                        <button
+                          onClick={() => {
+                            if (window.confirm(`Delete Draft #${draft.draft_code}?`)) {
+                              deleteReceiptDraft(draft.id);
+                            }
+                          }}
+                          className="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:text-red-600 hover:bg-red-50 transition cursor-pointer"
+                          title="Delete draft"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Expandable Itemized Table */}
+                    {isExpanded && (
+                      <div className="pt-2 border-t border-slate-100 overflow-x-auto">
+                        <table className="w-full text-xs text-left">
+                          <thead>
+                            <tr className="text-[10px] uppercase font-bold text-slate-400 bg-slate-50">
+                              <th className="py-2 px-2.5">Part No</th>
+                              <th className="py-2 px-2.5">Item Name</th>
+                              <th className="py-2 px-2.5">Model</th>
+                              <th className="py-2 px-2.5 text-center">Qty</th>
+                              <th className="py-2 px-2.5 text-right">Unit Price</th>
+                              <th className="py-2 px-2.5 text-right">Total Price</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100">
+                            {draft.items.map((it, idx) => (
+                              <tr key={idx} className="hover:bg-slate-50/50">
+                                <td className="py-2 px-2.5 font-mono font-bold text-[#111111]">{it.part_number}</td>
+                                <td className="py-2 px-2.5 font-medium">{it.name}</td>
+                                <td className="py-2 px-2.5 font-mono font-semibold">{it.model || '-'}</td>
+                                <td className="py-2 px-2.5 text-center font-mono font-bold">{it.quantity}</td>
+                                <td className="py-2 px-2.5 text-right font-mono">{formatMoney(it.unit_price)}</td>
+                                <td className="py-2 px-2.5 text-right font-mono font-bold">{formatMoney(it.total_price)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                        {draft.notes && (
+                          <div className="mt-2 text-xs text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                            <strong>Remark / Notes: </strong> {draft.notes}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 
@@ -1447,6 +1895,97 @@ export const SalesTerminalView: React.FC = () => {
                 )}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* Quick Edit Draft Modal */}
+      {editingDraft && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <div>
+                <h3 className="text-base font-extrabold text-[#111111]">
+                  Edit Draft #{editingDraft.draft_code}
+                </h3>
+                <p className="text-xs text-[#111111]/60">Update customer and order details</p>
+              </div>
+              <button
+                onClick={() => setEditingDraft(null)}
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveQuickEditDraft} className="space-y-3 text-xs">
+              <div>
+                <label className="block text-[10px] font-extrabold uppercase tracking-wider text-[#111111]/70 mb-1">
+                  Client Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editDraftName}
+                  onChange={e => setEditDraftName(e.target.value)}
+                  className="w-full bg-[#F7F6F3] border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-extrabold uppercase tracking-wider text-[#111111]/70 mb-1">
+                  Client Phone Number
+                </label>
+                <input
+                  type="text"
+                  value={editDraftPhone}
+                  onChange={e => setEditDraftPhone(e.target.value)}
+                  placeholder="+256..."
+                  className="w-full bg-[#F7F6F3] border border-slate-200 rounded-xl px-3 py-2 text-xs font-mono text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-extrabold uppercase tracking-wider text-[#111111]/70 mb-1">
+                  Issued By
+                </label>
+                <input
+                  type="text"
+                  value={editDraftIssuer}
+                  onChange={e => setEditDraftIssuer(e.target.value)}
+                  className="w-full bg-[#F7F6F3] border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-extrabold uppercase tracking-wider text-[#111111]/70 mb-1">
+                  Remark / Notes
+                </label>
+                <textarea
+                  rows={2}
+                  value={editDraftNotes}
+                  onChange={e => setEditDraftNotes(e.target.value)}
+                  placeholder="Order notes, pickup remarks..."
+                  className="w-full bg-[#F7F6F3] border border-slate-200 rounded-xl px-3 py-2 text-xs text-[#111111] focus:outline-none focus:ring-2 focus:ring-[#F6AF31] resize-none"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingDraft(null)}
+                  className="px-4 py-2 rounded-full border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-full bg-[#F6AF31] hover:bg-[#e5a028] text-[#111111] font-black transition cursor-pointer shadow-xs"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

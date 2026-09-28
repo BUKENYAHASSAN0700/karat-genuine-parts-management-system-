@@ -99,7 +99,7 @@ export interface CommercialOrder {
   customer_email?: string;
   equipment_model: string;
   delivery_site: string;
-  delivery_method: 'Field Van Delivery' | 'Warehouse Pickup (Yard 4 - Industrial Area)' | 'Expedited Air Freight';
+  delivery_method: 'Field Van Delivery' | 'Store Pickup (Yard 4 - Industrial Area)' | 'Warehouse Pickup (Yard 4 - Industrial Area)' | 'Expedited Air Freight';
   items: InquiryLineItem[];
   subtotal: number;
   tax_amount?: number;
@@ -236,6 +236,33 @@ export interface SaleReceipt {
   notes?: string;
   cashier_name: string;
   currency: CurrencyCode;
+}
+
+export interface ReceiptDraftItem {
+  part_id: string;
+  part_number: string;
+  oem_number: string;
+  name: string;
+  brand: string;
+  category: string;
+  quantity: number;
+  unit_price: number;
+  total_price: number;
+  model?: string;
+}
+
+export interface ReceiptDraft {
+  id: string;
+  draft_code: string; // 6-character varchar, e.g. "D84920"
+  customer_name: string;
+  customer_phone?: string;
+  issued_by: string;
+  items: ReceiptDraftItem[];
+  subtotal: number;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+  timestamp: number;
 }
 
 export interface AppNotification {

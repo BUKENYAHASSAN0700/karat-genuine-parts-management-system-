@@ -229,7 +229,7 @@ export const FinancialAuditModal: React.FC<FinancialAuditModalProps> = ({
             </h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-xs">
               <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-                <span className="text-[10px] text-slate-500 font-bold block uppercase">Warehouse Spares Asset</span>
+                <span className="text-[10px] text-slate-500 font-bold block uppercase">Store Spares Asset</span>
                 <span className="font-mono font-black text-sm text-[#111111]">{formatMoney(totalInventoryCost)}</span>
                 <span className="text-[10px] text-slate-400 block mt-0.5">Physical stock at cost</span>
               </div>

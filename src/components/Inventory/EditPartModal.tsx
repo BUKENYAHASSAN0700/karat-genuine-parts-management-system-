@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Edit3, Save, Cpu, Warehouse, DollarSign, Package, Calendar, Tag, ShieldCheck } from 'lucide-react';
+import { X, Edit3, Save, Cpu, DollarSign, Package, Calendar, Tag, ShieldCheck } from 'lucide-react';
 import { useInertia } from '../../context/InertiaContext';
 import { SparePart } from '../../types';
 import { SERIES_LIST, getCategoriesForSeries, getSeriesForCategory, MANUFACTURER_BRANDS } from '../../data/partTaxonomy';
@@ -279,22 +279,35 @@ export const EditPartModal: React.FC<EditPartModalProps> = ({ part, isOpen, onCl
               <span>Model & Heavy Machinery Compatibility</span>
             </div>
 
-            {/* Model input */}
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-[#111111]/70">
-                  Machinery Model(s) (MODEL) *
+            {/* Product Model input */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
+                  Product Model (MODEL) *
                 </label>
-                <span className="text-[9px] text-[#111111]/50">Comma separated for multiple models</span>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. CAT 349D or PC400-8"
+                  value={formData.model}
+                  onChange={e => setFormData({ ...formData, model: e.target.value })}
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-[#111111] font-mono font-bold focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
+                />
               </div>
-              <input
-                type="text"
-                required
-                placeholder="e.g. CAT 349D, CAT 336D, CAT 345C"
-                value={formData.machinery_models}
-                onChange={e => setFormData({ ...formData, machinery_models: e.target.value, model: e.target.value.split(',')[0]?.trim() || '' })}
-                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-[#111111] font-medium focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
-              />
+
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-[#111111]/70 mb-1">
+                  Compatible Equipment (Optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. CAT 336D, CAT 345C"
+                  value={formData.machinery_models}
+                  onChange={e => setFormData({ ...formData, machinery_models: e.target.value })}
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-[#111111] font-medium focus:outline-none focus:ring-2 focus:ring-[#F6AF31]"
+                />
+              </div>
+            </div>
 
               {/* Quick suggestions */}
               <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
@@ -310,7 +323,6 @@ export const EditPartModal: React.FC<EditPartModalProps> = ({ part, isOpen, onCl
                   </button>
                 ))}
               </div>
-            </div>
 
             {/* Brand, Series & Category */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

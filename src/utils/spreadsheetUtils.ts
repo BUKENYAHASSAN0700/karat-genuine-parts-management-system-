@@ -54,7 +54,7 @@ export const SAMPLE_TEMPLATE_DATA = [
     'Mini Alert Stock': 2,
     'Unit Price USD': 3850,
     'Compatible Machinery': 'CAT 349D, CAT 349E, CAT 336D',
-    'Warehouse Bin Location': 'Yard 4 - Shelf B',
+    'Store Shelf Location': 'Yard 4 - Shelf B',
     'Product ID (Optional)': 'KA113',
   },
   {
@@ -68,7 +68,7 @@ export const SAMPLE_TEMPLATE_DATA = [
     'Mini Alert Stock': 4,
     'Unit Price USD': 620,
     'Compatible Machinery': 'Komatsu PC200-8, PC220-8, PC270-8',
-    'Warehouse Bin Location': 'Aisle 1 - Shelf C - Bin 04',
+    'Store Shelf Location': 'Section 1 - Shelf C - Shelf 04',
     'Product ID (Optional)': 'KA114',
   },
   {
@@ -82,7 +82,7 @@ export const SAMPLE_TEMPLATE_DATA = [
     'Mini Alert Stock': 1,
     'Unit Price USD': 920,
     'Compatible Machinery': 'Volvo EC480D, EC380D, EC360B',
-    'Warehouse Bin Location': 'Heavy Bay 4 - Floor Pallet 02',
+    'Store Shelf Location': 'Heavy Bay 4 - Floor Pallet 02',
     'Product ID (Optional)': 'KA115',
   },
   {
@@ -96,7 +96,7 @@ export const SAMPLE_TEMPLATE_DATA = [
     'Mini Alert Stock': 2,
     'Unit Price USD': 340,
     'Compatible Machinery': 'Hitachi ZX350-5G, ZX330-3, ZX370',
-    'Warehouse Bin Location': 'Undercarriage Yard - Rack 12',
+    'Store Shelf Location': 'Undercarriage Yard - Rack 12',
     'Product ID (Optional)': 'KA116',
   },
   {
@@ -110,7 +110,7 @@ export const SAMPLE_TEMPLATE_DATA = [
     'Mini Alert Stock': 3,
     'Unit Price USD': 180,
     'Compatible Machinery': 'Hyundai R300LC-9, R330LC-9, R210-7',
-    'Warehouse Bin Location': 'Aisle 2 - Shelf A - Bin 18',
+    'Store Shelf Location': 'Section 2 - Shelf A - Shelf 18',
     'Product ID (Optional)': 'KA117',
   },
   {
@@ -124,7 +124,7 @@ export const SAMPLE_TEMPLATE_DATA = [
     'Mini Alert Stock': 2,
     'Unit Price USD': 1180,
     'Compatible Machinery': 'Doosan DX340LCA, DX300LCA, DL300',
-    'Warehouse Bin Location': 'Aisle 2 - Shelf D - Bin 09',
+    'Store Shelf Location': 'Section 2 - Shelf D - Shelf 09',
     'Product ID (Optional)': 'KA118',
   },
 ];
@@ -147,7 +147,7 @@ export const downloadExcelTemplate = () => {
     { wch: 18 }, // Mini Alert Stock
     { wch: 16 }, // Unit Price USD
     { wch: 36 }, // Compatible Machinery
-    { wch: 30 }, // Warehouse Bin Location
+    { wch: 30 }, // Store Shelf Location
     { wch: 22 }, // Product ID
   ];
 
@@ -171,7 +171,7 @@ export const downloadCsvTemplate = () => {
     'Mini Alert Stock',
     'Unit Price USD',
     'Compatible Machinery',
-    'Warehouse Bin Location',
+    'Store Shelf Location',
     'Product ID (Optional)'
   ];
 
@@ -186,7 +186,7 @@ export const downloadCsvTemplate = () => {
     item['Mini Alert Stock'],
     item['Unit Price USD'],
     `"${item['Compatible Machinery']}"`,
-    `"${item['Warehouse Bin Location']}"`,
+    `"${item['Store Shelf Location']}"`,
     `"${item['Product ID (Optional)']}"`
   ]);
 
@@ -540,14 +540,14 @@ export const parseAndValidateSpreadsheet = (
       });
     }
 
-    // 10. Warehouse Storage Bin Location
+    // 10. Store Shelf Location
     const binData = getCellValue(colIndexBin);
     if (!binData.strVal) {
       errors.push({
         productName,
         cell: binData.cellRef,
-        missingField: 'Warehouse Storage Bin Location',
-        formattedMessage: `${productName} in cell ${binData.cellRef} is missing Warehouse Storage Bin Location`,
+        missingField: 'Store Shelf Location',
+        formattedMessage: `${productName} in cell ${binData.cellRef} is missing Store Shelf Location`,
         rowNumber,
         columnKey: binData.cellRef.replace(/[0-9]/g, ''),
       });

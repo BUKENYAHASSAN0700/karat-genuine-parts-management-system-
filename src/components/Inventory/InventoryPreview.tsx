@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { 
   Boxes, 
   AlertTriangle, 
-  Warehouse, 
   Layers,
   ShieldCheck,
   X

@@ -5,19 +5,11 @@ import {
   CheckCircle2, 
   Copy, 
   Check, 
-  ShoppingCart, 
-  FileText,
-  ShieldCheck,
-  Building2,
-  Phone,
-  Calendar,
-  Clock,
-  User,
-  Hash,
-  QrCode
+  ShoppingCart
 } from 'lucide-react';
 import { SaleReceipt } from '../../types';
 import { useInertia } from '../../context/InertiaContext';
+import { cleanModelName } from '../../utils/modelUtils';
 
 interface ReceiptModalProps {
   receipt: SaleReceipt | null;
@@ -32,11 +24,28 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
   onClose,
   onNewSale,
 }) => {
-  const { formatMoney } = useInertia();
+  const { formatMoney, currentUser } = useInertia();
   const [copied, setCopied] = React.useState(false);
   const receiptRef = useRef<HTMLDivElement>(null);
 
+  const storeProfile = React.useMemo(() => {
+    try {
+      const saved = localStorage.getItem('karat_store_profile');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return null;
+  }, []);
+
+  const storeName = (storeProfile?.shopName || currentUser?.shop_name || 'KARAT HEAVY MACHINERY SPARE PARTS').toUpperCase();
+  const storeAddress = (storeProfile?.physicalAddress && !storeProfile.physicalAddress.includes('Jinja Road')) 
+    ? storeProfile.physicalAddress 
+    : 'Kampala Kisenyi';
+  const storePhone = storeProfile?.dispatchPhone || currentUser?.phone || '+256 700 882194';
+  const receiptFooter = storeProfile?.receiptFooter || 'When picking up the goods, please point out and confirm the quantity, model and amount of the goods can be returned and exchange within 7 days; if damage, change, oil contamination, used; the goods will not be returned. Thank you for your cooperation.';
+
   if (!isOpen || !receipt) return null;
+
+  const totalQuantity = receipt.items.reduce((sum, item) => sum + item.quantity, 0);
 
   const handlePrint = () => {
     window.print();
@@ -45,27 +54,21 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
   const handleCopySummary = () => {
     const summary = `
 ========================================
-KARAT HEAVY MACHINERY SPARE PARTS
-OFFICIAL SALE RECEIPT: ${receipt.receipt_number}
+${storeName}
+Location: ${storeAddress} | Phone: ${storePhone}
+Receipt Number: ${receipt.receipt_number}
+Date: ${receipt.date}
+Client Name: ${receipt.customer_name || 'Walk-in Client'}
+Client Phone: ${receipt.customer_phone || '-'}
+Issued By: ${receipt.cashier_name || 'Arafat'}
 ========================================
-Date: ${receipt.date} ${receipt.time}
-Customer: ${receipt.customer_name}${receipt.customer_company ? ` (${receipt.customer_company})` : ''}
-Phone: ${receipt.customer_phone || 'N/A'}
-Equipment: ${receipt.equipment_model || 'N/A'}
-Cashier: ${receipt.cashier_name}
+ITEMS:
+${receipt.items.map((it, idx) => `${idx + 1}. [${it.part_number}] ${it.name} | Model: ${cleanModelName(it.model || '-', it.brand)} | Qty: ${it.quantity} PCS | Price: ${formatMoney(it.unit_price)} | Total: ${formatMoney(it.total_price)}`).join('\n')}
 ----------------------------------------
-ITEMS SOLD:
-${receipt.items.map((it, idx) => `${idx + 1}. [${it.part_number}] ${it.name} (${it.model || it.oem_number || 'Model'}) - ${it.quantity}x @ ${formatMoney(it.unit_price)} = ${formatMoney(it.total_price)}`).join('\n')}
-----------------------------------------
-Subtotal: ${formatMoney(receipt.subtotal)}
-Discount: -${formatMoney(receipt.discount_amount)}
-Tax / VAT (${receipt.tax_rate}%): ${formatMoney(receipt.tax_amount)}
-TOTAL PAID: ${formatMoney(receipt.grand_total)}
-Payment Method: ${receipt.payment_method}
-Payment Status: ${receipt.payment_status}
-${receipt.notes ? `Notes: ${receipt.notes}\n` : ''}========================================
-Thank you for trusting Karat Heavy Machinery Spare Parts!
-30-Day Warranty on All Parts.
+TOTAL QUANTITY: ${totalQuantity} PCS
+TOTAL PRICE: ${formatMoney(receipt.grand_total)}
+========================================
+Attention: ${receiptFooter}
 `;
     navigator.clipboard.writeText(summary.trim());
     setCopied(true);
@@ -73,18 +76,19 @@ Thank you for trusting Karat Heavy Machinery Spare Parts!
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/60 backdrop-blur-xs overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/65 backdrop-blur-xs overflow-y-auto">
       {/* Container with print-safe styles */}
-      <div className="bg-white rounded-3xl max-w-2xl w-full shadow-2xl overflow-hidden my-auto flex flex-col max-h-[92vh] border border-slate-200">
+      <div className="bg-white rounded-2xl max-w-4xl w-full shadow-2xl overflow-hidden my-auto flex flex-col max-h-[95vh] border border-slate-300">
+        
         {/* Top Modal Controls (Hidden in Print) */}
-        <div className="print:hidden bg-[#111111] text-white px-6 py-4 flex items-center justify-between border-b border-white/10 shrink-0">
+        <div className="print:hidden bg-[#111111] text-white px-5 py-3.5 flex items-center justify-between border-b border-white/10 shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-[#F6AF31] text-[#111111] flex items-center justify-center font-extrabold shadow-sm">
               <CheckCircle2 className="w-5 h-5 text-[#111111]" />
             </div>
             <div>
               <h2 className="text-sm font-extrabold text-white">Sale Completed Successfully</h2>
-              <p className="text-[11px] text-white/60 font-mono">Receipt #{receipt.receipt_number} generated</p>
+              <p className="text-[11px] text-white/60 font-mono">Receipt #{receipt.receipt_number}</p>
             </div>
           </div>
 
@@ -109,7 +113,7 @@ Thank you for trusting Karat Heavy Machinery Spare Parts!
 
             <button
               onClick={handlePrint}
-              className="px-4 py-1.5 rounded-full bg-[#F6AF31] hover:bg-[#e5a028] text-[#111111] text-xs font-extrabold flex items-center gap-1.5 transition shadow-xs cursor-pointer"
+              className="px-4 py-1.5 rounded-full bg-[#F6AF31] hover:bg-[#e5a028] text-[#111111] text-xs font-black flex items-center gap-1.5 transition shadow-xs cursor-pointer"
             >
               <Printer className="w-3.5 h-3.5" />
               <span>Print Receipt</span>
@@ -117,7 +121,7 @@ Thank you for trusting Karat Heavy Machinery Spare Parts!
 
             <button
               onClick={onClose}
-              className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white/70 hover:text-white flex items-center justify-center transition ml-1"
+              className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white/70 hover:text-white flex items-center justify-center transition ml-1 cursor-pointer"
               title="Close receipt preview"
             >
               <X className="w-4 h-4" />
@@ -126,242 +130,181 @@ Thank you for trusting Karat Heavy Machinery Spare Parts!
         </div>
 
         {/* Printable Receipt Paper Container */}
-        <div className="overflow-y-auto p-6 sm:p-8 bg-[#FAFAF8] flex-1 print:p-0 print:bg-white print:overflow-visible" ref={receiptRef}>
-          <div className="bg-white border border-slate-200/90 rounded-2xl p-6 sm:p-8 shadow-xs print:border-none print:shadow-none print:p-4 text-[#111111]">
-            {/* Receipt Header */}
-            <div className="border-b-2 border-[#111111] pb-5">
-              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xl sm:text-2xl font-black tracking-tight text-[#111111]">
-                      KARAT
-                    </span>
-                    <span className="px-2 py-0.5 rounded-md bg-[#F6AF31] text-[#111111] text-[10px] font-black tracking-wider uppercase">
-                      Heavy Machinery
-                    </span>
-                  </div>
-                  <p className="text-xs font-bold text-[#111111]/70 mt-1 uppercase tracking-wider">
-                    Heavy Machinery Spare Parts & Fleet Logistics
-                  </p>
-                  <p className="text-[11px] text-[#111111]/60 mt-1">
-                    Plot 44, Jinja Road Industrial Area • Kampala, Uganda
-                  </p>
-                  <p className="text-[11px] text-[#111111]/60">
-                    Tel: +256 757 800 000 / +1 (800) 555-4272 • Email: sales@karat.com
-                  </p>
-                  <p className="text-[10px] font-mono text-[#111111]/50 mt-0.5">
-                    TIN: 1009842891 • VAT Reg: UG-VAT-2024-K
-                  </p>
-                </div>
-
-                {/* Receipt Badge & Number */}
-                <div className="sm:text-right flex sm:flex-col items-start sm:items-end justify-between border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-100">
-                  <span className="inline-block px-3 py-1 rounded-full bg-[#111111] text-white text-[11px] font-extrabold uppercase tracking-wider">
-                    Official Receipt
-                  </span>
-                  <div className="mt-2 text-left sm:text-right">
-                    <span className="text-[10px] uppercase font-bold text-[#111111]/50 block">Receipt No</span>
-                    <span className="text-base font-black font-mono text-[#111111]">{receipt.receipt_number}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Date, Time, Cashier Bar */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 pt-4 border-t border-slate-100 text-xs">
-                <div>
-                  <span className="text-[10px] uppercase font-bold text-[#111111]/40 block">Date</span>
-                  <span className="font-semibold text-[#111111] flex items-center gap-1">
-                    <Calendar className="w-3 h-3 text-[#111111]/40" />
-                    {receipt.date}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-[10px] uppercase font-bold text-[#111111]/40 block">Time</span>
-                  <span className="font-semibold text-[#111111] flex items-center gap-1">
-                    <Clock className="w-3 h-3 text-[#111111]/40" />
-                    {receipt.time}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-[10px] uppercase font-bold text-[#111111]/40 block">Cashier / Agent</span>
-                  <span className="font-semibold text-[#111111] flex items-center gap-1">
-                    <User className="w-3 h-3 text-[#111111]/40" />
-                    {receipt.cashier_name}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-[10px] uppercase font-bold text-[#111111]/40 block">Status</span>
-                  <span className="inline-flex items-center gap-1 font-bold text-[#22A06B]">
-                    <ShieldCheck className="w-3.5 h-3.5" />
-                    {receipt.payment_status.toUpperCase()}
-                  </span>
-                </div>
-              </div>
+        <div className="overflow-y-auto p-4 sm:p-6 bg-[#EEEEEA] flex-1 print:p-0 print:bg-white print:overflow-visible" ref={receiptRef}>
+          
+          {/* Continuous Stationery Sheet Wrapper with Perforated Tractor Margins */}
+          <div className="relative max-w-3xl mx-auto bg-[#FFFDF9] border border-stone-300 shadow-md print:shadow-none print:border-none text-black font-sans">
+            
+            {/* Left Tractor Feed Margin with Sprocket Holes */}
+            <div className="absolute left-0 top-0 bottom-0 w-5 flex flex-col justify-around items-center border-r border-dashed border-stone-300 print:hidden pointer-events-none select-none">
+              {Array.from({ length: 16 }).map((_, i) => (
+                <div key={`left-hole-${i}`} className="w-2.5 h-2.5 rounded-full bg-[#EEEEEA] border border-stone-300" />
+              ))}
             </div>
 
-            {/* Billed To / Customer Section */}
-            <div className="py-4 border-b border-slate-100 bg-[#F7F6F3]/50 -mx-6 sm:-mx-8 px-6 sm:px-8">
-              <span className="text-[10px] uppercase font-extrabold text-[#111111]/50 tracking-wider block mb-1.5">
-                Customer & Machinery Information
-              </span>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                <div>
-                  <span className="text-[10px] text-[#111111]/50 block">Customer / Company</span>
-                  <span className="font-bold text-[#111111]">{receipt.customer_name}</span>
-                  {receipt.customer_company && (
-                    <span className="text-[11px] text-[#111111]/70 block">{receipt.customer_company}</span>
-                  )}
-                </div>
-
-                <div>
-                  <span className="text-[10px] text-[#111111]/50 block">Phone / Contact</span>
-                  <span className="font-medium text-[#111111]">{receipt.customer_phone || 'Walk-in Customer'}</span>
-                </div>
-
-                <div>
-                  <span className="text-[10px] text-[#111111]/50 block">Equipment Model</span>
-                  <span className="font-semibold text-[#111111]">{receipt.equipment_model || 'Standard Machinery'}</span>
-                </div>
-              </div>
+            {/* Right Tractor Feed Margin with Sprocket Holes */}
+            <div className="absolute right-0 top-0 bottom-0 w-5 flex flex-col justify-around items-center border-l border-dashed border-stone-300 print:hidden pointer-events-none select-none">
+              {Array.from({ length: 16 }).map((_, i) => (
+                <div key={`right-hole-${i}`} className="w-2.5 h-2.5 rounded-full bg-[#EEEEEA] border border-stone-300" />
+              ))}
             </div>
 
-            {/* Itemized Parts Table */}
-            <div className="py-4">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-slate-200 text-[10px] uppercase tracking-wider font-extrabold text-[#111111]/60">
-                    <th className="py-2 w-8">#</th>
-                    <th className="py-2">Item / Part Description</th>
-                    <th className="py-2">Brand</th>
-                    <th className="py-2 text-center">Qty</th>
-                    <th className="py-2 text-right">Unit Price</th>
-                    <th className="py-2 text-right">Amount</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-xs">
-                  {receipt.items.map((item, index) => (
-                    <tr key={index} className="hover:bg-slate-50/50">
-                      <td className="py-2.5 font-mono text-[10px] text-[#111111]/40">{index + 1}</td>
-                      <td className="py-2.5 pr-2">
-                        <div className="font-bold text-[#111111]">{item.name}</div>
-                        <div className="text-[10px] text-[#111111]/60 flex items-center gap-2 mt-0.5">
-                          <span className="font-bold text-[#111111]">{item.part_number}</span>
-                          {item.model && <span>• Model: {item.model}</span>}
-                        </div>
-                      </td>
-                      <td className="py-2.5 text-[11px] font-medium text-[#111111]/80">
-                        {item.brand}
-                      </td>
-                      <td className="py-2.5 text-center font-bold text-[#111111] font-mono">
-                        {item.quantity}
-                      </td>
-                      <td className="py-2.5 text-right font-mono text-[#111111]/80">
-                        {formatMoney(item.unit_price)}
-                      </td>
-                      <td className="py-2.5 text-right font-bold font-mono text-[#111111]">
-                        {formatMoney(item.total_price)}
-                      </td>
+            {/* Main Receipt Content Area */}
+            <div className="px-7 sm:px-10 py-7 text-[12px] leading-tight text-neutral-900">
+              
+              {/* Header Title */}
+              <div className="text-center pb-2">
+                <h1 className="text-base sm:text-lg font-black tracking-wide text-neutral-900 uppercase">
+                  {storeName}
+                </h1>
+                <p className="text-[11px] text-neutral-600 font-semibold tracking-normal mt-0.5">
+                  {storeAddress} {storePhone ? `• Tel: ${storePhone}` : ''}
+                </p>
+              </div>
+
+              {/* Subheader Metadata: Receipt Number, Date, Client Info, Issued By */}
+              <div className="pt-2 pb-2 text-[11px] border-y border-black grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div>
+                  <span className="text-[10px] text-neutral-600 block uppercase font-bold">Receipt Number:</span>
+                  <span className="font-mono font-black text-xs text-neutral-900">{receipt.receipt_number}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-neutral-600 block uppercase font-bold">Date:</span>
+                  <span className="font-mono font-semibold text-neutral-900">{receipt.date}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-neutral-600 block uppercase font-bold">Client Name:</span>
+                  <span className="font-bold text-neutral-900 truncate block">{receipt.customer_name || 'Walk-in Client'}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-neutral-600 block uppercase font-bold">Client Phone:</span>
+                  <span className="font-mono font-semibold text-neutral-900">{receipt.customer_phone || '-'}</span>
+                </div>
+              </div>
+
+              <div className="py-1 text-[11px] flex items-center justify-between border-b border-black">
+                <div className="flex items-center gap-1.5">
+                  <span className="font-bold text-neutral-700">Issued By:</span>
+                  <span className="font-semibold text-neutral-900">{receipt.cashier_name || 'Arafat'}</span>
+                </div>
+                {receipt.customer_company && (
+                  <div className="flex items-center gap-1.5 text-neutral-700">
+                    <span className="font-bold">Company:</span>
+                    <span>{receipt.customer_company}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Itemized Parts Table Matching Requested Fields */}
+              <div className="mt-3 overflow-x-auto">
+                <table className="w-full border-collapse border border-black text-[11px]">
+                  <thead>
+                    <tr className="bg-neutral-100/70 border-b border-black text-center font-bold text-[10.5px]">
+                      <th className="border-r border-black py-1.5 px-1.5 w-10">No.</th>
+                      <th className="border-r border-black py-1.5 px-2">Part No.</th>
+                      <th className="border-r border-black py-1.5 px-2 text-left">Item</th>
+                      <th className="border-r border-black py-1.5 px-2">Model</th>
+                      <th className="border-r border-black py-1.5 px-1.5 w-14">Quantity</th>
+                      <th className="border-r border-black py-1.5 px-1.5 w-12">Unit</th>
+                      <th className="border-r border-black py-1.5 px-2 text-right">Unit Price</th>
+                      <th className="border-r border-black py-1.5 px-2 text-right">Total Price</th>
+                      <th className="py-1.5 px-2 text-center w-20">Remark</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {receipt.items.map((item, index) => (
+                      <tr key={index} className="border-b border-black/80 hover:bg-neutral-50/50">
+                        <td className="border-r border-black py-1.5 px-1.5 text-center font-mono font-medium">
+                          {index + 1}
+                        </td>
+                        <td className="border-r border-black py-1.5 px-2 font-mono font-bold text-center">
+                          {item.part_number}
+                        </td>
+                        <td className="border-r border-black py-1.5 px-2 font-medium">
+                          {item.name}
+                        </td>
+                        <td className="border-r border-black py-1.5 px-2 text-center font-mono font-semibold">
+                          {cleanModelName(item.model || '-', item.brand)}
+                        </td>
+                        <td className="border-r border-black py-1.5 px-1.5 text-center font-mono font-bold">
+                          {item.quantity}
+                        </td>
+                        <td className="border-r border-black py-1.5 px-1.5 text-center uppercase font-mono">
+                          PCS
+                        </td>
+                        <td className="border-r border-black py-1.5 px-2 text-right font-mono font-medium">
+                          {formatMoney(item.unit_price)}
+                        </td>
+                        <td className="border-r border-black py-1.5 px-2 text-right font-mono font-bold">
+                          {formatMoney(item.total_price)}
+                        </td>
+                        <td className="py-1.5 px-2 text-center text-[10px] text-neutral-400 font-mono">
+                          
+                        </td>
+                      </tr>
+                    ))}
 
-            {/* Financial Calculations & Totals */}
-            <div className="border-t-2 border-slate-200 pt-4 flex flex-col sm:flex-row justify-between gap-6">
-              {/* Payment Method & Authorization Stamp */}
-              <div className="space-y-3 flex-1">
-                <div className="p-3 rounded-xl bg-[#F7F6F3] border border-slate-200/80 text-xs space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] uppercase font-bold text-[#111111]/50">Payment Method:</span>
-                    <span className="font-bold text-[#111111]">{receipt.payment_method}</span>
+                    {/* Total Price Row */}
+                    <tr className="font-extrabold bg-neutral-100/60 border-t border-black">
+                      <td colSpan={4} className="border-r border-black py-2 px-3 text-right uppercase tracking-wider font-bold">
+                        Total Price:
+                      </td>
+                      <td className="border-r border-black py-2 px-1.5 text-center font-mono font-black">
+                        {totalQuantity}
+                      </td>
+                      <td className="border-r border-black py-2 px-1.5 text-center"></td>
+                      <td className="border-r border-black py-2 px-2"></td>
+                      <td className="border-r border-black py-2 px-2 text-right font-mono font-black text-sm">
+                        {formatMoney(receipt.grand_total)}
+                      </td>
+                      <td></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Bottom Signatures & Remarks */}
+              <div className="mt-5 pt-2 text-[11px] grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold">Issued By:</span>
+                    <span className="font-mono font-semibold text-neutral-800">{receipt.cashier_name || 'Arafat'}</span>
                   </div>
-                  {receipt.payment_reference && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] uppercase font-bold text-[#111111]/50">Transaction Ref:</span>
-                      <span className="font-mono text-[11px] font-bold text-[#111111]">{receipt.payment_reference}</span>
+                  {receipt.notes && (
+                    <div className="flex items-start gap-2">
+                      <span className="font-bold">Remark:</span>
+                      <span className="font-mono font-medium text-neutral-800">{receipt.notes}</span>
                     </div>
                   )}
-                  {receipt.amount_tendered !== undefined && receipt.amount_tendered > 0 && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] uppercase font-bold text-[#111111]/50">Cash Tendered:</span>
-                      <span className="font-mono font-medium text-[#111111]">{formatMoney(receipt.amount_tendered)}</span>
-                    </div>
-                  )}
-                  {receipt.change_due !== undefined && receipt.change_due > 0 && (
-                    <div className="flex items-center justify-between text-[#22A06B] font-bold">
-                      <span className="text-[10px] uppercase">Change Returned:</span>
-                      <span className="font-mono">{formatMoney(receipt.change_due)}</span>
-                    </div>
-                  )}
                 </div>
 
-                {receipt.notes && (
-                  <div className="text-[11px] text-[#111111]/70 bg-amber-50/70 border border-amber-200/80 p-2.5 rounded-xl">
-                    <span className="font-bold text-amber-900 block text-[10px] uppercase">Transaction Notes:</span>
-                    {receipt.notes}
+                {/* Right side: Client Signature Line with empty field */}
+                <div className="sm:text-right space-y-2">
+                  <div className="inline-block text-left sm:text-right">
+                    <span className="font-bold block text-neutral-800">Client Signature:</span>
+                    <div className="mt-7 inline-block">
+                      <div className="w-52 border-b border-black"></div>
+                    </div>
                   </div>
-                )}
+                </div>
               </div>
 
-              {/* Numerical Breakdown */}
-              <div className="w-full sm:w-64 space-y-2 text-xs">
-                <div className="flex justify-between text-[#111111]/70">
-                  <span>Subtotal:</span>
-                  <span className="font-mono font-semibold text-[#111111]">{formatMoney(receipt.subtotal)}</span>
-                </div>
-
-                {receipt.discount_amount > 0 && (
-                  <div className="flex justify-between text-[#22A06B]">
-                    <span>Discount Applied:</span>
-                    <span className="font-mono font-semibold">-{formatMoney(receipt.discount_amount)}</span>
-                  </div>
-                )}
-
-                {receipt.tax_amount > 0 && (
-                  <div className="flex justify-between text-[#111111]/70">
-                    <span>Tax / VAT ({receipt.tax_rate}%):</span>
-                    <span className="font-mono font-semibold text-[#111111]">{formatMoney(receipt.tax_amount)}</span>
-                  </div>
-                )}
-
-                <div className="border-t border-slate-200 pt-2 flex justify-between items-baseline">
-                  <span className="text-sm font-extrabold text-[#111111] uppercase tracking-tight">Total Amount:</span>
-                  <span className="text-lg font-black font-mono text-[#111111]">{formatMoney(receipt.grand_total)}</span>
-                </div>
-
-                <div className="p-2 rounded-lg bg-[#22A06B]/15 text-[#22A06B] text-center font-extrabold text-xs tracking-wider uppercase border border-[#22A06B]/30">
-                  ✓ PAID IN FULL
-                </div>
+              {/* Attention Notice at Bottom */}
+              <div className="mt-6 pt-3 border-t border-black text-[10.5px] leading-snug text-neutral-800">
+                <p>
+                  <strong className="text-black">Attention: </strong>
+                  {receiptFooter}
+                </p>
               </div>
+
             </div>
 
-            {/* Official Terms & Footer */}
-            <div className="mt-8 pt-4 border-t border-dashed border-slate-300 text-[10px] text-[#111111]/60 space-y-2">
-              <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                <div>
-                  <p className="font-bold text-[#111111]/80">WARRANTY & RETURN POLICY:</p>
-                  <p>1. 30-day warranty against manufacturer defects on genuine OEM parts with this original receipt.</p>
-                  <p>2. Electrical components and hydraulic seal kits are non-refundable once opened or installed.</p>
-                  <p>3. Goods inspected and received in good working condition.</p>
-                </div>
-                
-                {/* Visual Stamp Line */}
-                <div className="w-40 text-center border-t border-slate-400 pt-1 mt-3 sm:mt-0">
-                  <span className="text-[9px] uppercase font-bold text-[#111111]/60 block">Authorized Signature</span>
-                  <span className="font-serif italic text-xs text-[#111111]">{receipt.cashier_name}</span>
-                </div>
-              </div>
-
-              <div className="text-center pt-3 text-[#111111]/40 border-t border-slate-100">
-                *** THANK YOU FOR YOUR BUSINESS • KEEP YOUR FLEET RUNNING STRONG ***
-              </div>
-            </div>
           </div>
+
         </div>
 
         {/* Bottom Actions Footer (Hidden in Print) */}
-        <div className="print:hidden bg-white border-t border-slate-200/90 px-6 py-3.5 flex items-center justify-between shrink-0">
+        <div className="print:hidden bg-white border-t border-slate-200/90 px-6 py-3 flex items-center justify-between shrink-0">
           <button
             onClick={onClose}
             className="px-4 py-2 rounded-full border border-slate-200 text-xs font-bold text-[#111111] hover:bg-slate-50 transition cursor-pointer"
@@ -388,11 +331,14 @@ Thank you for trusting Karat Heavy Machinery Spare Parts!
               className="px-5 py-2 rounded-full bg-[#F6AF31] hover:bg-[#e5a028] text-[#111111] text-xs font-black flex items-center gap-1.5 transition shadow-xs cursor-pointer"
             >
               <Printer className="w-4 h-4" />
-              <span>Print Official Receipt</span>
+              <span>Print Receipt</span>
             </button>
           </div>
         </div>
+
       </div>
     </div>
   );
 };
+
+export default ReceiptModal;

@@ -12,7 +12,6 @@ import {
   ShieldAlert, 
   Package, 
   DollarSign, 
-  Warehouse, 
   Cpu, 
   HelpCircle,
   AlertTriangle,

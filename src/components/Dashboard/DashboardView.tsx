@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { Plus, Minus } from 'lucide-react';
 import { useInertia } from '../../context/InertiaContext';
 import { SaleReceipt, SaleReceiptItem } from '../../types';
 import { ReceiptModal } from '../Sales/ReceiptModal';
@@ -213,16 +214,16 @@ export const DashboardView: React.FC = () => {
               </div>
             </div>
 
-            {/* Brand Filter Pills */}
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 no-scrollbar">
+            {/* Category / Brand Filter Tabs */}
+            <div className="flex items-center gap-3 overflow-x-auto pb-1 sm:pb-0 no-scrollbar">
               {(['All', 'Caterpillar', 'Komatsu', 'Volvo', 'Hitachi'] as const).map(brand => (
                 <button
                   key={brand}
                   onClick={() => setSelectedBrand(brand)}
-                  className={`px-3 py-1 rounded-full text-xs font-bold transition whitespace-nowrap cursor-pointer ${
+                  className={`text-xs transition whitespace-nowrap cursor-pointer py-1 ${
                     selectedBrand === brand
-                      ? 'bg-[#111111] text-white shadow-2xs'
-                      : 'bg-[#F7F6F3] text-[#111111]/70 hover:bg-slate-200/60'
+                      ? 'text-[#111111] font-bold'
+                      : 'text-[#111111]/50 hover:text-[#111111] font-medium'
                   }`}
                 >
                   {brand}
@@ -241,7 +242,7 @@ export const DashboardView: React.FC = () => {
                 </div>
                 <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-[#F6AF31] rounded-full transition-all duration-500"
+                    className="h-full bg-slate-400 rounded-full transition-all duration-500"
                     style={{ width: `${b.percentage}%` }}
                   />
                 </div>
@@ -278,16 +279,8 @@ export const DashboardView: React.FC = () => {
                         <span className="font-mono font-bold text-xs text-[#111111] bg-[#F7F6F3] px-2 py-0.5 rounded border border-slate-200">
                           {part.part_number}
                         </span>
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                          part.brand === 'Caterpillar' ? 'bg-[#F6AF31]/20 text-[#111111]' :
-                          part.brand === 'Komatsu' ? 'bg-blue-50 text-blue-800' :
-                          part.brand === 'Volvo' ? 'bg-slate-200 text-[#111111]' :
-                          'bg-orange-50 text-orange-800'
-                        }`}>
+                        <span className="text-[11px] font-semibold text-[#111111]/60">
                           {part.brand}
-                        </span>
-                        <span className="text-[10px] text-[#111111]/40 truncate">
-                          {part.warehouse_bin}
                         </span>
                       </div>
 
@@ -315,17 +308,17 @@ export const DashboardView: React.FC = () => {
                         <button
                           onClick={() => handleStockQuickAdjust(part.id, part.stock_quantity, -1)}
                           disabled={part.stock_quantity <= 0}
-                          className="w-6 h-6 rounded-lg bg-white hover:bg-slate-200 text-[#111111] flex items-center justify-center disabled:opacity-30 transition shadow-2xs cursor-pointer"
+                          className="w-6 h-6 rounded-lg bg-white hover:bg-slate-200 text-[#111111] flex items-center justify-center disabled:opacity-30 transition shadow-2xs cursor-pointer border border-slate-200/80"
                           title="Decrease Stock (Sale / Dispense)"
                         >
-                          <UIcon name="minus-circle" className="text-xs" />
+                          <Minus className="w-3 h-3 stroke-[2.5]" />
                         </button>
                         <button
                           onClick={() => handleStockQuickAdjust(part.id, part.stock_quantity, 1)}
-                          className="w-6 h-6 rounded-lg bg-[#111111] hover:bg-black text-white flex items-center justify-center transition shadow-2xs cursor-pointer"
+                          className="w-6 h-6 rounded-lg bg-[#F6AF31] hover:bg-[#e29d20] active:scale-95 text-[#111111] flex items-center justify-center transition shadow-2xs cursor-pointer font-bold border border-amber-400/60"
                           title="Increase Stock (Restock received)"
                         >
-                          <UIcon name="plus-circle" className="text-xs text-[#F6AF31]" />
+                          <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
                         </button>
                       </div>
                     </div>

@@ -283,7 +283,7 @@ export const NewOrderModal: React.FC<NewOrderModalProps> = ({ isOpen, onClose })
                   className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-[#22A06B] font-medium"
                 >
                   <option value="Field Van Delivery">Field Van Delivery (Direct to Mine/Site)</option>
-                  <option value="Warehouse Pickup (Yard 4 - Industrial Area)">Warehouse Pickup (Yard 4 - Industrial Area)</option>
+                  <option value="Store Pickup (Yard 4 - Industrial Area)">Store Pickup (Yard 4 - Industrial Area)</option>
                   <option value="Expedited Air Freight">Expedited Air Freight</option>
                 </select>
               </div>
@@ -332,7 +332,7 @@ export const NewOrderModal: React.FC<NewOrderModalProps> = ({ isOpen, onClose })
 
             <div>
               <label className="block text-[11px] font-bold text-[#111111]/70 mb-1">
-                Warehouse Fulfillment Stage
+                Store Fulfillment Stage
               </label>
               <select
                 value={fulfillmentStatus}

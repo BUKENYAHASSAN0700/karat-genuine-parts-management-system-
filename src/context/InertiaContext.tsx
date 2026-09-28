@@ -9,6 +9,7 @@ import {
   ClientAccount,
   CurrencyCode,
   SaleReceipt,
+  ReceiptDraft,
   OEMSupplier,
   OEMPurchaseOrder,
   OEMPurchaseOrderItem,
@@ -22,6 +23,7 @@ import {
   INITIAL_TRANSACTIONS, 
   INITIAL_CLIENTS,
   INITIAL_RECEIPTS,
+  INITIAL_RECEIPT_DRAFTS,
   INITIAL_OEM_SUPPLIERS,
   INITIAL_OEM_ORDERS,
   INITIAL_INQUIRIES,
@@ -29,6 +31,7 @@ import {
   INITIAL_NOTIFICATIONS
 } from '../data/initialData';
 import { getSeriesForCategory } from '../data/partTaxonomy';
+import { cleanModelName } from '../utils/modelUtils';
 
 const UGX_EXCHANGE_RATE = 3750; // 1 USD = 3,750 UGX
 
@@ -46,6 +49,34 @@ export const generateNextKaratId = (existingParts: SparePart[]): string => {
   });
   const nextNum = maxNum + 1;
   return `KA${nextNum}`;
+};
+
+export const generateSixVarcharReceiptNumber = (existingReceipts: SaleReceipt[] = []): string => {
+  const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  let code = '';
+  let attempts = 0;
+  do {
+    code = '';
+    for (let i = 0; i < 6; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    attempts++;
+  } while (attempts < 200 && existingReceipts.some(r => r.receipt_number === code));
+  return code;
+};
+
+export const generateSixVarcharDraftCode = (existingDrafts: ReceiptDraft[] = []): string => {
+  const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  let code = '';
+  let attempts = 0;
+  do {
+    code = 'D';
+    for (let i = 0; i < 5; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    attempts++;
+  } while (attempts < 200 && existingDrafts.some(d => d.draft_code === code || d.id === code));
+  return code;
 };
 
 interface InertiaContextType {
@@ -74,6 +105,13 @@ interface InertiaContextType {
   activeReceipt: SaleReceipt | null;
   setActiveReceipt: (receipt: SaleReceipt | null) => void;
   deleteReceipt: (receiptId: string) => void;
+  receiptDrafts: ReceiptDraft[];
+  activeDraftId: string | null;
+  setActiveDraftId: (id: string | null) => void;
+  saveReceiptDraft: (draftData: Omit<ReceiptDraft, 'id' | 'draft_code' | 'created_at' | 'updated_at' | 'timestamp'>, existingDraftId?: string) => ReceiptDraft;
+  updateReceiptDraft: (id: string, updates: Partial<ReceiptDraft>) => void;
+  deleteReceiptDraft: (id: string) => void;
+  clearAllReceiptDrafts: () => void;
   selectedPartForSale: SparePart | null;
   startSaleWithPart: (part: SparePart) => void;
   clearSelectedPartForSale: () => void;
@@ -122,6 +160,17 @@ interface InertiaContextType {
 }
 
 const InertiaContext = createContext<InertiaContextType | null>(null);
+
+const cleanLocation = (val?: string) => {
+  if (!val) return 'Section 1 - Shelf 1';
+  return val
+    .replace(/\bAisle\b/gi, 'Section')
+    .replace(/\bCabinet\b/gi, 'Storage')
+    .replace(/\bTray\b/gi, 'Box')
+    .replace(/\bWarehouse Bin:?\s*/gi, '')
+    .replace(/\bSafety Threshold:?\s*/gi, '')
+    .trim();
+};
 
 export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Authentication state - check localStorage or default to false to show Login First as requested
@@ -253,23 +302,30 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const saved = localStorage.getItem('karat_parts_v3');
       if (saved) {
         const parsed = JSON.parse(saved);
-        const existingIds = new Set(parsed.map((p: any) => p.id));
-        const missing = INITIAL_SPARE_PARTS.filter(p => !existingIds.has(p.id));
-        const combined = [...parsed, ...missing];
-        return combined.map((p: any) => ({
+        const filteredParsed = parsed.filter((p: any) => p.id !== 'KA106' && p.warehouse_bin !== 'Aisle 4 - Bay A - Heavy Rack');
+        const existingIds = new Set(filteredParsed.map((p: any) => p.id));
+        const missing = INITIAL_SPARE_PARTS.filter(p => !existingIds.has(p.id) && p.id !== 'KA106' && p.warehouse_bin !== 'Aisle 4 - Bay A - Heavy Rack');
+        const combined = [...filteredParsed, ...missing];
+        const cleaned = combined.map((p: any) => ({
           ...p,
+          warehouse_bin: cleanLocation(p.warehouse_bin),
           unit: p.unit || (p.name?.toLowerCase().includes('kit') ? 'KIT' : p.name?.toLowerCase().includes('set') ? 'SET' : p.name?.toLowerCase().includes('assembly') || p.name?.toLowerCase().includes('pump') || p.name?.toLowerCase().includes('motor') ? 'ASSY' : 'PCS'),
           taxes: p.taxes || '18% VAT',
           tax_rate: p.tax_rate ?? 18,
           unit_cost: p.unit_cost !== undefined ? p.unit_cost : Math.round((p.unit_price || 0) * 0.65),
           registered_date: p.registered_date || '2026-03-01',
-          model: p.model || (p.machinery_models && p.machinery_models.length > 0 ? p.machinery_models.join(', ') : 'Universal Fleet'),
+          machinery_models: (p.machinery_models || []).map((m: string) => cleanModelName(m, p.brand)),
+          model: cleanModelName(p.model || (p.machinery_models?.[0] || 'Standard'), p.brand),
           series: p.series || getSeriesForCategory(p.category)
         }));
+        try {
+          localStorage.setItem('karat_parts_v3', JSON.stringify(cleaned));
+        } catch {}
+        return cleaned;
       }
-      return INITIAL_SPARE_PARTS;
+      return INITIAL_SPARE_PARTS.filter(p => p.id !== 'KA106' && p.warehouse_bin !== 'Aisle 4 - Bay A - Heavy Rack');
     } catch {
-      return INITIAL_SPARE_PARTS;
+      return INITIAL_SPARE_PARTS.filter(p => p.id !== 'KA106' && p.warehouse_bin !== 'Aisle 4 - Bay A - Heavy Rack');
     }
   });
 
@@ -281,6 +337,23 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
       return INITIAL_RECEIPTS;
     }
   });
+
+  const [receiptDrafts, setReceiptDrafts] = useState<ReceiptDraft[]>(() => {
+    try {
+      const saved = localStorage.getItem('karat_receipt_drafts');
+      return saved ? JSON.parse(saved) : INITIAL_RECEIPT_DRAFTS;
+    } catch {
+      return INITIAL_RECEIPT_DRAFTS;
+    }
+  });
+
+  const [activeDraftId, setActiveDraftId] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('karat_receipt_drafts', JSON.stringify(receiptDrafts));
+    } catch {}
+  }, [receiptDrafts]);
 
   const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(() => {
     try {
@@ -503,7 +576,8 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
       unit_cost: Number(newPartData.unit_cost) || 0,
       unit_price: Number(newPartData.unit_price) || 0,
       registered_date: new Date().toISOString().slice(0, 10),
-      model: newPartData.model || (newPartData.machinery_models?.join(', ') || ''),
+      machinery_models: (newPartData.machinery_models || []).map(m => cleanModelName(m, newPartData.brand)),
+      model: cleanModelName(newPartData.model || (newPartData.machinery_models?.[0] || 'Standard'), newPartData.brand),
     };
     setParts(prev => [newPart, ...prev]);
     setFlashMessage('success', `Product [${newPart.id}] ${newPart.name} added.`);
@@ -568,6 +642,8 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const enrichedPart = {
       ...updatedPart,
       series: updatedPart.series || getSeriesForCategory(updatedPart.category),
+      machinery_models: (updatedPart.machinery_models || []).map(m => cleanModelName(m, updatedPart.brand)),
+      model: cleanModelName(updatedPart.model || (updatedPart.machinery_models?.[0] || 'Standard'), updatedPart.brand),
     };
     setParts(prev => prev.map(p => {
       if (p.id === enrichedPart.id) {
@@ -778,7 +854,7 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
       customer_email: inq?.customer_email,
       equipment_model: inq?.equipment_model || 'Universal Fleet',
       delivery_site: inq?.delivery_site || 'Kampala Depot (Yard 4 - Industrial Area)',
-      delivery_method: 'Warehouse Pickup (Yard 4 - Industrial Area)',
+      delivery_method: 'Store Pickup (Yard 4 - Industrial Area)',
       items: inq?.items || [],
       subtotal: inq?.quoted_amount || 0,
       total_amount: inq?.quoted_amount || 0,
@@ -824,13 +900,80 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setSelectedPartForSale(null);
   };
 
+  const saveReceiptDraft = (
+    draftData: Omit<ReceiptDraft, 'id' | 'draft_code' | 'created_at' | 'updated_at' | 'timestamp'>,
+    existingDraftId?: string
+  ): ReceiptDraft => {
+    const now = new Date();
+    const dateStr = now.toISOString().slice(0, 10);
+
+    if (existingDraftId) {
+      const found = receiptDrafts.find(d => d.id === existingDraftId || d.draft_code === existingDraftId);
+      if (found) {
+        const updatedDraft: ReceiptDraft = {
+          ...found,
+          ...draftData,
+          updated_at: dateStr,
+          timestamp: now.getTime(),
+        };
+        setReceiptDrafts(prev => prev.map(d => (d.id === found.id || d.draft_code === found.draft_code) ? updatedDraft : d));
+        setFlashMessage('success', `Draft #${found.draft_code} updated successfully.`);
+        return updatedDraft;
+      }
+    }
+
+    const draftCode = generateSixVarcharDraftCode(receiptDrafts);
+    const newDraft: ReceiptDraft = {
+      ...draftData,
+      id: draftCode,
+      draft_code: draftCode,
+      created_at: dateStr,
+      updated_at: dateStr,
+      timestamp: now.getTime(),
+    };
+
+    setReceiptDrafts(prev => [newDraft, ...prev]);
+    setActiveDraftId(newDraft.id);
+    setFlashMessage('success', `Receipt saved as draft #${draftCode}.`);
+    return newDraft;
+  };
+
+  const updateReceiptDraft = (id: string, updates: Partial<ReceiptDraft>) => {
+    setReceiptDrafts(prev => prev.map(d => {
+      if (d.id === id || d.draft_code === id) {
+        return {
+          ...d,
+          ...updates,
+          updated_at: new Date().toISOString().slice(0, 10),
+        };
+      }
+      return d;
+    }));
+    setFlashMessage('success', `Draft updated.`);
+  };
+
+  const deleteReceiptDraft = (id: string) => {
+    setReceiptDrafts(prev => prev.filter(d => d.id !== id && d.draft_code !== id));
+    if (activeDraftId === id) {
+      setActiveDraftId(null);
+    }
+    setFlashMessage('success', `Draft removed.`);
+  };
+
+  const clearAllReceiptDrafts = () => {
+    setReceiptDrafts([]);
+    setActiveDraftId(null);
+    setFlashMessage('success', 'All receipt drafts cleared.');
+  };
+
   const completeSale = (saleData: Omit<SaleReceipt, 'id' | 'receipt_number' | 'timestamp' | 'date' | 'time'>): SaleReceipt => {
     const now = new Date();
-    const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const receiptNumber = generateSixVarcharReceiptNumber(receipts);
+    const dateStr = `${year}-${month}-${day}`;
     const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-    
-    const nextReceiptNum = 816 + receipts.length;
-    const receiptNumber = `RCT-2026-0${nextReceiptNum}`;
 
     const newReceipt: SaleReceipt = {
       ...saleData,
@@ -876,7 +1019,7 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const newTx: RecentTransaction = {
       id: `TX-${900 + transactions.length + 1}`,
       name: saleData.customer_name || 'Walk-in Customer',
-      subtitle: `${itemsSummary} • ${receiptNumber}`,
+      subtitle: `${itemsSummary} • #${receiptNumber}`,
       type: 'sale',
       date: dateStr,
       time: timeStr,
@@ -889,6 +1032,12 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     // 4. Set active receipt for viewing/printing
     setActiveReceipt(newReceipt);
+
+    // 5. If this sale was completed from an active draft, clean up that draft
+    if (activeDraftId) {
+      setReceiptDrafts(prev => prev.filter(d => d.id !== activeDraftId && d.draft_code !== activeDraftId));
+      setActiveDraftId(null);
+    }
 
     setFlashMessage(
       'success',
@@ -975,6 +1124,13 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
         activeReceipt,
         setActiveReceipt,
         deleteReceipt,
+        receiptDrafts,
+        activeDraftId,
+        setActiveDraftId,
+        saveReceiptDraft,
+        updateReceiptDraft,
+        deleteReceiptDraft,
+        clearAllReceiptDrafts,
         selectedPartForSale,
         startSaleWithPart,
         clearSelectedPartForSale,

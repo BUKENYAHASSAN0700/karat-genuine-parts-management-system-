@@ -89,7 +89,7 @@ export const GoodsReceivedNoteModal: React.FC<GoodsReceivedNoteModalProps> = ({
                   KARAT
                 </span>
                 <span className="px-2 py-0.5 bg-[#22A06B] text-white font-black text-[10px] rounded uppercase tracking-wider">
-                  Warehouse Depot
+                  Store Facility
                 </span>
               </div>
               <div className="text-xs font-bold text-slate-700 mt-1 uppercase tracking-wide">
@@ -98,7 +98,7 @@ export const GoodsReceivedNoteModal: React.FC<GoodsReceivedNoteModalProps> = ({
               <div className="text-[11px] text-slate-500 mt-1 leading-relaxed">
                 Plot 14 Industrial Area, Yard 4, Kampala, Uganda<br />
                 Central Heavy Parts Receiving Bay • Dock 3<br />
-                Internal System Code: KARAT-WMS-INGEST
+                Internal System Code: KARAT-STORE-INGEST
               </div>
             </div>
 
@@ -202,7 +202,7 @@ export const GoodsReceivedNoteModal: React.FC<GoodsReceivedNoteModalProps> = ({
             </table>
           </div>
 
-          {/* Quality Inspection & Warehouse Endorsement Notes */}
+          {/* Quality Inspection & Store Endorsement Notes */}
           <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200 text-xs space-y-2">
             <div className="font-extrabold text-[#111111] flex items-center gap-1.5">
               <ClipboardCheck className="w-4 h-4 text-[#22A06B]" />
@@ -218,7 +218,7 @@ export const GoodsReceivedNoteModal: React.FC<GoodsReceivedNoteModalProps> = ({
             <div>
               <div className="text-[10px] uppercase font-bold text-slate-400">Stores Receiving Officer:</div>
               <div className="font-bold text-[#111111] mt-1">{receiverName}</div>
-              <div className="text-[11px] text-slate-500">Warehouse Receiving & Shelving Inspector</div>
+              <div className="text-[11px] text-slate-500">Store Receiving & Shelving Inspector</div>
               <div className="mt-8 border-b border-dashed border-slate-400 w-48"></div>
               <div className="text-[10px] text-slate-400 mt-1">Date & Signature of Acceptance</div>
             </div>
