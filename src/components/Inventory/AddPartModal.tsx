@@ -18,13 +18,14 @@ const COMMON_UNITS = [
 ];
 
 export const AddPartModal: React.FC = () => {
-  const { addModalOpen, setAddModalOpen, addPart, parts, currency } = useInertia();
+  const { addModalOpen, setAddModalOpen, addPart, parts, currency, exchangeRate } = useInertia();
 
   const [assignedId, setAssignedId] = useState<string>('KA119');
   const [error, setError] = useState<string | null>(null);
   const [selectedSeries, setSelectedSeries] = useState<string>('Motor Series');
 
   const todayStr = new Date().toISOString().slice(0, 10);
+  const rate = (typeof exchangeRate === 'number' && exchangeRate > 0) ? exchangeRate : 3750;
 
   const [formData, setFormData] = useState({
     oem_number: '',
@@ -42,8 +43,8 @@ export const AddPartModal: React.FC = () => {
     transport_cost: 0,
     stock_quantity: 1,
     min_stock_alert: 2,
-    unit_cost: 1100,
-    unit_price: 1850,
+    unit_cost: currency === 'USD' ? 30 : 110000,
+    unit_price: currency === 'USD' ? 50 : 185000,
     registered_date: todayStr,
     warehouse_bin: '',
   });
@@ -114,6 +115,10 @@ export const AddPartModal: React.FC = () => {
 
     const partStatus: SparePart['status'] = stockQty <= minAlert ? 'Low Stock' : 'In Stock';
 
+    const finalUnitPrice = currency === 'USD' ? Math.round(unitPrice * rate) : unitPrice;
+    const finalUnitCost = currency === 'USD' ? Math.round(itemCost * rate) : itemCost;
+    const finalTransportCost = currency === 'USD' ? Math.round((Number(formData.transport_cost) || 0) * rate) : (Number(formData.transport_cost) || 0);
+
     addPart({
       part_number: assignedId,
       oem_number: formData.oem_number.trim() || 'OEM-STANDARD',
@@ -128,11 +133,11 @@ export const AddPartModal: React.FC = () => {
       taxes: formData.taxes || '18% VAT',
       tax_rate: formData.tax_rate,
       tax_amount: Number(formData.tax_amount) || 0,
-      transport_cost: Number(formData.transport_cost) || 0,
+      transport_cost: finalTransportCost,
       stock_quantity: stockQty,
       min_stock_alert: minAlert,
-      unit_cost: itemCost,
-      unit_price: unitPrice,
+      unit_cost: finalUnitCost,
+      unit_price: finalUnitPrice,
       registered_date: formData.registered_date || todayStr,
       warehouse_bin: formData.warehouse_bin.trim() || 'General Receiving Rack',
       status: partStatus,
@@ -479,7 +484,9 @@ export const AddPartModal: React.FC = () => {
               <div className="bg-white border border-slate-200 rounded-xl px-3 py-2 flex items-center justify-between">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-[#111111]/60">Total Stock Selling Value</span>
                 <strong className="text-sm font-black text-[#111111]">
-                  {currency} {(Number(formData.stock_quantity) * Number(formData.unit_price)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {currency === 'USD'
+                    ? `$${(Number(formData.stock_quantity) * Number(formData.unit_price)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                    : `UGX ${Math.round(Number(formData.stock_quantity) * Number(formData.unit_price)).toLocaleString()}`}
                 </strong>
               </div>
             </div>

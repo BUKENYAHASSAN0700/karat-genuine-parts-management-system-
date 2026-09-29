@@ -62,7 +62,7 @@ export const InventoryValuationReport: React.FC = () => {
       {/* Top Banner */}
       <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-black text-[#111111] tracking-tight">
+          <h2 className="text-lg sm:text-xl font-bold text-[#111111] tracking-tight">
             Inventory Asset Valuation & Stock Turnover
           </h2>
           <p className="text-xs text-slate-500 mt-1">
@@ -71,10 +71,10 @@ export const InventoryValuationReport: React.FC = () => {
         </div>
 
         <div className="bg-slate-50 px-5 py-3 rounded-2xl border border-slate-200">
-          <div className="text-xl font-black text-[#111111] font-mono">
+          <div className="text-lg sm:text-xl font-bold text-[#111111] font-mono">
             {totalItemsCount} <span className="text-xs font-normal text-slate-400">Units</span>
           </div>
-          <div className="text-xs font-semibold text-slate-500 mt-0.5">
+          <div className="text-xs font-medium text-slate-500 mt-0.5">
             Catalog SKU Units
           </div>
         </div>
@@ -84,30 +84,30 @@ export const InventoryValuationReport: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* Total Cost Value */}
         <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-xs">
-          <div className="text-2xl sm:text-3xl font-black text-[#111111] font-mono tracking-tight">
+          <div className="text-xl sm:text-2xl font-bold text-[#111111] font-mono tracking-tight leading-snug">
             {formatMoney(totalValueAtCost)}
           </div>
-          <div className="text-xs font-semibold text-slate-500 mt-1">
+          <div className="text-xs font-medium text-slate-500 mt-1">
             Total Inventory at Cost
           </div>
         </div>
 
         {/* Total Retail Realization */}
         <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-xs">
-          <div className="text-2xl sm:text-3xl font-black text-blue-600 font-mono tracking-tight">
+          <div className="text-xl sm:text-2xl font-bold text-blue-600 font-mono tracking-tight leading-snug">
             {formatMoney(totalValueAtRetail)}
           </div>
-          <div className="text-xs font-semibold text-slate-500 mt-1">
+          <div className="text-xs font-medium text-slate-500 mt-1">
             Projected Retail Realization
           </div>
         </div>
 
         {/* Potential Gross Profit */}
         <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-xs">
-          <div className="text-2xl sm:text-3xl font-black text-[#22A06B] font-mono tracking-tight">
+          <div className="text-xl sm:text-2xl font-bold text-[#22A06B] font-mono tracking-tight leading-snug">
             +{formatMoney(unrealizedProfit)}
           </div>
-          <div className="text-xs font-semibold text-slate-500 mt-1">
+          <div className="text-xs font-medium text-slate-500 mt-1">
             Unrealized Inventory Gain
           </div>
         </div>

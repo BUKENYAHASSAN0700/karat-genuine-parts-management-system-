@@ -997,7 +997,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                                 </div>
                                 <div className="font-mono text-xs space-y-1">
                                   <div><span className="text-[#111111]/50">Product ID:</span> <strong className="text-[#111111] px-1.5 py-0.5 rounded bg-[#111111] text-[#F6AF31]">{displayId}</strong></div>
-                                  <div><span className="text-[#111111]/50">Model:</span> <strong className="text-[#111111]">{part.model || part.machinery_models?.join(', ') || 'Universal'}</strong></div>
+                                  <div><span className="text-[#111111]/50">Model:</span> <strong className="text-[#111111]">{cleanModelName(part.model || part.machinery_models?.[0] || 'Universal', part.brand)}</strong></div>
                                   <div><span className="text-[#111111]/50">Brand:</span> <strong className="text-[#111111]">{part.brand}</strong></div>
                                   <div><span className="text-[#111111]/50">Date Added:</span> <strong className="text-[#111111]">{part.registered_date || '2026-03-01'}</strong></div>
                                 </div>
@@ -1280,7 +1280,7 @@ export const InventoryTable: React.FC<InventoryTableProps> = ({
                     <span className="text-[10px] uppercase font-bold text-[#111111]/50 block">Model</span>
                   </div>
                   <div className="font-mono font-bold text-xs text-[#111111] mt-0.5">
-                    {detailModalPart.model || detailModalPart.oem_number || detailModalPart.machinery_models?.[0] || 'Universal'}
+                    {cleanModelName(detailModalPart.model || detailModalPart.oem_number || detailModalPart.machinery_models?.[0] || 'Universal', detailModalPart.brand)}
                   </div>
                 </div>
 

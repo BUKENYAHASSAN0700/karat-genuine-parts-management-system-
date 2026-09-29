@@ -49,7 +49,8 @@ export const FinancialCharts: React.FC<FinancialChartsProps> = ({
   brandData,
   categoryData
 }) => {
-  const { formatMoney, currency } = useInertia();
+  const { formatMoney, currency, exchangeRate } = useInertia();
+  const rate = (typeof exchangeRate === 'number' && exchangeRate > 0) ? exchangeRate : 3750;
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {

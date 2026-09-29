@@ -101,7 +101,7 @@ export const DashboardView: React.FC = () => {
     <div className="space-y-6">
       {/* Top Header Row with Clear Greeting */}
       <div className="flex items-center justify-between pb-1">
-        <h1 className="text-2xl sm:text-3xl font-black text-[#111111] tracking-tight font-poppins">
+        <h1 className="text-xl sm:text-2xl font-bold text-[#111111] tracking-tight font-poppins">
           Dashboard
         </h1>
       </div>
@@ -115,10 +115,10 @@ export const DashboardView: React.FC = () => {
           className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-2xs hover:border-[#111111]/30 transition cursor-pointer group flex items-start justify-between gap-3"
         >
           <div className="min-w-0 flex-1">
-            <div className="text-2xl sm:text-3xl font-black text-[#111111] font-mono tracking-tight truncate">
+            <div className="text-lg sm:text-xl lg:text-2xl font-bold text-[#111111] font-mono tracking-normal leading-snug break-words">
               {formatMoney(totalStockValuation)}
             </div>
-            <div className="text-xs font-semibold text-slate-500 mt-1">
+            <div className="text-xs font-medium text-slate-500 mt-1">
               Inventory Valuation
             </div>
           </div>
@@ -133,10 +133,10 @@ export const DashboardView: React.FC = () => {
           className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-2xs hover:border-[#111111]/30 transition cursor-pointer group flex items-start justify-between gap-3"
         >
           <div className="min-w-0 flex-1">
-            <div className="text-2xl sm:text-3xl font-black text-[#111111] font-mono tracking-tight">
+            <div className="text-lg sm:text-xl lg:text-2xl font-bold text-[#111111] font-mono tracking-tight leading-snug">
               {totalUnitsInStock} <span className="text-sm font-normal text-slate-400">Units</span>
             </div>
-            <div className="text-xs font-semibold text-slate-500 mt-1">
+            <div className="text-xs font-medium text-slate-500 mt-1">
               Total Units In Stock
             </div>
           </div>
@@ -155,12 +155,12 @@ export const DashboardView: React.FC = () => {
           }`}
         >
           <div className="min-w-0 flex-1">
-            <div className={`text-2xl sm:text-3xl font-black font-mono tracking-tight ${
+            <div className={`text-lg sm:text-xl lg:text-2xl font-bold font-mono tracking-tight leading-snug ${
               lowStockCount > 0 ? 'text-[#DC2626]' : 'text-[#111111]'
             }`}>
               {lowStockCount} <span className="text-sm font-normal text-slate-400">Items</span>
             </div>
-            <div className={`text-xs font-semibold mt-1 ${
+            <div className={`text-xs font-medium mt-1 ${
               lowStockCount > 0 ? 'text-[#DC2626]' : 'text-slate-500'
             }`}>
               Low Stock Alerts
@@ -181,10 +181,10 @@ export const DashboardView: React.FC = () => {
           className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-2xs hover:border-[#111111]/30 transition cursor-pointer group flex items-start justify-between gap-3"
         >
           <div className="min-w-0 flex-1">
-            <div className="text-2xl sm:text-3xl font-black text-[#111111] font-mono tracking-tight">
+            <div className="text-lg sm:text-xl lg:text-2xl font-bold text-[#111111] font-mono tracking-tight leading-snug">
               {totalSalesTransactions} <span className="text-sm font-normal text-slate-400">Transactions</span>
             </div>
-            <div className="text-xs font-semibold text-slate-500 mt-1">
+            <div className="text-xs font-medium text-slate-500 mt-1">
               Sales Transactions
             </div>
           </div>
@@ -208,7 +208,7 @@ export const DashboardView: React.FC = () => {
                 <div className="w-7 h-7 rounded-xl bg-[#111111] text-[#F6AF31] flex items-center justify-center font-bold text-xs">
                   <UIcon name="layers" className="text-xs text-[#F6AF31]" />
                 </div>
-                <h2 className="text-base font-black text-[#111111] tracking-tight">
+                <h2 className="text-base font-bold text-[#111111] tracking-tight">
                   Machinery Fleet Inventory & Stock Movements
                 </h2>
               </div>
@@ -339,7 +339,7 @@ export const DashboardView: React.FC = () => {
                 <div className="w-7 h-7 rounded-xl bg-[#111111] text-[#F6AF31] flex items-center justify-center font-bold text-xs shadow-2xs">
                   <UIcon name="shopping-cart" className="text-xs text-[#F6AF31]" />
                 </div>
-                <h2 className="text-base font-black text-[#111111] tracking-tight">
+                <h2 className="text-base font-bold text-[#111111] tracking-tight">
                   Sales Activity History
                 </h2>
               </div>
@@ -422,7 +422,7 @@ export const DashboardView: React.FC = () => {
               <UIcon name="time-past" className="text-lg text-[#F6AF31]" />
             </div>
             <div>
-              <h2 className="text-base sm:text-lg font-black text-[#111111] tracking-tight">
+              <h2 className="text-base sm:text-lg font-bold text-[#111111] tracking-tight">
                 Sold Items & Inventory Deductions History
               </h2>
             </div>

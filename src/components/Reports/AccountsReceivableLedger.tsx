@@ -116,7 +116,7 @@ export const AccountsReceivableLedger: React.FC = () => {
       {/* Top Banner & DSO Velocity */}
       <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-black text-[#111111] tracking-tight">
+          <h2 className="text-lg sm:text-xl font-bold text-[#111111] tracking-tight">
             Corporate Client Credit & Collections
           </h2>
           <p className="text-xs text-slate-500 mt-1">
@@ -125,7 +125,7 @@ export const AccountsReceivableLedger: React.FC = () => {
         </div>
 
         <div className="bg-slate-50 px-5 py-3 rounded-2xl border border-slate-200">
-          <div className="text-xl font-black text-[#111111] font-mono">
+          <div className="text-lg sm:text-xl font-bold text-[#111111] font-mono">
             16.4 Days DSO
           </div>
           <div className="text-xs font-semibold text-slate-500 mt-0.5">

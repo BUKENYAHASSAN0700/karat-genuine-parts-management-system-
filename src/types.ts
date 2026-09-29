@@ -269,7 +269,7 @@ export interface AppNotification {
   id: string;
   title: string;
   message: string;
-  category: 'stock' | 'sale' | 'system';
+  category: 'stock' | 'sale' | 'system' | 'order' | 'delete' | string;
   timestamp: string;
   createdAt: number;
   read: boolean;

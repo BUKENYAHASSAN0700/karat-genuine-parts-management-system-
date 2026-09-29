@@ -162,7 +162,7 @@ export const InquiriesOrdersView: React.FC = () => {
               )}
             </div>
             
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
               Inquiries & Commercial Orders
             </h1>
             <p className="text-slate-400 text-xs sm:text-sm max-w-2xl leading-relaxed">

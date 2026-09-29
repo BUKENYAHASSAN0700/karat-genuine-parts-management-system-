@@ -24,7 +24,9 @@ interface EditPartModalProps {
 }
 
 export const EditPartModal: React.FC<EditPartModalProps> = ({ part, isOpen, onClose }) => {
-  const { updatePart, currency } = useInertia();
+  const { updatePart, currency, exchangeRate } = useInertia();
+  const rate = (typeof exchangeRate === 'number' && exchangeRate > 0) ? exchangeRate : 3750;
+  const isUSD = currency === 'USD';
 
   const [selectedSeries, setSelectedSeries] = useState<string>('Motor Series');
   const [formData, setFormData] = useState({
@@ -55,6 +57,10 @@ export const EditPartModal: React.FC<EditPartModalProps> = ({ part, isOpen, onCl
     if (part) {
       const partSeries = part.series || getSeriesForCategory(part.category);
       setSelectedSeries(partSeries);
+      const rawPrice = part.unit_price || 0;
+      const rawCost = part.unit_cost !== undefined ? part.unit_cost : Math.round(rawPrice * 0.65);
+      const rawTransport = part.transport_cost ?? 0;
+
       setFormData({
         name: part.name || '',
         description: part.description || '',
@@ -68,17 +74,17 @@ export const EditPartModal: React.FC<EditPartModalProps> = ({ part, isOpen, onCl
         taxes: part.taxes || '18% VAT',
         tax_rate: part.tax_rate ?? 18,
         tax_amount: part.tax_amount ?? 0,
-        transport_cost: part.transport_cost ?? 0,
+        transport_cost: isUSD ? Number((rawTransport / rate).toFixed(2)) : rawTransport,
         stock_quantity: part.stock_quantity ?? 1,
         min_stock_alert: part.min_stock_alert ?? 1,
-        unit_cost: part.unit_cost !== undefined ? part.unit_cost : Math.round((part.unit_price || 0) * 0.65),
-        unit_price: part.unit_price || 0,
+        unit_cost: isUSD ? Number((rawCost / rate).toFixed(2)) : rawCost,
+        unit_price: isUSD ? Number((rawPrice / rate).toFixed(2)) : rawPrice,
         registered_date: part.registered_date || '2026-03-01',
         warehouse_bin: part.warehouse_bin || '',
       });
       setError(null);
     }
-  }, [part]);
+  }, [part, isUSD, rate]);
 
   const handleSeriesChange = (newSeries: string) => {
     setSelectedSeries(newSeries);
@@ -151,6 +157,10 @@ export const EditPartModal: React.FC<EditPartModalProps> = ({ part, isOpen, onCl
       partStatus = 'Low Stock';
     }
 
+    const finalUnitPrice = isUSD ? Math.round(price * rate) : price;
+    const finalUnitCost = isUSD ? Math.round(itemCost * rate) : itemCost;
+    const finalTransportCost = isUSD ? Math.round((Number(formData.transport_cost) || 0) * rate) : (Number(formData.transport_cost) || 0);
+
     const updatedPart: SparePart = {
       ...part,
       name: formData.name.trim(),
@@ -165,11 +175,11 @@ export const EditPartModal: React.FC<EditPartModalProps> = ({ part, isOpen, onCl
       taxes: formData.taxes || '18% VAT',
       tax_rate: formData.tax_rate,
       tax_amount: Number(formData.tax_amount) || 0,
-      transport_cost: Number(formData.transport_cost) || 0,
+      transport_cost: finalTransportCost,
       stock_quantity: stockQty,
       min_stock_alert: minAlert,
-      unit_cost: itemCost,
-      unit_price: price,
+      unit_cost: finalUnitCost,
+      unit_price: finalUnitPrice,
       registered_date: formData.registered_date || part.registered_date || '2026-03-01',
       warehouse_bin: formData.warehouse_bin.trim() || part.warehouse_bin,
       status: partStatus,
@@ -492,7 +502,9 @@ export const EditPartModal: React.FC<EditPartModalProps> = ({ part, isOpen, onCl
               <div className="bg-white border border-slate-200 rounded-xl px-3 py-2 flex items-center justify-between">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-[#111111]/60">Total Stock Selling Value</span>
                 <strong className="text-sm font-black text-[#111111]">
-                  {currency} {(Number(formData.stock_quantity) * Number(formData.unit_price)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {isUSD
+                    ? `$${(Number(formData.stock_quantity) * Number(formData.unit_price)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                    : `UGX ${Math.round(Number(formData.stock_quantity) * Number(formData.unit_price)).toLocaleString()}`}
                 </strong>
               </div>
             </div>

@@ -17,6 +17,7 @@ export const Header: React.FC = () => {
     toggleMobileMenu,
     currency,
     setCurrency,
+    exchangeRate,
     setFlashMessage,
     theme,
     toggleTheme,
@@ -92,7 +93,11 @@ export const Header: React.FC = () => {
 
   const handleCurrencySelect = (code: CurrencyCode) => {
     setCurrency(code);
-    setFlashMessage('success', `Currency updated to ${code} (${code === 'UGX' ? '1 USD = 3,750 UGX' : 'US Dollar'}).`);
+    const rateStr = (exchangeRate || 3750).toLocaleString();
+    setFlashMessage(
+      'success',
+      `Currency updated to ${code} (${code === 'UGX' ? `1 USD = ${rateStr} UGX` : `Converted at 1 USD = ${rateStr} UGX`}).`
+    );
   };
 
   return (
@@ -138,8 +143,23 @@ export const Header: React.FC = () => {
         </form>
       </div>
 
-      {/* Right Controls: Shop, Add Part, User Profile */}
+      {/* Right Controls: Notifications, Shop, Add Part, User Profile */}
       <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+        {/* Notifications Activity Button */}
+        <button
+          onClick={() => setActiveView('notifications')}
+          className="relative p-2 sm:px-2.5 sm:py-2 rounded-full bg-slate-100 hover:bg-slate-200/80 text-[#111111] text-xs font-bold flex items-center justify-center border border-slate-200/90 transition cursor-pointer"
+          title="Notifications & Activity Log"
+          aria-label="View notifications"
+        >
+          <UIcon name={notificationsEnabled ? 'bell' : 'bell-slash'} className="text-sm" />
+          {unreadNotificationsCount > 0 && notificationsEnabled && (
+            <span className="absolute -top-1 -right-1 px-1.5 py-0.2 rounded-full text-[9px] font-mono font-black bg-[#111111] text-[#F6AF31] border border-white shadow-2xs animate-pulse">
+              {unreadNotificationsCount > 9 ? '9+' : unreadNotificationsCount}
+            </span>
+          )}
+        </button>
+
         {/* Shop Button */}
         <button
           onClick={() => setActiveView('pos')}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useInertia } from '../../context/InertiaContext';
 import { 
   Store, 
@@ -11,6 +11,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { CurrencyCode } from '../../types';
+import { ConfirmDeleteModal } from '../Common/ConfirmDeleteModal';
 
 interface StoreProfileSettings {
   shopName: string;
@@ -67,6 +68,28 @@ export const StoreSettingsView: React.FC = () => {
   const [selectedCurrency, setSelectedCurrency] = useState<CurrencyCode>(currency || 'UGX');
   const [rateInput, setRateInput] = useState<number>(exchangeRate || 3750);
   const [isSaved, setIsSaved] = useState(false);
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+
+  useEffect(() => {
+    setSelectedCurrency(currency);
+  }, [currency]);
+
+  useEffect(() => {
+    if (exchangeRate) {
+      setRateInput(exchangeRate);
+    }
+  }, [exchangeRate]);
+
+  const handleSelectCurrency = (code: CurrencyCode) => {
+    setSelectedCurrency(code);
+    setCurrency(code);
+    const effective = rateInput > 0 ? rateInput : (exchangeRate || 3750);
+    setExchangeRate(effective);
+    setFlashMessage(
+      'info',
+      `Currency set to ${code}. ${code === 'USD' ? `Converted at 1 USD = ${effective.toLocaleString()} UGX.` : 'Displaying in Ugandan Shillings.'}`
+    );
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,17 +119,16 @@ export const StoreSettingsView: React.FC = () => {
   };
 
   const handleResetDefaults = () => {
-    if (window.confirm('Reset settings to system defaults?')) {
-      setFormData(DEFAULT_SETTINGS);
-      setSelectedCurrency('UGX');
-      setRateInput(3750);
-      try {
-        localStorage.setItem('karat_store_profile', JSON.stringify(DEFAULT_SETTINGS));
-      } catch {}
-      setCurrency('UGX');
-      setExchangeRate(3750);
-      setFlashMessage('info', 'Settings reset to default values.');
-    }
+    setFormData(DEFAULT_SETTINGS);
+    setSelectedCurrency('UGX');
+    setRateInput(3750);
+    try {
+      localStorage.setItem('karat_store_profile', JSON.stringify(DEFAULT_SETTINGS));
+    } catch {}
+    setCurrency('UGX');
+    setExchangeRate(3750);
+    setFlashMessage('info', 'Settings reset to default values.');
+    setIsResetModalOpen(false);
   };
 
   return (
@@ -115,7 +137,7 @@ export const StoreSettingsView: React.FC = () => {
       {/* Header Banner */}
       <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-[#111111] tracking-tight">
+          <h1 className="text-xl sm:text-2xl font-bold text-[#111111] tracking-tight">
             Settings
           </h1>
         </div>
@@ -243,7 +265,7 @@ export const StoreSettingsView: React.FC = () => {
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
-                  onClick={() => setSelectedCurrency('UGX')}
+                  onClick={() => handleSelectCurrency('UGX')}
                   className={`px-4 py-2.5 rounded-xl text-xs font-bold border transition flex items-center justify-center gap-1.5 cursor-pointer ${
                     selectedCurrency === 'UGX'
                       ? 'bg-[#111111] text-white border-[#111111] shadow-xs'
@@ -255,7 +277,7 @@ export const StoreSettingsView: React.FC = () => {
 
                 <button
                   type="button"
-                  onClick={() => setSelectedCurrency('USD')}
+                  onClick={() => handleSelectCurrency('USD')}
                   className={`px-4 py-2.5 rounded-xl text-xs font-bold border transition flex items-center justify-center gap-1.5 cursor-pointer ${
                     selectedCurrency === 'USD'
                       ? 'bg-[#111111] text-white border-[#111111] shadow-xs'
@@ -276,10 +298,22 @@ export const StoreSettingsView: React.FC = () => {
                 type="number"
                 min={1}
                 value={rateInput}
-                onChange={e => setRateInput(Number(e.target.value))}
+                onChange={e => {
+                  const val = Number(e.target.value);
+                  setRateInput(val);
+                  if (val > 0) {
+                    setExchangeRate(val);
+                  }
+                }}
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-mono font-bold text-[#111111] focus:bg-white focus:outline-none focus:border-amber-400 transition"
                 placeholder="3750"
               />
+              <div className="flex items-center justify-between text-[11px] text-slate-500 font-mono pt-1">
+                <span>1 USD = {(rateInput > 0 ? rateInput : 3750).toLocaleString()} UGX</span>
+                <span className="text-amber-800 font-bold">
+                  UGX 1,000,000 = ${(1000000 / (rateInput > 0 ? rateInput : 3750)).toFixed(2)}
+                </span>
+              </div>
             </div>
           </div>
         </div>

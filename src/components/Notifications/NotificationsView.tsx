@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useInertia } from '../../context/InertiaContext';
 import { UIcon } from '../Common/UIcon';
+import { ConfirmDeleteModal } from '../Common/ConfirmDeleteModal';
 
 export const NotificationsView: React.FC = () => {
   const { 
@@ -13,12 +14,21 @@ export const NotificationsView: React.FC = () => {
     setActiveView 
   } = useInertia();
 
+  const [activeFilter, setActiveFilter] = useState<'all' | 'sale' | 'stock' | 'order' | 'delete' | 'system'>('all');
+  const [isClearAllModalOpen, setIsClearAllModalOpen] = useState(false);
+  const [deleteConfirmNotif, setDeleteConfirmNotif] = useState<{ id: string; title: string } | null>(null);
+
   const handleOpenLink = (notifId: string, linkView?: string) => {
     markNotificationAsRead(notifId);
     if (linkView) {
       setActiveView(linkView);
     }
   };
+
+  const filteredNotifications = notifications.filter(n => {
+    if (activeFilter === 'all') return true;
+    return n.category === activeFilter;
+  });
 
   return (
     <div className="space-y-5 max-w-4xl mx-auto">
@@ -29,8 +39,8 @@ export const NotificationsView: React.FC = () => {
             <UIcon name={notificationsEnabled ? 'bell' : 'bell-slash'} className="text-base" />
           </div>
           <div>
-            <h1 className="text-xl sm:text-2xl font-black text-[#111111] tracking-tight font-poppins flex items-center gap-2.5">
-              <span>Notifications</span>
+            <h1 className="text-lg sm:text-xl font-bold text-[#111111] tracking-tight font-poppins flex items-center gap-2.5">
+              <span>Notifications & Activity Log</span>
               {notifications.length > 0 && notificationsEnabled && (
                 <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-[#111111] text-white">
                   {notifications.length}
@@ -40,7 +50,7 @@ export const NotificationsView: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5 self-start sm:self-auto">
+        <div className="flex items-center gap-2.5 self-start sm:self-auto flex-wrap">
           {/* Sliding switch button from left to right showing ON or OFF */}
           <div
             onClick={toggleNotificationsEnabled}
@@ -50,7 +60,7 @@ export const NotificationsView: React.FC = () => {
             title={notificationsEnabled ? 'Click to turn notifications OFF' : 'Click to turn notifications ON'}
           >
             <span className="text-xs font-bold text-[#111111]">
-              {notificationsEnabled ? 'Notifications' : 'Notifications'}
+              Alerts
             </span>
             <div
               className={`relative inline-flex items-center h-5 w-12 rounded-full p-0.5 transition-colors duration-200 shrink-0 ${
@@ -71,14 +81,43 @@ export const NotificationsView: React.FC = () => {
 
           {notifications.length > 0 && (
             <button
-              onClick={clearAllNotifications}
-              className="px-3.5 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 transition cursor-pointer flex items-center gap-1.5 shadow-2xs"
+              onClick={() => setIsClearAllModalOpen(true)}
+              className="px-3.5 py-1.5 rounded-xl border border-rose-200 bg-rose-50/50 hover:bg-rose-100/70 text-xs font-bold text-rose-700 transition cursor-pointer flex items-center gap-1.5 shadow-2xs"
             >
-              <UIcon name="trash" className="text-xs text-slate-500" />
+              <UIcon name="trash" className="text-xs text-rose-600" />
               <span>Clear All</span>
             </button>
           )}
         </div>
+      </div>
+
+      {/* Filter Tabs */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+        {[
+          { id: 'all', label: 'All Activity', count: notifications.length },
+          { id: 'sale', label: 'Sales & Receipts', count: notifications.filter(n => n.category === 'sale').length },
+          { id: 'stock', label: 'Stock & Inventory', count: notifications.filter(n => n.category === 'stock').length },
+          { id: 'order', label: 'Commercial Orders', count: notifications.filter(n => n.category === 'order').length },
+          { id: 'delete', label: 'Deletions', count: notifications.filter(n => n.category === 'delete').length },
+          { id: 'system', label: 'System & Settings', count: notifications.filter(n => n.category === 'system').length },
+        ].map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveFilter(tab.id as any)}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+              activeFilter === tab.id
+                ? 'bg-[#111111] text-white shadow-2xs'
+                : 'bg-white border border-slate-200 text-slate-600 hover:text-black hover:border-slate-300'
+            }`}
+          >
+            <span>{tab.label}</span>
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold ${
+              activeFilter === tab.id ? 'bg-[#F6AF31] text-[#111111]' : 'bg-slate-100 text-slate-600'
+            }`}>
+              {tab.count}
+            </span>
+          </button>
+        ))}
       </div>
 
       {!notificationsEnabled && (
@@ -97,45 +136,83 @@ export const NotificationsView: React.FC = () => {
       )}
 
       {/* Notifications List */}
-      {notifications.length === 0 ? (
+      {filteredNotifications.length === 0 ? (
         <div className="bg-white border border-slate-200/90 rounded-2xl p-12 text-center shadow-2xs space-y-3">
           <div className="w-12 h-12 rounded-2xl bg-slate-100 border border-slate-200/80 mx-auto flex items-center justify-center text-slate-400">
             <UIcon name="bell-slash" className="text-xl" />
           </div>
           <div>
             <h3 className="text-sm font-bold text-[#111111]">No notifications</h3>
-            <p className="text-xs text-slate-500 mt-1">All alerts and updates have been cleared.</p>
+            <p className="text-xs text-slate-500 mt-1">
+              {activeFilter === 'all' 
+                ? 'All alerts and activity updates have been cleared.' 
+                : `No notifications in the ${activeFilter} category.`}
+            </p>
           </div>
         </div>
       ) : (
         <div className="space-y-2.5">
-          {notifications.map((notif) => {
-            const getCategoryIcon = () => {
+          {filteredNotifications.map((notif) => {
+            const getCategoryStyle = () => {
               switch (notif.category) {
                 case 'stock':
-                  return 'boxes';
+                  return {
+                    icon: 'boxes',
+                    iconBg: 'bg-amber-50 text-amber-700 border-amber-200/70',
+                    tag: 'bg-amber-100/70 text-amber-900',
+                    tagLabel: 'Stock'
+                  };
                 case 'sale':
-                  return 'shopping-cart';
+                  return {
+                    icon: 'shopping-cart',
+                    iconBg: 'bg-emerald-50 text-emerald-700 border-emerald-200/70',
+                    tag: 'bg-emerald-100/70 text-emerald-900',
+                    tagLabel: 'Sale'
+                  };
+                case 'order':
+                  return {
+                    icon: 'document',
+                    iconBg: 'bg-blue-50 text-blue-700 border-blue-200/70',
+                    tag: 'bg-blue-100/70 text-blue-900',
+                    tagLabel: 'Order'
+                  };
+                case 'delete':
+                  return {
+                    icon: 'trash',
+                    iconBg: 'bg-rose-50 text-rose-700 border-rose-200/70',
+                    tag: 'bg-rose-100/70 text-rose-900',
+                    tagLabel: 'Deletion'
+                  };
                 case 'system':
                 default:
-                  return 'info';
+                  return {
+                    icon: 'settings',
+                    iconBg: 'bg-slate-100 text-slate-700 border-slate-200/80',
+                    tag: 'bg-slate-200 text-slate-800',
+                    tagLabel: 'System'
+                  };
               }
             };
+
+            const style = getCategoryStyle();
 
             return (
               <div
                 key={notif.id}
                 className={`bg-white border rounded-2xl p-4 sm:p-5 shadow-2xs transition flex items-start justify-between gap-4 ${
-                  notif.read ? 'border-slate-200/80' : 'border-slate-300'
+                  notif.read ? 'border-slate-200/80' : 'border-slate-300 bg-slate-50/20'
                 }`}
               >
                 <div className="flex items-start gap-3.5 min-w-0">
-                  <div className="w-9 h-9 rounded-xl bg-slate-100 border border-slate-200/80 flex items-center justify-center text-slate-700 shrink-0 mt-0.5">
-                    <UIcon name={getCategoryIcon()} className="text-sm" />
+                  <div className={`w-9 h-9 rounded-xl border flex items-center justify-center shrink-0 mt-0.5 ${style.iconBg}`}>
+                    <UIcon name={style.icon} className="text-sm" />
                   </div>
 
                   <div className="min-w-0 space-y-1">
                     <div className="flex items-center gap-2 flex-wrap">
+                      <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold uppercase tracking-wider ${style.tag}`}>
+                        {style.tagLabel}
+                      </span>
                       <h4 className="text-sm font-bold text-[#111111] leading-tight">
                         {notif.title}
                       </h4>
@@ -157,7 +234,7 @@ export const NotificationsView: React.FC = () => {
                           onClick={() => handleOpenLink(notif.id, notif.linkView)}
                           className="text-[11px] font-bold text-[#111111] hover:underline flex items-center gap-1 cursor-pointer"
                         >
-                          <span>{notif.linkView === 'inventory' ? 'Open Inventory' : notif.linkView === 'pos' ? 'Open Shop' : 'View'}</span>
+                          <span>{notif.linkView === 'inventory' ? 'Open Inventory' : notif.linkView === 'pos' ? 'Open Shop' : notif.linkView === 'restock' ? 'Open Restock' : notif.linkView === 'inquiries' ? 'Open Orders' : notif.linkView === 'settings' ? 'Open Settings' : 'View Module'}</span>
                           <UIcon name="arrow-right" className="text-[10px]" />
                         </button>
                       </div>
@@ -165,12 +242,12 @@ export const NotificationsView: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Dismiss/Clear Button */}
+                {/* Dismiss/Clear Button with Confirmation */}
                 <button
-                  onClick={() => clearNotification(notif.id)}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer shrink-0"
-                  title="Clear notification"
-                  aria-label="Clear notification"
+                  onClick={() => setDeleteConfirmNotif({ id: notif.id, title: notif.title })}
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer shrink-0"
+                  title="Remove notification"
+                  aria-label="Remove notification"
                 >
                   <UIcon name="cross" className="text-xs" />
                 </button>
@@ -179,6 +256,37 @@ export const NotificationsView: React.FC = () => {
           })}
         </div>
       )}
+
+      {/* Confirmation Modal for Clearing a Single Notification */}
+      <ConfirmDeleteModal
+        isOpen={Boolean(deleteConfirmNotif)}
+        title="Remove Notification?"
+        message={`Are you sure you want to dismiss and remove this notification?`}
+        itemDetails={deleteConfirmNotif ? [{ label: 'Notification', value: deleteConfirmNotif.title }] : []}
+        confirmText="Yes, Remove"
+        onConfirm={() => {
+          if (deleteConfirmNotif) {
+            clearNotification(deleteConfirmNotif.id);
+            setDeleteConfirmNotif(null);
+          }
+        }}
+        onCancel={() => setDeleteConfirmNotif(null)}
+      />
+
+      {/* Confirmation Modal for Clearing All Notifications */}
+      <ConfirmDeleteModal
+        isOpen={isClearAllModalOpen}
+        title="Clear All Notifications?"
+        message="Are you sure you want to clear all notifications and system activity logs? This action will permanently empty the activity feed."
+        itemDetails={[{ label: 'Total Records', value: `${notifications.length} notifications` }]}
+        confirmText="Yes, Clear All"
+        onConfirm={() => {
+          clearAllNotifications();
+          setIsClearAllModalOpen(false);
+        }}
+        onCancel={() => setIsClearAllModalOpen(false)}
+      />
     </div>
   );
 };
+

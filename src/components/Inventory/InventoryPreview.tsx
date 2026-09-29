@@ -22,7 +22,7 @@ export const InventoryPreview: React.FC = () => {
       {/* Top Header Bento Summary */}
       <div className="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xs flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-[#111111] tracking-tight font-poppins">
+          <h1 className="text-xl sm:text-2xl font-bold text-[#111111] tracking-tight font-poppins">
             Inventory
           </h1>
         </div>
@@ -30,19 +30,19 @@ export const InventoryPreview: React.FC = () => {
         {/* Metric Capsules */}
         <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
           <div className="px-5 py-3 bg-slate-50 rounded-2xl border border-slate-200/90">
-            <div className="text-xl sm:text-2xl font-black font-mono text-[#111111]">
+            <div className="text-lg sm:text-xl font-bold font-mono text-[#111111]">
               {formatMoney(totalValuation)}
             </div>
-            <div className="text-xs font-semibold text-slate-500 mt-0.5">
+            <div className="text-xs font-medium text-slate-500 mt-0.5">
               Catalog Valuation
             </div>
           </div>
 
           <div className="px-5 py-3 bg-slate-50 rounded-2xl border border-slate-200/90">
-            <div className="text-xl sm:text-2xl font-black font-mono text-[#111111]">
+            <div className="text-lg sm:text-xl font-bold font-mono text-[#111111]">
               {totalUnits} <span className="text-xs font-normal text-slate-400">Units</span>
             </div>
-            <div className="text-xs font-semibold text-slate-500 mt-0.5">
+            <div className="text-xs font-medium text-slate-500 mt-0.5">
               Total Units in Stock
             </div>
           </div>

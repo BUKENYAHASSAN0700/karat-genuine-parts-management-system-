@@ -34,6 +34,7 @@ export const FinancialReportsView: React.FC = () => {
     parts, 
     currency, 
     setCurrency, 
+    exchangeRate,
     formatMoney, 
     setFlashMessage 
   } = useInertia();
@@ -251,7 +252,7 @@ export const FinancialReportsView: React.FC = () => {
               Kampala Depot • Operating Ledger
             </span>
           </div>
-          <h1 className="text-2xl font-black text-[#111111] tracking-tight">
+          <h1 className="text-xl sm:text-2xl font-bold text-[#111111] tracking-tight">
             Financial & Commercial Analytics
           </h1>
           <p className="text-xs text-slate-500 mt-1 max-w-2xl">
@@ -265,7 +266,8 @@ export const FinancialReportsView: React.FC = () => {
             <button
               onClick={() => {
                 setCurrency('USD');
-                setFlashMessage('success', 'Operating currency set to USD ($).');
+                const rateStr = (exchangeRate || 3750).toLocaleString();
+                setFlashMessage('success', `Operating currency set to USD ($ at 1 USD = ${rateStr} UGX).`);
               }}
               className={`px-3 py-1.5 rounded-xl text-xs font-black transition cursor-pointer ${
                 currency === 'USD'
@@ -278,7 +280,8 @@ export const FinancialReportsView: React.FC = () => {
             <button
               onClick={() => {
                 setCurrency('UGX');
-                setFlashMessage('success', 'Operating currency set to UGX (USh at 3,750 rate).');
+                const rateStr = (exchangeRate || 3750).toLocaleString();
+                setFlashMessage('success', `Operating currency set to UGX (USh at ${rateStr} rate).`);
               }}
               className={`px-3 py-1.5 rounded-xl text-xs font-black transition cursor-pointer ${
                 currency === 'UGX'

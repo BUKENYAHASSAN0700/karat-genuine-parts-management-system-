@@ -98,6 +98,7 @@ interface InertiaContextType {
   formatMoney: (amountInUSD: number, options?: { showCode?: boolean; round?: boolean }) => string;
   formatMoneyShort: (amountInUSD: number) => string;
   getConvertedAmount: (amountInUSD: number) => number;
+  convertToBaseUGX: (amount: number) => number;
   parts: SparePart[];
   transactions: RecentTransaction[];
   clients: ClientAccount[];
@@ -153,6 +154,7 @@ interface InertiaContextType {
   notifications: AppNotification[];
   notificationsEnabled: boolean;
   toggleNotificationsEnabled: () => void;
+  addNotification: (notification: Omit<AppNotification, 'id' | 'timestamp' | 'createdAt' | 'read'>) => void;
   clearNotification: (id: string) => void;
   clearAllNotifications: () => void;
   markNotificationAsRead: (id: string) => void;
@@ -209,9 +211,9 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [currency, setCurrencyState] = useState<CurrencyCode>(() => {
     try {
       const saved = localStorage.getItem('karat_currency');
-      return (saved === 'UGX' || saved === 'USD') ? saved : 'USD';
+      return (saved === 'UGX' || saved === 'USD') ? saved : 'UGX';
     } catch {
-      return 'USD';
+      return 'UGX';
     }
   });
 
@@ -244,10 +246,17 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const setExchangeRate = (rate: number) => {
-    setExchangeRateState(rate);
+    const validRate = (typeof rate === 'number' && rate > 0) ? rate : 3750;
+    setExchangeRateState(validRate);
     try {
-      localStorage.setItem('karat_exchange_rate', String(rate));
+      localStorage.setItem('karat_exchange_rate', String(validRate));
     } catch {}
+    addNotification({
+      title: 'Exchange Rate Updated',
+      message: `Configured exchange rate to 1 USD = ${validRate.toLocaleString()} UGX.`,
+      category: 'system',
+      linkView: 'settings',
+    });
   };
 
   const updateUser = (userData: Partial<User>) => {
@@ -259,6 +268,12 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
       } catch {}
       return updated;
     });
+    addNotification({
+      title: 'Store Profile Updated',
+      message: `Store profile details for ${userData.shop_name || 'KARAT'} were updated.`,
+      category: 'system',
+      linkView: 'settings',
+    });
   };
 
   const setCurrency = (newCurrency: CurrencyCode) => {
@@ -268,33 +283,93 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     } catch {
       // ignore
     }
+    addNotification({
+      title: 'System Currency Changed',
+      message: `Operating display currency changed to ${newCurrency}.`,
+      category: 'system',
+      linkView: 'settings',
+    });
   };
 
   const getConvertedAmount = (amount: number): number => {
-    // 1:1 direct pricing: the exact price placed on the item is what appears across the store
+    if (isNaN(amount) || amount === null || amount === undefined) return 0;
+    const rate = (typeof exchangeRate === 'number' && exchangeRate > 0) ? exchangeRate : 3750;
+    if (currency === 'USD') {
+      return Number((amount / rate).toFixed(2));
+    }
+    return amount;
+  };
+
+  const convertToBaseUGX = (amount: number): number => {
+    if (isNaN(amount) || amount === null || amount === undefined) return 0;
+    const rate = (typeof exchangeRate === 'number' && exchangeRate > 0) ? exchangeRate : 3750;
+    if (currency === 'USD') {
+      return Number((amount * rate).toFixed(2));
+    }
     return amount;
   };
 
   const formatMoney = (amount: number, options?: { showCode?: boolean; round?: boolean }): string => {
     if (isNaN(amount) || amount === null || amount === undefined) {
-      return currency === 'UGX' ? 'UGX 0' : '$0';
+      return currency === 'UGX' ? (options?.showCode !== false ? 'UGX 0' : '0') : (options?.showCode !== false ? '$0.00' : '0.00');
     }
-    const formatted = options?.round 
-      ? Math.round(amount).toLocaleString() 
-      : Number(amount).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-    if (currency === 'UGX') {
-      return options?.showCode !== false ? `UGX ${formatted}` : formatted;
+
+    const rate = (typeof exchangeRate === 'number' && exchangeRate > 0) ? exchangeRate : 3750;
+    const isUSD = currency === 'USD';
+    const effectiveAmount = isUSD ? (amount / rate) : amount;
+    const isNegative = effectiveAmount < 0;
+    const absVal = Math.abs(effectiveAmount);
+
+    let formatted: string;
+    if (isUSD) {
+      if (options?.round) {
+        formatted = Math.round(absVal).toLocaleString();
+      } else {
+        formatted = absVal.toLocaleString(undefined, {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
+      }
+      const res = options?.showCode !== false ? `$${formatted}` : formatted;
+      return isNegative ? `-${res}` : res;
+    } else {
+      if (options?.round || Number.isInteger(absVal)) {
+        formatted = Math.round(absVal).toLocaleString();
+      } else {
+        formatted = absVal.toLocaleString(undefined, {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0,
+        });
+      }
+      const res = options?.showCode !== false ? `UGX ${formatted}` : formatted;
+      return isNegative ? `-${res}` : res;
     }
-    return options?.showCode !== false ? `$${formatted}` : formatted;
   };
 
   const formatMoneyShort = (amount: number): string => {
-    if (isNaN(amount) || amount === null || amount === undefined) return '$0';
-    const prefix = currency === 'UGX' ? 'UGX ' : '$';
-    if (amount >= 1_000_000_000) return `${prefix}${(amount / 1_000_000_000).toFixed(1)}B`;
-    if (amount >= 1_000_000) return `${prefix}${(amount / 1_000_000).toFixed(1)}M`;
-    if (amount >= 1_000) return `${prefix}${(amount / 1_000).toFixed(0)}k`;
-    return `${prefix}${Math.round(amount).toLocaleString()}`;
+    if (isNaN(amount) || amount === null || amount === undefined) {
+      return currency === 'UGX' ? 'UGX 0' : '$0';
+    }
+    const rate = (typeof exchangeRate === 'number' && exchangeRate > 0) ? exchangeRate : 3750;
+    const isUSD = currency === 'USD';
+    const effectiveAmount = isUSD ? (amount / rate) : amount;
+    const isNegative = effectiveAmount < 0;
+    const absVal = Math.abs(effectiveAmount);
+    const prefix = isUSD ? '$' : 'UGX ';
+
+    let strVal: string;
+    if (absVal >= 1_000_000_000) {
+      strVal = `${(absVal / 1_000_000_000).toFixed(1)}B`;
+    } else if (absVal >= 1_000_000) {
+      strVal = `${(absVal / 1_000_000).toFixed(1)}M`;
+    } else if (absVal >= 1_000) {
+      strVal = `${(absVal / 1_000).toFixed(1)}k`;
+    } else {
+      strVal = isUSD
+        ? absVal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        : Math.round(absVal).toLocaleString();
+    }
+    return isNegative ? `-${prefix}${strVal}` : `${prefix}${strVal}`;
   };
 
   const [parts, setParts] = useState<SparePart[]>(() => {
@@ -388,6 +463,20 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
       localStorage.setItem('karat_notifications', JSON.stringify(notifications));
     } catch {}
   }, [notifications]);
+
+  const addNotification = (notifData: Omit<AppNotification, 'id' | 'timestamp' | 'createdAt' | 'read'>) => {
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+    const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const newNotif: AppNotification = {
+      ...notifData,
+      id: `NTF-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      timestamp: `${dateStr}, ${timeStr}`,
+      createdAt: Date.now(),
+      read: false,
+    };
+    setNotifications(prev => [newNotif, ...prev]);
+  };
 
   const clearNotification = (id: string) => {
     setNotifications(prev => prev.filter(n => n.id !== id));
@@ -544,6 +633,12 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
 
     setFlashMessage('success', 'Welcome back to Karat Heavy Machinery Spare Parts.');
+    addNotification({
+      title: 'User Authenticated',
+      message: `Administrator session active for ${ownerUser.name}.`,
+      category: 'system',
+      linkView: 'dashboard',
+    });
     return true;
   };
 
@@ -581,6 +676,12 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     };
     setParts(prev => [newPart, ...prev]);
     setFlashMessage('success', `Product [${newPart.id}] ${newPart.name} added.`);
+    addNotification({
+      title: `Product Added • [${newPart.id}]`,
+      message: `Registered ${newPart.name} with ${newPart.stock_quantity} units at ${formatMoney(newPart.unit_price)}.`,
+      category: 'stock',
+      linkView: 'inventory',
+    });
   };
 
   const addMultipleParts = (partsList: Array<Omit<SparePart, 'id'>>) => {
@@ -636,6 +737,12 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     setParts(prev => [...createdParts, ...prev]);
     setFlashMessage('success', `Bulk import complete: ${createdParts.length} spare parts successfully uploaded into KARAT.`);
+    addNotification({
+      title: `Bulk Products Imported (${createdParts.length})`,
+      message: `Successfully uploaded ${createdParts.length} spare parts to catalog.`,
+      category: 'stock',
+      linkView: 'inventory',
+    });
   };
 
   const updatePart = (updatedPart: SparePart) => {
@@ -661,11 +768,19 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
       return p;
     }));
     setFlashMessage('success', `Spare part [${enrichedPart.id}] ${enrichedPart.name} updated.`);
+    addNotification({
+      title: `Product Updated • [${enrichedPart.id}]`,
+      message: `Updated specs for ${enrichedPart.name}. Current stock: ${enrichedPart.stock_quantity} units.`,
+      category: 'stock',
+      linkView: 'inventory',
+    });
   };
 
   const updatePartStock = (partId: string, newStock: number) => {
+    let partName = partId;
     setParts(prev => prev.map(p => {
       if (p.id === partId) {
+        partName = p.name;
         const status: SparePart['status'] = 
           newStock === 0 ? 'Out of Stock' : (newStock <= p.min_stock_alert ? 'Low Stock' : 'In Stock');
         return { ...p, stock_quantity: newStock, status };
@@ -673,11 +788,24 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
       return p;
     }));
     setFlashMessage('success', `Stock for part ${partId} updated to ${newStock} units.`);
+    addNotification({
+      title: `Stock Level Updated • ${partId}`,
+      message: `Adjusted inventory for ${partName} to ${newStock} units.`,
+      category: 'stock',
+      linkView: 'inventory',
+    });
   };
 
   const deletePart = (partId: string) => {
+    const target = parts.find(p => p.id === partId || p.part_number === partId);
     setParts(prev => prev.filter(p => p.id !== partId && String(p.id) !== String(partId) && p.part_number !== partId));
     setFlashMessage('success', `Part ${partId} removed from catalog.`);
+    addNotification({
+      title: `Product Deleted from Catalog`,
+      message: `Spare part [${partId}] ${target ? target.name : ''} was deleted from inventory.`,
+      category: 'delete',
+      linkView: 'inventory',
+    });
   };
 
   const addTransaction = (txData: Omit<RecentTransaction, 'id'>) => {
@@ -703,6 +831,12 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     setOemOrders(prev => [newPO, ...prev]);
     setFlashMessage('success', `OEM Purchase Order ${poId} dispatched to ${newPO.supplier_name}.`);
+    addNotification({
+      title: `OEM Order Dispatched • ${poId}`,
+      message: `Purchase order of ${formatMoney(newPO.total_cost)} dispatched to ${newPO.supplier_name}.`,
+      category: 'order',
+      linkView: 'restock',
+    });
     return newPO;
   };
 
@@ -724,6 +858,12 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
       return order;
     }));
     setFlashMessage('success', `OEM Purchase Order ${id} updated to ${status}.`);
+    addNotification({
+      title: `OEM Order Updated • ${id}`,
+      message: `Purchase order ${id} status updated to "${status}".`,
+      category: 'order',
+      linkView: 'restock',
+    });
   };
 
   const receiveOEMOrderShipment = (orderId: string, receiverName?: string) => {
@@ -811,11 +951,23 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     });
 
     setFlashMessage('success', `Shipment ${po.id} verified and stocked! GRN ${grnNum} generated. Added ${totalItemsAdded} units to inventory.`);
+    addNotification({
+      title: `OEM Stock Ingested • GRN ${grnNum}`,
+      message: `Verified and shelved ${totalItemsAdded} units from order ${po.id} (${po.supplier_name}).`,
+      category: 'stock',
+      linkView: 'restock',
+    });
   };
 
   const deleteOEMOrder = (id: string) => {
     setOemOrders(prev => prev.filter(o => o.id !== id));
     setFlashMessage('success', `OEM Order ${id} deleted.`);
+    addNotification({
+      title: `OEM Order Deleted`,
+      message: `Purchase order ${id} was deleted from procurement records.`,
+      category: 'delete',
+      linkView: 'restock',
+    });
   };
 
   const addInquiry = (inquiryData: Omit<InquiryItem, 'id' | 'created_at'>): InquiryItem => {
@@ -828,17 +980,35 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     };
     setInquiries(prev => [newInquiry, ...prev]);
     setFlashMessage('success', `Inquiry ${newInquiry.id} created successfully.`);
+    addNotification({
+      title: `Customer Inquiry Logged • ${newInquiry.id}`,
+      message: `Logged inquiry for ${newInquiry.customer_name} (${newInquiry.machinery_model || 'Fleet'}). Quoted: ${formatMoney(newInquiry.quoted_amount)}.`,
+      category: 'order',
+      linkView: 'inquiries',
+    });
     return newInquiry;
   };
 
   const updateInquiryStatus = (id: string, status: InquiryItem['status'], extra?: Partial<InquiryItem>) => {
     setInquiries(prev => prev.map(inq => inq.id === id ? { ...inq, status, ...extra } : inq));
     setFlashMessage('success', `Inquiry ${id} status updated to ${status}.`);
+    addNotification({
+      title: `Inquiry Status Updated • ${id}`,
+      message: `Customer inquiry ${id} status changed to "${status}".`,
+      category: 'order',
+      linkView: 'inquiries',
+    });
   };
 
   const deleteInquiry = (id: string) => {
     setInquiries(prev => prev.filter(inq => inq.id !== id));
     setFlashMessage('success', `Inquiry ${id} deleted.`);
+    addNotification({
+      title: `Inquiry Deleted`,
+      message: `Customer inquiry ${id} was deleted.`,
+      category: 'delete',
+      linkView: 'inquiries',
+    });
   };
 
   const convertInquiryToOrder = (inquiryId: string): CommercialOrder => {
@@ -866,6 +1036,12 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setOrders(prev => [newOrder, ...prev]);
     setInquiries(prev => prev.map(i => i.id === inquiryId ? { ...i, status: 'Converted to Order', converted_order_id: newOrder.id } : i));
     setFlashMessage('success', `Inquiry ${inquiryId} converted to Commercial Order ${newOrder.id}.`);
+    addNotification({
+      title: `Inquiry Converted to Order • ${newOrder.id}`,
+      message: `Commercial order created for ${newOrder.customer_name} (${formatMoney(newOrder.total_amount)}).`,
+      category: 'order',
+      linkView: 'inquiries',
+    });
     return newOrder;
   };
 
@@ -878,17 +1054,35 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     };
     setOrders(prev => [newOrder, ...prev]);
     setFlashMessage('success', `Commercial Order ${newOrder.id} registered successfully.`);
+    addNotification({
+      title: `Commercial Order Created • ${newOrder.id}`,
+      message: `Order for ${newOrder.customer_name} registered (${formatMoney(newOrder.total_amount)}).`,
+      category: 'order',
+      linkView: 'inquiries',
+    });
     return newOrder;
   };
 
   const updateOrderStatus = (id: string, status: CommercialOrder['fulfillment_status'], extra?: Partial<CommercialOrder>) => {
     setOrders(prev => prev.map(ord => ord.id === id ? { ...ord, fulfillment_status: status, ...extra } : ord));
     setFlashMessage('success', `Order ${id} status updated to ${status}.`);
+    addNotification({
+      title: `Order Status Updated • ${id}`,
+      message: `Commercial Order ${id} fulfillment status changed to "${status}".`,
+      category: 'order',
+      linkView: 'inquiries',
+    });
   };
 
   const deleteOrder = (id: string) => {
     setOrders(prev => prev.filter(ord => ord.id !== id));
     setFlashMessage('success', `Order ${id} deleted.`);
+    addNotification({
+      title: `Order Deleted`,
+      message: `Commercial order ${id} was deleted.`,
+      category: 'delete',
+      linkView: 'inquiries',
+    });
   };
 
   const startSaleWithPart = (part: SparePart) => {
@@ -935,12 +1129,22 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setReceiptDrafts(prev => [newDraft, ...prev]);
     setActiveDraftId(newDraft.id);
     setFlashMessage('success', `Receipt saved as draft #${draftCode}.`);
+    addNotification({
+      title: `Receipt Draft Saved • #${draftCode}`,
+      message: `Draft created for ${newDraft.customer_name} (${newDraft.items.length} line items).`,
+      category: 'sale',
+      linkView: 'pos',
+    });
     return newDraft;
   };
 
   const updateReceiptDraft = (id: string, updates: Partial<ReceiptDraft>) => {
+    let updatedCode = id;
+    let customer = 'Client';
     setReceiptDrafts(prev => prev.map(d => {
       if (d.id === id || d.draft_code === id) {
+        updatedCode = d.draft_code;
+        customer = updates.customer_name || d.customer_name;
         return {
           ...d,
           ...updates,
@@ -950,6 +1154,12 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
       return d;
     }));
     setFlashMessage('success', `Draft updated.`);
+    addNotification({
+      title: `Draft Updated • #${updatedCode}`,
+      message: `Draft order details for ${customer} were updated.`,
+      category: 'sale',
+      linkView: 'pos',
+    });
   };
 
   const deleteReceiptDraft = (id: string) => {
@@ -958,12 +1168,24 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setActiveDraftId(null);
     }
     setFlashMessage('success', `Draft removed.`);
+    addNotification({
+      title: `Receipt Draft Deleted`,
+      message: `Draft #${id} was deleted.`,
+      category: 'delete',
+      linkView: 'pos',
+    });
   };
 
   const clearAllReceiptDrafts = () => {
     setReceiptDrafts([]);
     setActiveDraftId(null);
     setFlashMessage('success', 'All receipt drafts cleared.');
+    addNotification({
+      title: `All Drafts Cleared`,
+      message: `All pending receipt drafts were deleted.`,
+      category: 'delete',
+      linkView: 'pos',
+    });
   };
 
   const completeSale = (saleData: Omit<SaleReceipt, 'id' | 'receipt_number' | 'timestamp' | 'date' | 'time'>): SaleReceipt => {
@@ -984,7 +1206,8 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
       timestamp: now.getTime(),
     };
 
-    // 1. Deduct stock quantity in real-time from inventory
+    // 1. Deduct stock quantity in real-time from inventory and detect low stock alerts
+    const lowStockAlerts: { partName: string; partNumber: string; remaining: number }[] = [];
     setParts(prevParts => {
       const updated = prevParts.map(p => {
         const soldItem = saleData.items.find(
@@ -994,6 +1217,13 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
           const newStock = Math.max(0, p.stock_quantity - soldItem.quantity);
           const status: SparePart['status'] =
             newStock === 0 ? 'Out of Stock' : (newStock <= p.min_stock_alert ? 'Low Stock' : 'In Stock');
+          if (newStock <= p.min_stock_alert) {
+            lowStockAlerts.push({
+              partName: p.name,
+              partNumber: p.part_number,
+              remaining: newStock,
+            });
+          }
           return {
             ...p,
             stock_quantity: newStock,
@@ -1044,6 +1274,24 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
       `Sale complete! Receipt #${receiptNumber} generated for ${saleData.customer_name}. Stock deducted.`
     );
 
+    // 6. Record System Activity Notifications
+    const totalSoldUnits = saleData.items.reduce((s, it) => s + it.quantity, 0);
+    addNotification({
+      title: `Sale Completed • #${receiptNumber}`,
+      message: `Sale of ${formatMoney(newReceipt.grand_total)} issued to ${newReceipt.customer_name}. ${totalSoldUnits} units deducted from inventory.`,
+      category: 'sale',
+      linkView: 'pos',
+    });
+
+    lowStockAlerts.forEach(alert => {
+      addNotification({
+        title: `Low Stock Alert • [${alert.partNumber}]`,
+        message: `${alert.partName} has reached ${alert.remaining} units left in stock. Reorder recommended.`,
+        category: 'stock',
+        linkView: 'inventory',
+      });
+    });
+
     return newReceipt;
   };
 
@@ -1072,6 +1320,12 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     )));
     setActiveReceipt(current => current?.id === receipt.id || current?.receipt_number === receipt.receipt_number ? null : current);
     setFlashMessage('success', `Receipt ${receipt.receipt_number} deleted and stock restored.`);
+    addNotification({
+      title: `Receipt Deleted • #${receipt.receipt_number}`,
+      message: `Receipt for ${receipt.customer_name} (${formatMoney(receipt.grand_total)}) was deleted and stock was restored to warehouse inventory.`,
+      category: 'delete',
+      linkView: 'pos',
+    });
   };
 
   const resetAllDataToDefaults = () => {
@@ -1094,6 +1348,12 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setNotifications(INITIAL_NOTIFICATIONS);
     setExchangeRateState(UGX_EXCHANGE_RATE);
     setFlashMessage('success', 'All system records and inventory reset to factory defaults.');
+    addNotification({
+      title: 'System Data Reset',
+      message: 'All inventory, sales records, and settings were reset to default state.',
+      category: 'system',
+      linkView: 'settings',
+    });
   };
 
   return (
@@ -1117,6 +1377,7 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
         formatMoney,
         formatMoneyShort,
         getConvertedAmount,
+        convertToBaseUGX,
         parts,
         transactions,
         clients,
@@ -1172,6 +1433,7 @@ export const InertiaProvider: React.FC<{ children: React.ReactNode }> = ({ child
         notifications,
         notificationsEnabled,
         toggleNotificationsEnabled,
+        addNotification,
         clearNotification,
         clearAllNotifications,
         markNotificationAsRead,

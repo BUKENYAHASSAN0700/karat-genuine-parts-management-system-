@@ -145,7 +145,7 @@ export const ProfitAndLossStatement: React.FC<PnLProps> = ({
               GAAP & IFRS Compliant Multi-Step Statement
             </span>
           </div>
-          <h2 className="text-xl font-black text-[#111111] tracking-tight">
+          <h2 className="text-lg sm:text-xl font-bold text-[#111111] tracking-tight">
             Statement of Profit or Loss (P&L)
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">

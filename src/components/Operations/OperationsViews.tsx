@@ -56,7 +56,7 @@ export const SalesView: React.FC = () => {
       <div className="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl font-extrabold text-[#111111] tracking-tight">
+            <h1 className="text-xl sm:text-2xl font-bold text-[#111111] tracking-tight">
               Customer Quotes & Sales Orders
             </h1>
             <span className="px-3 py-0.5 rounded-full text-xs font-bold bg-[#22A06B]/15 text-[#22A06B]">

@@ -678,7 +678,7 @@ export const SalesTerminalView: React.FC = () => {
       {/* Module Title & Navigation Tabs Bar */}
       <div className="bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-[#111111] tracking-tight font-poppins">
+          <h1 className="text-xl sm:text-2xl font-bold text-[#111111] tracking-tight font-poppins">
             Shop
           </h1>
         </div>
@@ -759,7 +759,7 @@ export const SalesTerminalView: React.FC = () => {
           <div className="lg:col-span-7 bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-6 shadow-xs space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-100">
               <div>
-                <h2 className="text-base font-extrabold text-[#111111]">
+                <h2 className="text-base font-bold text-[#111111]">
                   Spare Parts Catalog
                 </h2>
                 <p className="text-[11px] text-[#111111]/50">
@@ -1000,7 +1000,7 @@ export const SalesTerminalView: React.FC = () => {
                   {cart.reduce((s, it) => s + it.quantity, 0)}
                 </div>
                 <div>
-                  <h2 className="text-base font-extrabold text-[#111111]">Current Customer Order</h2>
+                  <h2 className="text-base font-bold text-[#111111]">Current Customer Order</h2>
                 </div>
               </div>
 
@@ -1222,7 +1222,7 @@ export const SalesTerminalView: React.FC = () => {
                   <FileText className="w-4 h-4 text-[#F6AF31]" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-extrabold text-[#111111] tracking-tight">
+                  <h2 className="text-base sm:text-lg font-bold text-[#111111] tracking-tight">
                     Order Drafts & Pending Receipts
                   </h2>
                   <p className="text-xs text-[#111111]/60">
@@ -1451,7 +1451,7 @@ export const SalesTerminalView: React.FC = () => {
                 <div className="w-8 h-8 rounded-xl bg-[#111111] text-[#F6AF31] flex items-center justify-center font-bold text-xs shrink-0">
                   <History className="w-4 h-4 text-[#F6AF31]" />
                 </div>
-                <h2 className="text-lg font-extrabold text-[#111111] tracking-tight">
+                <h2 className="text-base sm:text-lg font-bold text-[#111111] tracking-tight">
                   Sold Spare Parts & Itemized History
                 </h2>
               </div>
@@ -1699,7 +1699,7 @@ export const SalesTerminalView: React.FC = () => {
         <div className="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xs space-y-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-slate-100">
             <div>
-              <h2 className="text-lg font-extrabold text-[#111111] flex items-center gap-2">
+              <h2 className="text-base sm:text-lg font-bold text-[#111111] flex items-center gap-2">
                 <FileText className="w-5 h-5 text-[#F6AF31]" />
                 <span>Sales Receipts & Invoices Archive</span>
               </h2>

@@ -76,7 +76,7 @@ export const TaxComplianceReport: React.FC<TaxReportProps> = ({
               URA TIN: 1004829104 • Statutory Tax Compliance
             </span>
           </div>
-          <h2 className="text-xl font-black text-[#111111] tracking-tight">
+          <h2 className="text-lg sm:text-xl font-bold text-[#111111] tracking-tight">
             Uganda Revenue Authority (URA) VAT & Customs Duty
           </h2>
           <p className="text-xs text-slate-500 mt-1">
